@@ -668,10 +668,25 @@ The authentication flow is conceptually:
 
     Browser <- HttpOnly session ID cookie <- Express API
 
-Use a maintained OIDC and session-management library rather than implementing
-OIDC, cookie signing, or session lifecycle behavior from scratch. The exact
-library should be selected during implementation based on compatibility,
-maintenance, and security posture.
+The MVP authentication stack is:
+
+- `openid-client` for OIDC discovery and Authorization Code Flow
+- `express-session` for session lifecycle and cookie handling
+- `connect-pg-simple` for PostgreSQL session persistence using the existing
+  `pg` connection pool
+- `csrf-sync` for synchronizer-token CSRF protection
+
+Drizzle owns the session-table migration. Runtime table creation through the
+session store must remain disabled.
+
+Do not add Passport around `openid-client` for the MVP. It would introduce an
+additional authentication abstraction without solving a current requirement.
+Do not retain Google provider tokens after login unless a later feature requires
+access to a Google API.
+
+The full decision, alternatives, and consequences are recorded in:
+
+    docs/decisions/0001-authentication-libraries.md
 
 Session cookies must use:
 
