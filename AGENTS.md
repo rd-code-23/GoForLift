@@ -424,6 +424,17 @@ When applicable:
 Do not disable lint or TypeScript rules merely to avoid fixing an issue without
 explaining why.
 
+### File Purpose Comments
+
+Every new or modified source, configuration, and test file that supports
+comments must begin with one concise comment describing the file's primary
+responsibility.
+
+The comment should explain the file's purpose, not restate its implementation.
+Keep it accurate as the responsibility changes. Do not bulk-edit unrelated
+existing files solely to add comments, and do not add comments to generated
+files or formats that do not support them.
+
 
 ## Dependencies
 
