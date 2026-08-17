@@ -327,6 +327,23 @@ At minimum:
 - avoid leaking stack traces or internal errors to clients
 - follow least-privilege principles
 
+For MVP authentication:
+
+- use Google OIDC for registered-user login
+- use server-side sessions stored in PostgreSQL
+- place only an opaque, cryptographically random session ID in an `HttpOnly`
+  cookie
+- set `Secure` in production and choose `SameSite`, domain, path, and expiration
+  settings intentionally
+- do not introduce JWT-based application authentication unless the documented
+  architecture is deliberately changed
+- enforce authentication and resource authorization on the server for every
+  protected request
+- invalidate the server-side session on logout and reject expired sessions
+- implement CSRF protection appropriate for cookie-based authentication
+- use maintained OIDC and session-management libraries rather than implementing
+  security protocols or session primitives from scratch
+
 Never commit:
 
 - passwords

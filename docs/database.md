@@ -43,6 +43,8 @@ At a high level:
 
     User
       |
+      +---- Authentication Sessions
+      |
       +---- Routines
       |
       +---- Custom Exercises
@@ -97,6 +99,38 @@ Guest users are not required to have persistent database records.
 - (`auth_provider`, `auth_provider_subject`) should be unique.
 - Email uniqueness should be finalized alongside the authentication design rather
   than assuming email is always the canonical external identity.
+
+
+## 4.1 Authentication Sessions
+
+### Purpose
+
+Stores server-side sessions for registered users authenticated through Google
+OIDC. The browser stores only an opaque, cryptographically random session ID in
+an `HttpOnly` cookie. GoForLift does not use JWTs for application authentication
+in the MVP.
+
+### Fields
+
+| Field | Type | Purpose |
+|---|---|---|
+| `id` | UUID or sufficiently strong opaque identifier | Session identifier placed in the browser cookie. If the implementation stores only a hash of the cookie value, this field contains that hash instead. |
+| `user_id` | UUID, FK → `users.id` | User authenticated by the session. |
+| `expires_at` | TIMESTAMPTZ | Absolute time after which the session is invalid. |
+| `created_at` | TIMESTAMPTZ | When the session was created. |
+| `last_accessed_at` | TIMESTAMPTZ, nullable | Optional timestamp for idle-expiration or session-management behavior if adopted during implementation. |
+
+### Constraints and Lifecycle
+
+- `id` is the primary key or uniquely indexed lookup value.
+- `user_id` references `users.id`.
+- Session identifiers must be generated using a cryptographically secure source.
+- Expired sessions must not authenticate requests and should be removed
+  periodically.
+- Logout deletes or invalidates the matching session.
+- Deleting a user must invalidate that user's sessions.
+- An index on `user_id` supports user-wide session revocation.
+- An index on `expires_at` may support expiration cleanup.
 
 
 # 5. Exercises
@@ -443,6 +477,7 @@ The initial persistent model contains:
 | Table | Purpose |
 |---|---|
 | `users` | Registered user identity. |
+| `sessions` | Server-side authentication sessions for registered users. |
 | `exercises` | Built-in and user-created exercises. |
 | `routines` | User-created workout routines. |
 | `routine_exercises` | Exercise configuration within a routine. |
@@ -451,12 +486,19 @@ The initial persistent model contains:
 | `workout_sets` | Sets actually completed during workouts. |
 | `user_settings` | Persisted UI/user preferences. |
 
-This gives the MVP **8 core tables**.
+This gives the MVP **9 core tables**.
 
 Do not add a progression table because progression is not part of the MVP.
 
 
 # 15. Relationship Summary
+
+    users
+      |
+      | 1:N
+      v
+    sessions
+
 
     users
       |
@@ -576,6 +618,10 @@ Primary keys and unique constraints will naturally create some indexes.
 Likely query patterns should guide additional indexes.
 
 Potential candidates include:
+
+    sessions.user_id
+
+    sessions.expires_at
 
     routines.user_id
 
