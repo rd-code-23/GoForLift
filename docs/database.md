@@ -114,23 +114,24 @@ in the MVP.
 
 | Field | Type | Purpose |
 |---|---|---|
-| `id` | UUID or sufficiently strong opaque identifier | Session identifier placed in the browser cookie. If the implementation stores only a hash of the cookie value, this field contains that hash instead. |
-| `user_id` | UUID, FK → `users.id` | User authenticated by the session. |
-| `expires_at` | TIMESTAMPTZ | Absolute time after which the session is invalid. |
-| `created_at` | TIMESTAMPTZ | When the session was created. |
-| `last_accessed_at` | TIMESTAMPTZ, nullable | Optional timestamp for idle-expiration or session-management behavior if adopted during implementation. |
+| `sid` | VARCHAR | Opaque session identifier used by `connect-pg-simple`. |
+| `sess` | JSON | Serialized server-side session state, including the authenticated GoForLift user ID after login. |
+| `expire` | TIMESTAMP(6) | Absolute time after which the session is invalid. |
 
 ### Constraints and Lifecycle
 
-- `id` is the primary key or uniquely indexed lookup value.
-- `user_id` references `users.id`.
+- `sid` is the primary key and session lookup index.
+- The table shape intentionally matches `connect-pg-simple`; application user
+  identity is stored inside `sess` rather than in a separate normalized column.
 - Session identifiers must be generated using a cryptographically secure source.
 - Expired sessions must not authenticate requests and should be removed
-  periodically.
+  at least daily by the configured session store.
 - Logout deletes or invalidates the matching session.
-- Deleting a user must invalidate that user's sessions.
-- An index on `user_id` supports user-wide session revocation.
-- An index on `expires_at` may support expiration cleanup.
+- Deleting a user must invalidate that user's sessions through application-owned
+  session cleanup.
+- An index on `expire` supports expiration pruning.
+- Drizzle owns table creation and migration. Runtime table creation through
+  `connect-pg-simple` remains disabled.
 
 
 # 5. Exercises
@@ -619,9 +620,7 @@ Likely query patterns should guide additional indexes.
 
 Potential candidates include:
 
-    sessions.user_id
-
-    sessions.expires_at
+    sessions.expire
 
     routines.user_id
 
