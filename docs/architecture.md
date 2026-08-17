@@ -646,22 +646,58 @@ Never commit real credentials or secrets.
 
 # 27. Authentication
 
-MVP authentication should support:
+Registered users authenticate with Google using OpenID Connect (OIDC).
 
-- Google authentication
-- guest access
+After a successful OIDC flow, the API finds or creates the corresponding
+GoForLift user and creates a server-side application session. Session records are
+stored in PostgreSQL. The browser receives only a cryptographically random,
+opaque session ID in an `HttpOnly` cookie; application authentication does not
+use JWTs for the MVP.
 
-The exact authentication implementation/library has not yet been finalized.
+The authentication flow is conceptually:
 
-Do not choose or implement an authentication provider solely based on assumption.
+    Browser
+       |
+       | Google OIDC login
+       v
+    Express API
+       |
+       | find/create user + create session
+       v
+    PostgreSQL
 
-Authentication architecture should be finalized when the authentication feature
-is implemented.
+    Browser <- HttpOnly session ID cookie <- Express API
+
+Use a maintained OIDC and session-management library rather than implementing
+OIDC, cookie signing, or session lifecycle behavior from scratch. The exact
+library should be selected during implementation based on compatibility,
+maintenance, and security posture.
+
+Session cookies must use:
+
+- `HttpOnly`
+- `Secure` in production
+- an intentionally selected `SameSite` policy compatible with the deployment
+  topology and OIDC redirect flow
+- a narrow path and domain scope where practical
+- a defined expiration consistent with the server-side session
+
+Logout invalidates the server-side session and clears the cookie. Expired and
+invalid session IDs must not authenticate a request. Because authentication uses
+cookies, the implementation must include appropriate CSRF protection for
+state-changing requests.
+
+Guest access remains unauthenticated and does not create a persistent session or
+registered-user data.
 
 
 ## 27.1 Authorization
 
 Authorization must occur on the backend.
+
+Every protected request must resolve a valid server-side session and enforce
+resource ownership or other applicable authorization rules. Authentication alone
+does not grant access to every registered user's resources.
 
 A user must not be able to access or modify another user's:
 
@@ -917,7 +953,7 @@ requirements.
 | Structure | Feature-based / vertical |
 | Architecture | Modular monolith |
 | Active workout | Client-side until finish/completion |
-| Authentication | Google + guest; implementation TBD |
+| Authentication | Google OIDC + PostgreSQL-backed server-side sessions; opaque session ID in an HttpOnly cookie; no application JWT for MVP |
 | Deployment | TBD |
 | Android | Future client using the same API |
 

@@ -56,7 +56,15 @@ MVP UX only needs to handle straightforward dumbbell workouts well.
 
 ## 4.1 Registered Users
 
-Users should be able to authenticate using Google.
+Users should be able to authenticate using Google OIDC.
+
+After authentication, GoForLift should maintain a server-side session stored in
+PostgreSQL. The browser should receive only an opaque session ID in an
+`HttpOnly` cookie. Application authentication should not use JWTs for the MVP.
+
+Logging out should invalidate the server-side session. Protected resources must
+require a valid session, and the backend must verify that the authenticated user
+is authorized to access or modify each resource.
 
 Registered users have persistent data.
 
@@ -80,6 +88,7 @@ the application without creating an account.
 Guest mode:
 
 - does not require authentication
+- does not create a registered-user authentication session
 - does not persist user data permanently
 - should allow meaningful exploration of the application's core functionality
 
