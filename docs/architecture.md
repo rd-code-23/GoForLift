@@ -643,6 +643,23 @@ Provide safe example configuration through files such as:
 
 Never commit real credentials or secrets.
 
+Authentication startup configuration includes:
+
+- `WEB_ORIGIN` and `API_ORIGIN` as exact HTTP(S) origins; production values
+  must use HTTPS
+- `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` for the Google OIDC client
+- `GOOGLE_OIDC_REDIRECT_URI` as the exact registered callback URL; production
+  must use HTTPS
+- `SESSION_SECRET` with at least 32 characters
+- `SESSION_DURATION_SECONDS=604800`, matching the approved fixed seven-day
+  lifetime
+
+The API validates these values before startup. Missing or malformed values must
+fail fast without logging credential values. Derived cookie configuration uses
+the approved policy and enables `Secure` automatically in production. Safe
+development placeholders belong in `apps/api/.env.example`; real secrets do
+not.
+
 
 # 27. Authentication
 
