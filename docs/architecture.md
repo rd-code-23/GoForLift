@@ -692,15 +692,30 @@ Session cookies must use:
 
 - `HttpOnly`
 - `Secure` in production
-- an intentionally selected `SameSite` policy compatible with the deployment
-  topology and OIDC redirect flow
-- a narrow path and domain scope where practical
-- a defined expiration consistent with the server-side session
+- `SameSite=Lax`
+- the name `goforlift.sid`
+- path `/` with no `Domain` attribute, producing a host-only cookie
+- a fixed seven-day expiration with no rolling renewal or idle timeout
 
 Logout invalidates the server-side session and clears the cookie. Expired and
 invalid session IDs must not authenticate a request. Because authentication uses
 cookies, the implementation must include appropriate CSRF protection for
-state-changing requests.
+every cookie-authenticated `POST`, `PUT`, `PATCH`, and `DELETE` request. The
+browser obtains a synchronizer token tied to the session and returns it in the
+`X-CSRF-Token` header.
+
+Credentialed CORS permits only the explicitly configured web origin and never
+combines credentials with a wildcard origin. Local development uses
+`http://localhost:5173` for the web and `http://localhost:3000` for the API.
+Production origins must be explicit HTTPS URLs. Proxy trust is disabled locally
+and narrowly configured for the selected production reverse proxy.
+
+Post-login destinations must be validated root-relative application paths.
+Invalid, absolute, or protocol-relative destinations fall back to `/`.
+
+The complete policy and its deployment constraints are recorded in:
+
+    docs/decisions/0002-authentication-security-policy.md
 
 Guest access remains unauthenticated and does not create a persistent session or
 registered-user data.
