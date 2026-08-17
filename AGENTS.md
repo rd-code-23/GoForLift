@@ -341,6 +341,8 @@ For MVP authentication:
   protected request
 - invalidate the server-side session on logout and reject expired sessions
 - implement CSRF protection appropriate for cookie-based authentication
+- follow `docs/decisions/0002-authentication-security-policy.md` for the exact
+  session lifetime, cookie, CORS, CSRF, proxy, and redirect policy
 - use maintained OIDC and session-management libraries rather than implementing
   security protocols or session primitives from scratch
 

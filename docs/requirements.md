@@ -66,6 +66,13 @@ Logging out should invalidate the server-side session. Protected resources must
 require a valid session, and the backend must verify that the authenticated user
 is authorized to access or modify each resource.
 
+Registered-user sessions should expire after a fixed seven-day lifetime without
+rolling renewal. Session cookies must be host-only, `HttpOnly`, `SameSite=Lax`,
+and `Secure` in production. Every state-changing cookie-authenticated request
+must require a valid session-bound CSRF token. Credentialed CORS must allow only
+the configured web origin, and post-login redirects must remain within the web
+application.
+
 Registered users have persistent data.
 
 Their:
