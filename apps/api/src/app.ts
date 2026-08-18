@@ -1,20 +1,29 @@
+/** Composes the Express API and its application-wide middleware. */
 import { healthResponseSchema } from '@goforlift/contracts';
 import cors from 'cors';
-import express from 'express';
+import express, { type RequestHandler } from 'express';
 
 type AppDependencies = {
   checkDatabaseConnection: () => Promise<void>;
+  sessionMiddleware: RequestHandler;
+  trustProxyHops: number;
   webOrigin: string;
 };
 
 export function createApp({
   checkDatabaseConnection,
+  sessionMiddleware,
+  trustProxyHops,
   webOrigin,
 }: AppDependencies) {
   const app = express();
 
   app.disable('x-powered-by');
-  app.use(cors({ origin: webOrigin }));
+  if (trustProxyHops > 0) {
+    app.set('trust proxy', trustProxyHops);
+  }
+  app.use(cors({ origin: webOrigin, credentials: true }));
+  app.use(sessionMiddleware);
   app.use(express.json());
 
   app.get('/health', async (_request, response) => {
@@ -34,6 +43,13 @@ export function createApp({
       );
     }
   });
+
+  app.use(((error, _request, response, next) => {
+    void error;
+    void next;
+    console.error('API request failed');
+    response.status(500).json({ error: 'internal_server_error' });
+  }) satisfies express.ErrorRequestHandler);
 
   return app;
 }

@@ -1,12 +1,18 @@
+/** Starts the API with database, session, and graceful-shutdown resources. */
 import { sql } from 'drizzle-orm';
 
 import { createApp } from './app.js';
+import { createPostgresSession } from './auth/session.js';
 import { env } from './config/env.js';
 import { createDatabase } from './db/client.js';
 
 const { db, pool } = createDatabase(env.DATABASE_URL);
+const { middleware: sessionMiddleware, store: sessionStore } =
+  createPostgresSession(pool, env);
 const app = createApp({
   webOrigin: env.WEB_ORIGIN,
+  trustProxyHops: env.TRUST_PROXY_HOPS,
+  sessionMiddleware,
   checkDatabaseConnection: async () => {
     await db.execute(sql`select 1`);
   },
@@ -18,6 +24,7 @@ const server = app.listen(env.PORT, () => {
 
 function shutdown() {
   server.close(() => {
+    sessionStore.close();
     void pool.end().then(() => process.exit(0));
   });
 }

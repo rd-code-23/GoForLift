@@ -7,6 +7,7 @@ import { parseEnv } from './env-schema.js';
 const validEnvironment = {
   NODE_ENV: 'development',
   PORT: '3000',
+  TRUST_PROXY_HOPS: '0',
   DATABASE_URL: 'postgresql://user:password@localhost:5432/goforlift',
   WEB_ORIGIN: 'http://localhost:5173',
   API_ORIGIN: 'http://localhost:3000',
@@ -70,6 +71,15 @@ describe('parseEnv', () => {
         NODE_ENV: 'production',
       }),
     ).toThrow('Must use HTTPS in production');
+  });
+
+  it('rejects broad trusted-proxy configuration', () => {
+    expect(() =>
+      parseEnv({
+        ...validEnvironment,
+        TRUST_PROXY_HOPS: '2',
+      }),
+    ).toThrow(ZodError);
   });
 
   it('enables secure cookies for valid production configuration', () => {
