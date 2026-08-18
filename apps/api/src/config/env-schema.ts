@@ -19,6 +19,7 @@ const rawEnvSchema = z
       .enum(['development', 'test', 'production'])
       .default('development'),
     PORT: z.coerce.number().int().positive().default(3000),
+    TRUST_PROXY_HOPS: z.coerce.number().int().min(0).max(1).default(0),
     DATABASE_URL: z.url(),
     WEB_ORIGIN: httpUrl.default('http://localhost:5173'),
     API_ORIGIN: httpUrl.default('http://localhost:3000'),
