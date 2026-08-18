@@ -1,9 +1,10 @@
 /** Composes the Express API and its application-wide middleware. */
 import { healthResponseSchema } from '@goforlift/contracts';
 import cors from 'cors';
-import express, { type RequestHandler } from 'express';
+import express, { type RequestHandler, type Router } from 'express';
 
 type AppDependencies = {
+  authRouter: Router;
   checkDatabaseConnection: () => Promise<void>;
   sessionMiddleware: RequestHandler;
   trustProxyHops: number;
@@ -11,6 +12,7 @@ type AppDependencies = {
 };
 
 export function createApp({
+  authRouter,
   checkDatabaseConnection,
   sessionMiddleware,
   trustProxyHops,
@@ -25,6 +27,7 @@ export function createApp({
   app.use(cors({ origin: webOrigin, credentials: true }));
   app.use(sessionMiddleware);
   app.use(express.json());
+  app.use('/auth', authRouter);
 
   app.get('/health', async (_request, response) => {
     try {

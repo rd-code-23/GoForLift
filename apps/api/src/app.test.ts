@@ -1,5 +1,6 @@
 /** Verifies health responses, credentialed CORS, and safe middleware errors. */
 import request from 'supertest';
+import { Router } from 'express';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { createApp } from './app.js';
@@ -10,6 +11,7 @@ describe('GET /health', () => {
   it('reports a connected database', async () => {
     const response = await request(
       createApp({
+        authRouter: Router(),
         webOrigin: 'http://localhost:5173',
         trustProxyHops: 0,
         sessionMiddleware: (_request, _response, next) => next(),
@@ -24,6 +26,7 @@ describe('GET /health', () => {
   it('returns a safe unavailable response when the database cannot be reached', async () => {
     const response = await request(
       createApp({
+        authRouter: Router(),
         webOrigin: 'http://localhost:5173',
         trustProxyHops: 0,
         sessionMiddleware: (_request, _response, next) => next(),
@@ -43,6 +46,7 @@ describe('GET /health', () => {
   it('allows credentialed requests only from the configured web origin', async () => {
     const response = await request(
       createApp({
+        authRouter: Router(),
         webOrigin: 'http://localhost:5173',
         trustProxyHops: 0,
         sessionMiddleware: (_request, _response, next) => next(),
@@ -62,6 +66,7 @@ describe('GET /health', () => {
     const errorLog = vi.spyOn(console, 'error').mockImplementation(() => {});
     const response = await request(
       createApp({
+        authRouter: Router(),
         webOrigin: 'http://localhost:5173',
         trustProxyHops: 0,
         sessionMiddleware: (_request, _response, next) =>
