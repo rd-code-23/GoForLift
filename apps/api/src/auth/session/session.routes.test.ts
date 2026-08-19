@@ -23,7 +23,7 @@ const sessionConfiguration = {
 };
 
 const publicUser = {
-  id: 'user-123',
+  id: '26d34dc0-8e4c-4bd0-9e3b-7b839b44e486',
   email: 'lifter@example.com',
   displayName: 'Go For Lifter',
   avatarUrl: 'https://images.example.com/avatar.png',

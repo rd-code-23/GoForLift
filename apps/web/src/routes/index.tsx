@@ -21,6 +21,7 @@ function HomePage() {
   });
 
   const isConnected = health.data?.database === 'connected';
+  const systemStatus = getSystemStatus(health.isPending, isConnected);
 
   return (
     <main className="min-h-screen bg-background px-6 py-10 text-foreground sm:px-10 lg:px-16">
@@ -69,14 +70,10 @@ function HomePage() {
           <div className="mt-8 flex items-center gap-3 border-t border-border pt-6">
             <span
               aria-hidden="true"
-              className={cnStatusDot(health.isPending, isConnected)}
+              className={`size-2.5 rounded-full ${systemStatus.dotColor}`}
             />
             <p aria-live="polite" className="font-medium">
-              {health.isPending
-                ? 'Contacting API…'
-                : isConnected
-                  ? 'API and PostgreSQL connected'
-                  : 'API or PostgreSQL unavailable'}
+              {systemStatus.message}
             </p>
           </div>
         </aside>
@@ -85,11 +82,23 @@ function HomePage() {
   );
 }
 
-function cnStatusDot(isPending: boolean, isConnected: boolean) {
-  const color = isPending
-    ? 'bg-muted-foreground'
-    : isConnected
-      ? 'bg-primary'
-      : 'bg-destructive';
-  return `size-2.5 rounded-full ${color}`;
+function getSystemStatus(isPending: boolean, isConnected: boolean) {
+  if (isPending) {
+    return {
+      dotColor: 'bg-muted-foreground',
+      message: 'Contacting API…',
+    };
+  }
+
+  if (isConnected) {
+    return {
+      dotColor: 'bg-primary',
+      message: 'API and PostgreSQL connected',
+    };
+  }
+
+  return {
+    dotColor: 'bg-destructive',
+    message: 'API or PostgreSQL unavailable',
+  };
 }

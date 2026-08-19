@@ -1,3 +1,4 @@
+/** Configures repository-wide TypeScript, React, and code-readability lint rules. */
 import js from '@eslint/js';
 import reactHooks from 'eslint-plugin-react-hooks';
 import reactRefresh from 'eslint-plugin-react-refresh';
@@ -16,6 +17,12 @@ export default tseslint.config(
   },
   js.configs.recommended,
   ...tseslint.configs.recommendedTypeChecked,
+  {
+    files: ['**/*.{js,jsx,ts,tsx}'],
+    rules: {
+      'no-nested-ternary': 'error',
+    },
+  },
   {
     files: ['**/*.{ts,tsx}'],
     languageOptions: {
