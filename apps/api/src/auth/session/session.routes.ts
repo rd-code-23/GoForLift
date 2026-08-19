@@ -39,13 +39,11 @@ export function createSessionRouter({
   });
 
   router.get('/csrf-token', (request, response) => {
-    response
-      .status(200)
-      .json(
-        csrfTokenResponseSchema.parse({
-          csrfToken: generateCsrfToken(request),
-        }),
-      );
+    response.status(200).json(
+      csrfTokenResponseSchema.parse({
+        csrfToken: generateCsrfToken(request),
+      }),
+    );
   });
 
   router.post('/logout', (request, response, next) => {
