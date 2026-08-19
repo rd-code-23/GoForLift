@@ -1,3 +1,4 @@
+/** Configures the web build, tests, and local API development proxy. */
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import { tanstackRouter } from '@tanstack/router-plugin/vite';
@@ -21,6 +22,7 @@ export default defineConfig({
   },
   server: {
     proxy: {
+      '/auth': 'http://localhost:3000',
       '/health': 'http://localhost:3000',
     },
   },

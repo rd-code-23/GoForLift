@@ -1,15 +1,9 @@
 /** Loads the public profile fields exposed for the authenticated application user. */
+import type { PublicUser } from '@goforlift/contracts';
 import { eq } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 
 import { users } from '../../db/schema/index.js';
-
-export type PublicUser = {
-  avatarUrl: string | null;
-  displayName: string | null;
-  email: string;
-  id: string;
-};
 
 export async function findPublicUserById(
   database: NodePgDatabase,

@@ -1,7 +1,11 @@
 /** Defines current-user, CSRF-token, and logout endpoints for browser sessions. */
+import {
+  csrfTokenResponseSchema,
+  currentUserResponseSchema,
+  type PublicUser,
+} from '@goforlift/contracts';
 import { Router } from 'express';
 
-import type { PublicUser } from '../user/current-user.service.js';
 import { generateCsrfToken, revokeCsrfToken } from '../csrf/csrf.middleware.js';
 
 type SessionRouterOptions = {
@@ -20,20 +24,28 @@ export function createSessionRouter({
   router.get('/me', async (request, response, next) => {
     const userId = request.session.userId;
     if (!userId) {
-      response.status(200).json({ user: null });
+      response
+        .status(200)
+        .json(currentUserResponseSchema.parse({ user: null }));
       return;
     }
 
     try {
       const user = await findPublicUser(userId);
-      response.status(200).json({ user });
+      response.status(200).json(currentUserResponseSchema.parse({ user }));
     } catch (error) {
       next(error);
     }
   });
 
   router.get('/csrf-token', (request, response) => {
-    response.status(200).json({ csrfToken: generateCsrfToken(request) });
+    response
+      .status(200)
+      .json(
+        csrfTokenResponseSchema.parse({
+          csrfToken: generateCsrfToken(request),
+        }),
+      );
   });
 
   router.post('/logout', (request, response, next) => {

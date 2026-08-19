@@ -8,7 +8,7 @@ import { findPublicUserById } from './current-user.service.js';
 describe('findPublicUserById', () => {
   it('returns the public user projection', async () => {
     const publicUser = {
-      id: 'user-123',
+      id: '26d34dc0-8e4c-4bd0-9e3b-7b839b44e486',
       email: 'lifter@example.com',
       displayName: 'Go For Lifter',
       avatarUrl: null,
