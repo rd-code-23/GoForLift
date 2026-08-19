@@ -6,6 +6,8 @@ import express, { type RequestHandler, type Router } from 'express';
 type AppDependencies = {
   authRouter: Router;
   checkDatabaseConnection: () => Promise<void>;
+  csrfErrorHandler: express.ErrorRequestHandler;
+  csrfProtection: RequestHandler;
   sessionMiddleware: RequestHandler;
   trustProxyHops: number;
   webOrigin: string;
@@ -14,6 +16,8 @@ type AppDependencies = {
 export function createApp({
   authRouter,
   checkDatabaseConnection,
+  csrfErrorHandler,
+  csrfProtection,
   sessionMiddleware,
   trustProxyHops,
   webOrigin,
@@ -27,6 +31,7 @@ export function createApp({
   app.use(cors({ origin: webOrigin, credentials: true }));
   app.use(sessionMiddleware);
   app.use(express.json());
+  app.use(csrfProtection);
   app.use('/auth', authRouter);
 
   app.get('/health', async (_request, response) => {
@@ -47,6 +52,7 @@ export function createApp({
     }
   });
 
+  app.use(csrfErrorHandler);
   app.use(((error, _request, response, next) => {
     void error;
     void next;
