@@ -6,6 +6,7 @@ import {
   createGoogleOidcRouter,
   discoverGoogleOidc,
 } from './auth/google-oidc.js';
+import { provisionGoogleUser } from './auth/google-user.js';
 import { createPostgresSession } from './auth/session.js';
 import { env } from './config/env.js';
 import { createDatabase } from './db/client.js';
@@ -15,7 +16,12 @@ const { middleware: sessionMiddleware, store: sessionStore } =
   createPostgresSession(pool, env);
 const oidc = await discoverGoogleOidc(env);
 const app = createApp({
-  authRouter: createGoogleOidcRouter(oidc, env.GOOGLE_OIDC_REDIRECT_URI),
+  authRouter: createGoogleOidcRouter({
+    oidc,
+    redirectUri: env.GOOGLE_OIDC_REDIRECT_URI,
+    webOrigin: env.WEB_ORIGIN,
+    provisionUser: (profile) => provisionGoogleUser(db, profile),
+  }),
   webOrigin: env.WEB_ORIGIN,
   trustProxyHops: env.TRUST_PROXY_HOPS,
   sessionMiddleware,
