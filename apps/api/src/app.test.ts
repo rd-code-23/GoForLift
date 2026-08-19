@@ -5,6 +5,11 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { createApp } from './app.js';
 
+const noOpMiddleware = ((_request, _response, next) =>
+  next()) satisfies import('express').RequestHandler;
+const noOpErrorMiddleware = ((error, _request, _response, next) =>
+  next(error)) satisfies import('express').ErrorRequestHandler;
+
 afterEach(() => vi.restoreAllMocks());
 
 describe('GET /health', () => {
@@ -12,6 +17,8 @@ describe('GET /health', () => {
     const response = await request(
       createApp({
         authRouter: Router(),
+        csrfErrorHandler: noOpErrorMiddleware,
+        csrfProtection: noOpMiddleware,
         webOrigin: 'http://localhost:5173',
         trustProxyHops: 0,
         sessionMiddleware: (_request, _response, next) => next(),
@@ -27,6 +34,8 @@ describe('GET /health', () => {
     const response = await request(
       createApp({
         authRouter: Router(),
+        csrfErrorHandler: noOpErrorMiddleware,
+        csrfProtection: noOpMiddleware,
         webOrigin: 'http://localhost:5173',
         trustProxyHops: 0,
         sessionMiddleware: (_request, _response, next) => next(),
@@ -47,6 +56,8 @@ describe('GET /health', () => {
     const response = await request(
       createApp({
         authRouter: Router(),
+        csrfErrorHandler: noOpErrorMiddleware,
+        csrfProtection: noOpMiddleware,
         webOrigin: 'http://localhost:5173',
         trustProxyHops: 0,
         sessionMiddleware: (_request, _response, next) => next(),
@@ -67,6 +78,8 @@ describe('GET /health', () => {
     const response = await request(
       createApp({
         authRouter: Router(),
+        csrfErrorHandler: noOpErrorMiddleware,
+        csrfProtection: noOpMiddleware,
         webOrigin: 'http://localhost:5173',
         trustProxyHops: 0,
         sessionMiddleware: (_request, _response, next) =>
