@@ -3,7 +3,7 @@ import connectPgSimple from 'connect-pg-simple';
 import session, { type Store } from 'express-session';
 import type { Pool } from 'pg';
 
-import type { Env } from '../config/env-schema.js';
+import type { Env } from '../../config/env-schema.js';
 
 declare module 'express-session' {
   interface SessionData {

@@ -131,6 +131,12 @@ locations.
 
 Do not create shared abstractions before there is a real reuse case.
 
+Within a feature, use descriptive role suffixes when they make a file's
+responsibility clearer, such as `.routes.ts`, `.service.ts`, `.middleware.ts`,
+and `.schema.ts`. Colocate tests as `<name>.<role>.test.ts`. Group related
+capabilities into focused subfolders when a feature grows; avoid broad files
+such as `auth.service.ts` or empty layers created only to match a template.
+
 
 ## Frontend Standards
 

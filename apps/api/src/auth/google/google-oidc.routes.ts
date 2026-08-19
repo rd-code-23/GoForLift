@@ -1,4 +1,4 @@
-/** Starts Google OIDC authorization with protected state, nonce, and PKCE data. */
+/** Defines secure Google OIDC login-start and callback routes. */
 import { Router } from 'express';
 import {
   buildAuthorizationUrl,
@@ -12,8 +12,8 @@ import {
 } from 'openid-client';
 import { z } from 'zod';
 
-import type { Env } from '../config/env-schema.js';
-import type { GoogleUserProfile } from './google-user.js';
+import type { Env } from '../../config/env-schema.js';
+import type { GoogleUserProfile } from './google-user.service.js';
 
 const GOOGLE_ISSUER = new URL('https://accounts.google.com');
 const DEFAULT_RETURN_PATH = '/';

@@ -2,7 +2,7 @@
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { describe, expect, it, vi } from 'vitest';
 
-import { provisionGoogleUser } from './google-user.js';
+import { provisionGoogleUser } from './google-user.service.js';
 
 function createDatabaseResult(rows: Array<{ id: string }>) {
   const returning = vi.fn(() => Promise.resolve(rows));

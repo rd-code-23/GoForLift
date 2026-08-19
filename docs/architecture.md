@@ -417,6 +417,11 @@ A conceptual feature organization might be:
     apps/api/src/
       features/
         auth/
+          google/
+            google-oidc.routes.ts
+            google-user.service.ts
+          session/
+            session.middleware.ts
         exercises/
         routines/
         workouts/
@@ -436,6 +441,12 @@ Each backend feature may contain the pieces needed by that feature, such as:
 - tests
 
 Do not force every feature to contain every layer.
+
+Use descriptive role suffixes such as `.routes.ts`, `.service.ts`,
+`.middleware.ts`, and `.schema.ts` where they clarify responsibility. Colocate
+tests as `<name>.<role>.test.ts`. Prefer focused capability names over broad
+files such as `auth.service.ts`, and introduce controllers or other layers only
+when their separation provides real value.
 
 
 # 17. Backend Separation of Concerns

@@ -4,7 +4,7 @@ import session from 'express-session';
 import request from 'supertest';
 import { describe, expect, it } from 'vitest';
 
-import { createSessionMiddleware } from './session.js';
+import { createSessionMiddleware } from './session.middleware.js';
 
 const sessionConfiguration = {
   SESSION_SECRET: 'test-session-secret-at-least-32-characters',
