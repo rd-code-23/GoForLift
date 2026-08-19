@@ -1,0 +1,2 @@
+# Formats and lints only files staged for the pending commit.
+pnpm exec lint-staged
