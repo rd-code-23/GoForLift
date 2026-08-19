@@ -5,9 +5,9 @@ import { createApp } from './app.js';
 import {
   createGoogleOidcRouter,
   discoverGoogleOidc,
-} from './auth/google-oidc.js';
-import { provisionGoogleUser } from './auth/google-user.js';
-import { createPostgresSession } from './auth/session.js';
+} from './auth/google/google-oidc.routes.js';
+import { provisionGoogleUser } from './auth/google/google-user.service.js';
+import { createPostgresSession } from './auth/session/session.middleware.js';
 import { env } from './config/env.js';
 import { createDatabase } from './db/client.js';
 

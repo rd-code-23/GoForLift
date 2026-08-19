@@ -10,8 +10,8 @@ import {
   type ExchangeAuthorizationCode,
   type OidcFlowState,
   validateReturnTo,
-} from './google-oidc.js';
-import { createSessionMiddleware } from './session.js';
+} from './google-oidc.routes.js';
+import { createSessionMiddleware } from '../session/session.middleware.js';
 
 const redirectUri = 'http://localhost:3000/auth/google/callback';
 const sessionConfiguration = {
