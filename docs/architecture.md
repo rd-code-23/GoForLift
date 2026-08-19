@@ -766,6 +766,12 @@ A user must not be able to access or modify another user's:
 
 Client-side hiding of UI elements is not authorization.
 
+Protected endpoints return `401 Unauthorized` when no valid authenticated
+session identity exists. They return `403 Forbidden` when an authenticated user
+is not allowed to perform the requested action. Resource queries and ownership
+checks must use the user ID established from the server-side session; ownership
+identifiers supplied by the client are never authoritative.
+
 
 # 28. Guest Architecture
 
