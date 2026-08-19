@@ -3,10 +3,11 @@ import express from 'express';
 import session from 'express-session';
 import { calculatePKCECodeChallenge, Configuration } from 'openid-client';
 import request from 'supertest';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import {
   createGoogleOidcRouter,
+  type ExchangeAuthorizationCode,
   type OidcFlowState,
   validateReturnTo,
 } from './google-oidc.js';
@@ -26,7 +27,18 @@ const sessionConfiguration = {
   },
 };
 
-function createTestContext() {
+type TestContextOptions = {
+  exchangeAuthorizationCode?: ExchangeAuthorizationCode;
+  now?: () => number;
+  provisionUser?: (profile: {
+    avatarUrl?: string;
+    displayName?: string;
+    email: string;
+    subject: string;
+  }) => Promise<{ id: string }>;
+};
+
+function createTestContext(options: TestContextOptions = {}) {
   const store = new session.MemoryStore();
   const oidc = new Configuration(
     {
@@ -38,7 +50,18 @@ function createTestContext() {
   );
   const app = express();
   app.use(createSessionMiddleware(store, sessionConfiguration));
-  app.use('/auth', createGoogleOidcRouter(oidc, redirectUri));
+  app.use(
+    '/auth',
+    createGoogleOidcRouter({
+      oidc,
+      redirectUri,
+      webOrigin: 'http://localhost:5173',
+      provisionUser:
+        options.provisionUser ?? (() => Promise.resolve({ id: 'user-123' })),
+      exchangeAuthorizationCode: options.exchangeAuthorizationCode,
+      now: options.now,
+    }),
+  );
 
   return { app, store };
 }
@@ -60,6 +83,21 @@ function readStoredFlow(store: session.MemoryStore) {
   }
 
   return storedSession.oidcFlow;
+}
+
+function readStoredSession(store: session.MemoryStore) {
+  const sessions = (store as unknown as { sessions: Record<string, string> })
+    .sessions;
+  const serializedSession = Object.values(sessions)[0];
+
+  if (!serializedSession) {
+    throw new Error('Expected the test session to be stored');
+  }
+
+  return JSON.parse(serializedSession) as {
+    oidcFlow?: OidcFlowState;
+    userId?: string;
+  };
 }
 
 describe('GET /auth/google', () => {
@@ -121,5 +159,150 @@ describe('validateReturnTo', () => {
     expect(validateReturnTo('/workouts/history?filter=recent')).toBe(
       '/workouts/history?filter=recent',
     );
+  });
+});
+
+describe('GET /auth/google/callback', () => {
+  it('provisions the verified subject and regenerates the session', async () => {
+    const provisionUser = vi.fn(() =>
+      Promise.resolve({ id: 'application-user-123' }),
+    );
+    const exchangeAuthorizationCode = vi.fn<ExchangeAuthorizationCode>(
+      (_oidc, callbackUrl, checks) => {
+        expect(callbackUrl.origin + callbackUrl.pathname).toBe(redirectUri);
+        expect(callbackUrl.searchParams.get('code')).toBe('authorization-code');
+        expect(callbackUrl.searchParams.get('state')).toBe(
+          checks.expectedState,
+        );
+        expect(checks.expectedNonce).toBeTruthy();
+        expect(checks.pkceCodeVerifier).toBeTruthy();
+        expect(checks.idTokenExpected).toBe(true);
+
+        return Promise.resolve({
+          claims: () => ({
+            sub: 'google-subject-123',
+            email: 'user@example.com',
+            name: 'Go For Lifter',
+            picture: 'https://images.example.com/avatar.png',
+          }),
+        });
+      },
+    );
+    const { app, store } = createTestContext({
+      exchangeAuthorizationCode,
+      provisionUser,
+    });
+    const agent = request.agent(app);
+    const initiation = await agent.get('/auth/google?returnTo=%2Froutines');
+    const initialCookie = initiation.headers['set-cookie']?.[0];
+    const flow = readStoredFlow(store);
+
+    const response = await agent.get(
+      `/auth/google/callback?code=authorization-code&state=${flow.state}`,
+    );
+
+    expect(response.status).toBe(302);
+    expect(response.headers.location).toBe('http://localhost:5173/routines');
+    expect(response.headers['set-cookie']?.[0]).not.toBe(initialCookie);
+    expect(provisionUser).toHaveBeenCalledWith({
+      subject: 'google-subject-123',
+      email: 'user@example.com',
+      displayName: 'Go For Lifter',
+      avatarUrl: 'https://images.example.com/avatar.png',
+    });
+    expect(readStoredSession(store)).toEqual(
+      expect.objectContaining({ userId: 'application-user-123' }),
+    );
+    expect(readStoredSession(store).oidcFlow).toBeUndefined();
+    expect(JSON.stringify(readStoredSession(store))).not.toContain(
+      'authorization-code',
+    );
+  });
+
+  it('rejects a tampered state without provisioning a user', async () => {
+    const provisionUser = vi.fn(() => Promise.resolve({ id: 'user-123' }));
+    const exchangeAuthorizationCode: ExchangeAuthorizationCode = (
+      _oidc,
+      callbackUrl,
+      checks,
+    ) => {
+      if (callbackUrl.searchParams.get('state') !== checks.expectedState) {
+        return Promise.reject(new Error('state mismatch'));
+      }
+      return Promise.resolve({ claims: () => ({}) });
+    };
+    const { app } = createTestContext({
+      exchangeAuthorizationCode,
+      provisionUser,
+    });
+    const agent = request.agent(app);
+    await agent.get('/auth/google');
+
+    const response = await agent.get(
+      '/auth/google/callback?code=authorization-code&state=tampered',
+    );
+
+    expect(response.status).toBe(400);
+    expect(response.body).toEqual({ error: 'invalid_oidc_callback' });
+    expect(provisionUser).not.toHaveBeenCalled();
+  });
+
+  it('rejects missing, expired, and replayed flow state', async () => {
+    let currentTime = 0;
+    const exchangeAuthorizationCode: ExchangeAuthorizationCode = () =>
+      Promise.resolve({
+        claims: () => ({
+          sub: 'google-subject-123',
+          email: 'user@example.com',
+        }),
+      });
+    const { app, store } = createTestContext({
+      exchangeAuthorizationCode,
+      now: () => currentTime,
+    });
+    const agent = request.agent(app);
+
+    const missing = await agent.get(
+      '/auth/google/callback?code=authorization-code&state=missing',
+    );
+    expect(missing.status).toBe(400);
+
+    await agent.get('/auth/google');
+    const expiredFlow = readStoredFlow(store);
+    currentTime = 10 * 60 * 1000 + 1;
+    const expired = await agent.get(
+      `/auth/google/callback?code=authorization-code&state=${expiredFlow.state}`,
+    );
+    expect(expired.status).toBe(400);
+
+    currentTime = 0;
+    await agent.get('/auth/google');
+    const validFlow = readStoredFlow(store);
+    const first = await agent.get(
+      `/auth/google/callback?code=authorization-code&state=${validFlow.state}`,
+    );
+    expect(first.status).toBe(302);
+
+    const replay = await agent.get(
+      `/auth/google/callback?code=authorization-code&state=${validFlow.state}`,
+    );
+    expect(replay.status).toBe(400);
+  });
+
+  it('returns a safe error for provider and claim failures', async () => {
+    const exchangeAuthorizationCode: ExchangeAuthorizationCode = () =>
+      Promise.reject(new Error('provider token response with secret details'));
+    const { app, store } = createTestContext({ exchangeAuthorizationCode });
+    const agent = request.agent(app);
+    await agent.get('/auth/google');
+    const flow = readStoredFlow(store);
+
+    const response = await agent.get(
+      `/auth/google/callback?error=access_denied&state=${flow.state}`,
+    );
+
+    expect(response.status).toBe(400);
+    expect(response.body).toEqual({ error: 'invalid_oidc_callback' });
+    expect(response.text).not.toContain('secret details');
   });
 });
