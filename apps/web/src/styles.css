@@ -56,3 +56,27 @@ button,
 a {
   -webkit-tap-highlight-color: transparent;
 }
+
+.welcome-starfield {
+  position: relative;
+  background-color: #010307;
+}
+
+.welcome-panel {
+  border: 1px solid transparent;
+}
+
+@media (min-width: 640px) {
+  .welcome-panel {
+    border-radius: 1.5rem;
+    background: linear-gradient(
+      160deg,
+      rgb(11 25 36 / 50%),
+      rgb(6 16 24 / 56%)
+    );
+    box-shadow:
+      0 24px 80px rgb(0 0 0 / 45%),
+      inset 0 1px 0 rgb(255 255 255 / 4%);
+    backdrop-filter: blur(8px);
+  }
+}
