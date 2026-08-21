@@ -1,24 +1,14 @@
+// Verifies the welcome page's primary entry points and guest-storage notice.
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RouterProvider } from '@tanstack/react-router';
 import { render, screen } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import { router } from '../router';
 
-describe('foundation page', () => {
-  beforeEach(() => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn().mockResolvedValue({
-        json: () => Promise.resolve({ status: 'ok', database: 'connected' }),
-      }),
-    );
-  });
-
-  it('renders the routed application and API status', async () => {
-    const queryClient = new QueryClient({
-      defaultOptions: { queries: { retry: false } },
-    });
+describe('welcome page', () => {
+  it('renders the Google and guest entry points', async () => {
+    const queryClient = new QueryClient();
     await router.navigate({ to: '/' });
 
     render(
@@ -28,10 +18,14 @@ describe('foundation page', () => {
     );
 
     expect(
-      await screen.findByRole('heading', { name: /ready for liftoff/i }),
+      screen.getByRole('heading', { name: /train with purpose/i }),
     ).toBeVisible();
     expect(
-      await screen.findByText(/api and postgresql connected/i),
-    ).toBeVisible();
+      screen.getByRole('link', { name: /continue with google/i }),
+    ).toHaveAttribute('href', '/auth/google');
+    expect(
+      screen.getByRole('button', { name: /continue as guest/i }),
+    ).toBeEnabled();
+    expect(screen.getByText(/guest progress is temporary/i)).toBeVisible();
   });
 });
