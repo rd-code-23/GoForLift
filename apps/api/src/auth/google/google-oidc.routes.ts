@@ -16,7 +16,7 @@ import type { Env } from '../../config/env-schema.js';
 import type { GoogleUserProfile } from './google-user.service.js';
 
 const GOOGLE_ISSUER = new URL('https://accounts.google.com');
-const DEFAULT_RETURN_PATH = '/';
+const DEFAULT_RETURN_PATH = '/dashboard';
 const OIDC_FLOW_LIFETIME_MS = 10 * 60 * 1000;
 
 const googleIdentitySchema = z.object({

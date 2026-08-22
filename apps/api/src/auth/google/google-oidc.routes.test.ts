@@ -140,6 +140,14 @@ describe('GET /auth/google', () => {
     expect(secondFlow.nonce).not.toBe(firstFlow.nonce);
     expect(secondFlow.codeVerifier).not.toBe(firstFlow.codeVerifier);
   });
+
+  it('returns successful logins to the dashboard by default', async () => {
+    const { app, store } = createTestContext();
+
+    await request(app).get('/auth/google');
+
+    expect(readStoredFlow(store).returnTo).toBe('/dashboard');
+  });
 });
 
 describe('validateReturnTo', () => {
@@ -152,7 +160,7 @@ describe('validateReturnTo', () => {
     'javascript:alert(1)',
     '/path%00suffix',
   ])('rejects unsafe destination %s', (destination) => {
-    expect(validateReturnTo(destination)).toBe('/');
+    expect(validateReturnTo(destination)).toBe('/dashboard');
   });
 
   it('accepts a root-relative application destination', () => {
