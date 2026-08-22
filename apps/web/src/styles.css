@@ -6,19 +6,19 @@
 
 :root {
   color-scheme: dark;
-  --background: oklch(0.145 0.01 285);
+  --background: oklch(0.14 0.018 255);
   --foreground: oklch(0.96 0.01 285);
-  --surface: oklch(0.205 0.015 285);
-  --surface-elevated: oklch(0.26 0.02 285);
-  --primary: oklch(0.72 0.16 175);
-  --primary-foreground: oklch(0.15 0.02 175);
-  --secondary: oklch(0.26 0.02 285);
+  --surface: oklch(0.18 0.022 255);
+  --surface-elevated: oklch(0.22 0.025 255);
+  --primary: oklch(0.59 0.22 27);
+  --primary-foreground: oklch(0.98 0.005 27);
+  --secondary: oklch(0.22 0.025 255);
   --secondary-foreground: oklch(0.96 0.01 285);
-  --accent: oklch(0.3 0.025 285);
+  --accent: oklch(0.24 0.025 255);
   --accent-foreground: oklch(0.96 0.01 285);
-  --muted-foreground: oklch(0.7 0.02 285);
-  --border: oklch(0.32 0.02 285);
-  --input: oklch(0.32 0.02 285);
+  --muted-foreground: oklch(0.7 0.018 255);
+  --border: oklch(0.3 0.025 255);
+  --input: oklch(0.3 0.025 255);
   --ring: var(--primary);
   --destructive: oklch(0.65 0.2 25);
 }

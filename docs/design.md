@@ -310,6 +310,19 @@ If the same meaningful visual pattern repeatedly appears, consider:
 
 Do not abstract one-off styling simply to eliminate every repeated class.
 
+For readability, keep short Tailwind class lists inline. When a list becomes
+long or combines several responsibilities, pass multiple strings to `cn()` and
+group them in this order when applicable:
+
+1. layout and spacing
+2. typography and color
+3. interaction and focus states
+4. responsive overrides
+5. conditional state
+
+Extract a reusable component or `cva()` variant only when a meaningful styling
+pattern actually repeats.
+
 
 # 14. Responsive Design
 
