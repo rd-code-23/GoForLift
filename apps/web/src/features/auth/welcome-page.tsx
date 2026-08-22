@@ -1,4 +1,5 @@
 // Presents the responsive welcome page and entry points for Google sign-in and guest access.
+import { useNavigate } from '@tanstack/react-router';
 import { UserRound } from 'lucide-react';
 
 import shipUrl from '../../assets/goforlift-ship.png';
@@ -7,8 +8,16 @@ import desktopStarfieldUrl from '../../assets/welcome-starfield-desktop.webp';
 import starfieldUrl from '../../assets/welcome-starfield.webp';
 import wordmarkUrl from '../../assets/goforlift-wordmark.png';
 import { Button } from '../../components/ui/button';
+import { startGuestSession } from './guest-session';
 
 export function WelcomePage() {
+  const navigate = useNavigate();
+
+  function continueAsGuest() {
+    startGuestSession();
+    void navigate({ to: '/dashboard' });
+  }
+
   return (
     <main className="welcome-starfield flex min-h-screen items-center justify-center overflow-hidden px-6 py-8 text-foreground sm:px-8">
       <picture aria-hidden="true" className="absolute inset-0">
@@ -50,6 +59,7 @@ export function WelcomePage() {
           </Button>
           <Button
             className="h-14 rounded-md border-white/45 bg-white/[0.025] text-[16px] font-medium hover:bg-white/10"
+            onClick={continueAsGuest}
             type="button"
             variant="outline"
           >
