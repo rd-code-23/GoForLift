@@ -42,7 +42,9 @@ describe('welcome page', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /continue as guest/i }));
 
-    expect(await screen.findByText(/your session is ready/i)).toBeVisible();
+    expect(
+      await screen.findByRole('heading', { name: 'Dashboard' }),
+    ).toBeVisible();
     expect(sessionStorage.getItem('goforlift.guest')).toBe('true');
     expect(router.state.location.pathname).toBe('/dashboard');
 
