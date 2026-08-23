@@ -1,5 +1,4 @@
-// Presents a minimal content heading inside the shared application shell.
-import { ApplicationShell } from './application-shell';
+// Presents a minimal heading within the parent application route layout.
 
 type SectionLandingProps = {
   title: string;
@@ -7,10 +6,8 @@ type SectionLandingProps = {
 
 export function SectionLanding({ title }: SectionLandingProps) {
   return (
-    <ApplicationShell>
-      <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-        {title}
-      </h1>
-    </ApplicationShell>
+    <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
+      {title}
+    </h1>
   );
 }

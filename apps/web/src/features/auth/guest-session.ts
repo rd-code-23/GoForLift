@@ -5,6 +5,10 @@ export function startGuestSession() {
   sessionStorage.setItem(GUEST_SESSION_KEY, 'true');
 }
 
+export function isGuestSession() {
+  return sessionStorage.getItem(GUEST_SESSION_KEY) === 'true';
+}
+
 export function clearGuestSession() {
   sessionStorage.removeItem(GUEST_SESSION_KEY);
 }
