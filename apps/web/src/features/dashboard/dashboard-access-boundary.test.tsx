@@ -13,9 +13,12 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { createPublicUser } from '../../test/fixtures/public-user.fixture';
 import { startGuestSession } from '../auth/guest-session';
+import { ApplicationShell } from './application-shell';
 import { DashboardAccessBoundary } from './dashboard-access-boundary';
 
-const publicUser = createPublicUser();
+const publicUser = createPublicUser({
+  avatarUrl: 'https://images.example.com/avatar.png',
+});
 
 afterEach(() => {
   cleanup();
@@ -34,6 +37,17 @@ describe('dashboard access boundary', () => {
     expect(
       await screen.findByRole('heading', { name: 'Dashboard' }),
     ).toBeVisible();
+    expect(screen.getAllByText('Go For Lifter')).toHaveLength(2);
+    expect(screen.getAllByText('lifter@example.com')).toHaveLength(2);
+
+    for (const identity of screen.getAllByRole('region', {
+      name: 'Current identity',
+    })) {
+      expect(identity.querySelector('img')).toHaveAttribute(
+        'src',
+        publicUser.avatarUrl,
+      );
+    }
   });
 
   it('allows an active guest without waiting for the API', async () => {
@@ -47,6 +61,8 @@ describe('dashboard access boundary', () => {
     expect(
       await screen.findByRole('heading', { name: 'Dashboard' }),
     ).toBeVisible();
+    expect(screen.getAllByText('Guest')).toHaveLength(2);
+    expect(screen.getAllByText('Progress is temporary')).toHaveLength(2);
   });
 
   it('redirects an anonymous visitor to the welcome page', async () => {
@@ -97,7 +113,11 @@ function renderDashboard() {
     path: '/dashboard',
     component: () => (
       <DashboardAccessBoundary>
-        <h1>Dashboard</h1>
+        {(identity) => (
+          <ApplicationShell identity={identity}>
+            <h1>Dashboard</h1>
+          </ApplicationShell>
+        )}
       </DashboardAccessBoundary>
     ),
   });
