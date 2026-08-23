@@ -11,15 +11,11 @@ import {
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { createPublicUser } from '../../test/fixtures/public-user.fixture';
 import { startGuestSession } from '../auth/guest-session';
 import { DashboardAccessBoundary } from './dashboard-access-boundary';
 
-const publicUser = {
-  id: '26d34dc0-8e4c-4bd0-9e3b-7b839b44e486',
-  email: 'lifter@example.com',
-  displayName: 'Go For Lifter',
-  avatarUrl: null,
-};
+const publicUser = createPublicUser();
 
 afterEach(() => {
   cleanup();

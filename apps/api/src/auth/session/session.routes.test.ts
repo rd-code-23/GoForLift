@@ -5,29 +5,15 @@ import request from 'supertest';
 import { describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 
+import { createPublicUser } from '../../test/fixtures/public-user.fixture.js';
+import { testSessionConfiguration } from '../../test/fixtures/session-configuration.fixture.js';
 import { csrfErrorHandler, csrfProtection } from '../csrf/csrf.middleware.js';
 import { createSessionMiddleware } from './session.middleware.js';
 import { createSessionRouter } from './session.routes.js';
 
-const sessionConfiguration = {
-  SESSION_SECRET: 'test-session-secret-at-least-32-characters',
-  SESSION_DURATION_SECONDS: 604800,
-  SESSION_COOKIE: {
-    name: 'goforlift.sid',
-    httpOnly: true,
-    secure: false,
-    sameSite: 'lax' as const,
-    path: '/',
-    maxAgeMs: 604800000,
-  },
-};
-
-const publicUser = {
-  id: '26d34dc0-8e4c-4bd0-9e3b-7b839b44e486',
-  email: 'lifter@example.com',
-  displayName: 'Go For Lifter',
+const publicUser = createPublicUser({
   avatarUrl: 'https://images.example.com/avatar.png',
-};
+});
 
 const csrfTokenResponseSchema = z.object({ csrfToken: z.string() });
 
@@ -36,7 +22,7 @@ function createTestContext(
 ) {
   const store = new session.MemoryStore();
   const app = express();
-  app.use(createSessionMiddleware(store, sessionConfiguration));
+  app.use(createSessionMiddleware(store, testSessionConfiguration));
   app.use((request, _response, next) => {
     const testUserId = request.header('x-test-user-id');
     if (testUserId) {
@@ -48,8 +34,8 @@ function createTestContext(
   app.use(
     '/auth',
     createSessionRouter({
-      cookieName: sessionConfiguration.SESSION_COOKIE.name,
-      cookiePath: sessionConfiguration.SESSION_COOKIE.path,
+      cookieName: testSessionConfiguration.SESSION_COOKIE.name,
+      cookiePath: testSessionConfiguration.SESSION_COOKIE.path,
       findPublicUser,
     }),
   );

@@ -1,6 +1,7 @@
 /** Verifies credential inclusion, response validation, CSRF attachment, and 401 behavior. */
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { createPublicUser } from '../../test/fixtures/public-user.fixture';
 import {
   AuthApiError,
   fetchCurrentUser,
@@ -8,12 +9,7 @@ import {
   requestWithCsrf,
 } from './auth.api';
 
-const publicUser = {
-  id: '26d34dc0-8e4c-4bd0-9e3b-7b839b44e486',
-  email: 'lifter@example.com',
-  displayName: 'Go For Lifter',
-  avatarUrl: null,
-};
+const publicUser = createPublicUser();
 
 afterEach(() => vi.unstubAllGlobals());
 

@@ -4,14 +4,10 @@ import { renderHook, waitFor } from '@testing-library/react';
 import type { PropsWithChildren } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { createPublicUser } from '../../test/fixtures/public-user.fixture';
 import { useCurrentUser } from './current-user.query';
 
-const publicUser = {
-  id: '26d34dc0-8e4c-4bd0-9e3b-7b839b44e486',
-  email: 'lifter@example.com',
-  displayName: 'Go For Lifter',
-  avatarUrl: null,
-};
+const publicUser = createPublicUser();
 
 afterEach(() => vi.unstubAllGlobals());
 
