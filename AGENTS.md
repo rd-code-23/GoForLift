@@ -251,6 +251,9 @@ Do not bypass type errors using assertions simply to make the compiler pass.
 
 Prefer inference when the resulting type remains clear.
 
+In object type and interface declarations, list required properties before
+optional properties.
+
 Avoid duplicating types that can safely be inferred from Zod schemas or other
 authoritative definitions.
 

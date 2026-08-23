@@ -4,6 +4,7 @@ import {
   History,
   LayoutDashboard,
   Settings,
+  UserRound,
   type LucideIcon,
 } from 'lucide-react';
 import { Link } from '@tanstack/react-router';
@@ -11,6 +12,7 @@ import type { ReactNode } from 'react';
 
 import wordmarkUrl from '../../assets/goforlift-wordmark.png';
 import { cn } from '../../lib/utils';
+import type { ApplicationIdentity } from './dashboard-access-boundary';
 
 const navigationItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -21,9 +23,13 @@ const navigationItems = [
 
 type ApplicationShellProps = {
   children: ReactNode;
+  identity: ApplicationIdentity;
 };
 
-export function ApplicationShell({ children }: ApplicationShellProps) {
+export function ApplicationShell({
+  children,
+  identity,
+}: ApplicationShellProps) {
   return (
     <div
       className={cn(
@@ -34,6 +40,7 @@ export function ApplicationShell({ children }: ApplicationShellProps) {
       <aside className="hidden border-r bg-surface lg:flex lg:min-h-screen lg:flex-col">
         <Brand className="px-7 py-8" />
         <Navigation className="flex-1 space-y-1 px-4" />
+        <IdentitySummary className="border-t px-5 py-5" identity={identity} />
       </aside>
 
       <div className="min-w-0">
@@ -45,6 +52,11 @@ export function ApplicationShell({ children }: ApplicationShellProps) {
           )}
         >
           <Brand />
+          <IdentitySummary
+            className="ml-auto max-w-[180px]"
+            compact
+            identity={identity}
+          />
         </header>
         <main
           className={cn(
@@ -66,6 +78,55 @@ export function ApplicationShell({ children }: ApplicationShellProps) {
         )}
       />
     </div>
+  );
+}
+
+type IdentitySummaryProps = {
+  identity: ApplicationIdentity;
+  className?: string;
+  compact?: boolean;
+};
+
+function IdentitySummary({
+  className,
+  compact = false,
+  identity,
+}: IdentitySummaryProps) {
+  const isGuest = identity.kind === 'guest';
+  const label = isGuest
+    ? 'Guest'
+    : (identity.user.displayName ?? identity.user.email);
+  const detail = isGuest ? 'Progress is temporary' : identity.user.email;
+  const avatarUrl = isGuest ? null : identity.user.avatarUrl;
+
+  return (
+    <section
+      aria-label="Current identity"
+      className={cn('flex min-w-0 items-center gap-3', className)}
+    >
+      {avatarUrl ? (
+        <img
+          alt=""
+          className="size-9 shrink-0 rounded-full object-cover"
+          src={avatarUrl}
+        />
+      ) : (
+        <span className="grid size-9 shrink-0 place-items-center rounded-full bg-accent">
+          <UserRound aria-hidden="true" className="size-5" />
+        </span>
+      )}
+      <div className="min-w-0">
+        <p className="truncate text-sm font-medium">{label}</p>
+        <p
+          className={cn(
+            'truncate text-xs text-muted-foreground',
+            compact && 'hidden sm:block',
+          )}
+        >
+          {detail}
+        </p>
+      </div>
+    </section>
   );
 }
 

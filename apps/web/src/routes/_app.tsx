@@ -11,9 +11,11 @@ export const Route = createFileRoute('/_app')({
 function ProtectedApplicationLayout() {
   return (
     <DashboardAccessBoundary>
-      <ApplicationShell>
-        <Outlet />
-      </ApplicationShell>
+      {(identity) => (
+        <ApplicationShell identity={identity}>
+          <Outlet />
+        </ApplicationShell>
+      )}
     </DashboardAccessBoundary>
   );
 }

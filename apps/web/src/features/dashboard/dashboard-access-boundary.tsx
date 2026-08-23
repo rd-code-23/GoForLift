@@ -1,4 +1,5 @@
 // Allows authenticated and guest visitors into application routes while handling unresolved access.
+import type { PublicUser } from '@goforlift/contracts';
 import { Navigate } from '@tanstack/react-router';
 import type { ReactNode } from 'react';
 
@@ -6,8 +7,11 @@ import { Button } from '../../components/ui/button';
 import { useCurrentUser } from '../auth/current-user.query';
 import { isGuestSession } from '../auth/guest-session';
 
+export type ApplicationIdentity =
+  { kind: 'guest' } | { kind: 'user'; user: PublicUser };
+
 type DashboardAccessBoundaryProps = {
-  children: ReactNode;
+  children: (identity: ApplicationIdentity) => ReactNode;
 };
 
 export function DashboardAccessBoundary({
@@ -16,7 +20,7 @@ export function DashboardAccessBoundary({
   const currentUser = useCurrentUser();
 
   if (isGuestSession()) {
-    return children;
+    return children({ kind: 'guest' });
   }
 
   if (currentUser.authenticationStatus === 'loading') {
@@ -37,7 +41,7 @@ export function DashboardAccessBoundary({
     return <Navigate replace to="/" />;
   }
 
-  return children;
+  return children({ kind: 'user', user: currentUser.user });
 }
 
 function AccessStatus({

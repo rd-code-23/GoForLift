@@ -11,24 +11,36 @@ export const currentUserQueryOptions = queryOptions({
   retry: false,
 });
 
-export type AuthenticationStatus =
-  'loading' | 'anonymous' | 'authenticated' | 'error';
-
 export function useCurrentUser() {
   const query = useQuery(currentUserQueryOptions);
-  let authenticationStatus: AuthenticationStatus = 'anonymous';
 
   if (query.isPending) {
-    authenticationStatus = 'loading';
-  } else if (query.isError) {
-    authenticationStatus = 'error';
-  } else if (query.data.user) {
-    authenticationStatus = 'authenticated';
+    return {
+      ...query,
+      authenticationStatus: 'loading' as const,
+      user: null,
+    };
+  }
+
+  if (query.isError) {
+    return {
+      ...query,
+      authenticationStatus: 'error' as const,
+      user: null,
+    };
+  }
+
+  if (!query.data.user) {
+    return {
+      ...query,
+      authenticationStatus: 'anonymous' as const,
+      user: null,
+    };
   }
 
   return {
     ...query,
-    authenticationStatus,
-    user: query.data?.user ?? null,
+    authenticationStatus: 'authenticated' as const,
+    user: query.data.user,
   };
 }

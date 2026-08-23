@@ -24,6 +24,8 @@ describe('application shell', () => {
     );
 
     expect(screen.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
+    expect(screen.getAllByText('Guest')).toHaveLength(2);
+    expect(screen.getAllByText('Progress is temporary')).toHaveLength(2);
 
     const navigationRegions = screen.getAllByRole('navigation', {
       name: /primary navigation/i,
