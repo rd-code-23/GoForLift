@@ -4,24 +4,12 @@ import session from 'express-session';
 import request from 'supertest';
 import { describe, expect, it } from 'vitest';
 
+import { testSessionConfiguration } from '../../test/fixtures/session-configuration.fixture.js';
 import { createSessionMiddleware } from './session.middleware.js';
-
-const sessionConfiguration = {
-  SESSION_SECRET: 'test-session-secret-at-least-32-characters',
-  SESSION_DURATION_SECONDS: 604800,
-  SESSION_COOKIE: {
-    name: 'goforlift.sid',
-    httpOnly: true,
-    secure: false,
-    sameSite: 'lax' as const,
-    path: '/',
-    maxAgeMs: 604800000,
-  },
-};
 
 function createSessionTestApp(store: session.MemoryStore) {
   const app = express();
-  app.use(createSessionMiddleware(store, sessionConfiguration));
+  app.use(createSessionMiddleware(store, testSessionConfiguration));
 
   app.post('/session', (request, response) => {
     request.session.userId = 'user-123';

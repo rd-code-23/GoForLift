@@ -12,21 +12,9 @@ import {
   validateReturnTo,
 } from './google-oidc.routes.js';
 import { createSessionMiddleware } from '../session/session.middleware.js';
+import { testSessionConfiguration } from '../../test/fixtures/session-configuration.fixture.js';
 
 const redirectUri = 'http://localhost:3000/auth/google/callback';
-const sessionConfiguration = {
-  SESSION_SECRET: 'test-session-secret-at-least-32-characters',
-  SESSION_DURATION_SECONDS: 604800,
-  SESSION_COOKIE: {
-    name: 'goforlift.sid',
-    httpOnly: true,
-    secure: false,
-    sameSite: 'lax' as const,
-    path: '/',
-    maxAgeMs: 604800000,
-  },
-};
-
 type TestContextOptions = {
   exchangeAuthorizationCode?: ExchangeAuthorizationCode;
   now?: () => number;
@@ -49,7 +37,7 @@ function createTestContext(options: TestContextOptions = {}) {
     'google-client-secret',
   );
   const app = express();
-  app.use(createSessionMiddleware(store, sessionConfiguration));
+  app.use(createSessionMiddleware(store, testSessionConfiguration));
   app.use(
     '/auth',
     createGoogleOidcRouter({

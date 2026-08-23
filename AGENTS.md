@@ -400,6 +400,11 @@ Prioritize testing:
 
 Avoid tests that depend heavily on implementation details.
 
+Keep scenario-specific data local. Extract stable objects or configuration
+repeated across test files into typed factories or fixtures under the relevant
+application's `src/test/fixtures/` directory; prefer override-based factories
+for domain variants and do not share fixtures across unrelated boundaries.
+
 Do not weaken, remove, or rewrite a legitimate failing test merely to make a
 change pass.
 

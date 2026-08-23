@@ -9,31 +9,22 @@ import {
   establishAuthenticatedTestSession,
   withAuthenticatedTestUser,
 } from '../../test/authenticated-session.test-helper.js';
+import { testSessionConfiguration } from '../../test/fixtures/session-configuration.fixture.js';
 import {
   getAuthenticatedUserId,
   requireAuthentication,
 } from './authentication.middleware.js';
 import { requireAuthorization } from './authorization.middleware.js';
 
-const sessionConfiguration = {
-  SESSION_SECRET: 'test-session-secret-at-least-32-characters',
-  SESSION_DURATION_SECONDS: 604800,
-  SESSION_COOKIE: {
-    name: 'goforlift.sid',
-    httpOnly: true,
-    secure: false,
-    sameSite: 'lax' as const,
-    path: '/',
-    maxAgeMs: 604800000,
-  },
-};
-
 function createProtectedTestApp(
   userOwnsResource: (resourceId: string, userId: string) => Promise<boolean>,
 ) {
   const app = express();
   app.use(
-    createSessionMiddleware(new session.MemoryStore(), sessionConfiguration),
+    createSessionMiddleware(
+      new session.MemoryStore(),
+      testSessionConfiguration,
+    ),
   );
   app.use(establishAuthenticatedTestSession());
   app.get(

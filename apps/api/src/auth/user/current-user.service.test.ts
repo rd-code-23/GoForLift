@@ -3,16 +3,12 @@ import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { describe, expect, it, vi } from 'vitest';
 
 import { users } from '../../db/schema/index.js';
+import { createPublicUser } from '../../test/fixtures/public-user.fixture.js';
 import { findPublicUserById } from './current-user.service.js';
 
 describe('findPublicUserById', () => {
   it('returns the public user projection', async () => {
-    const publicUser = {
-      id: '26d34dc0-8e4c-4bd0-9e3b-7b839b44e486',
-      email: 'lifter@example.com',
-      displayName: 'Go For Lifter',
-      avatarUrl: null,
-    };
+    const publicUser = createPublicUser();
     const limit = vi.fn().mockResolvedValue([publicUser]);
     const where = vi.fn(() => ({ limit }));
     const from = vi.fn(() => ({ where }));
