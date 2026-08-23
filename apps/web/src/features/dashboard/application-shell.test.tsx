@@ -1,16 +1,27 @@
 // Verifies the application shell exposes accessible responsive navigation and active state.
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RouterProvider } from '@tanstack/react-router';
 import { cleanup, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { router } from '../../router';
+import { startGuestSession } from '../auth/guest-session';
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  sessionStorage.clear();
+});
 
 describe('application shell', () => {
   it('renders desktop and mobile navigation with the current page selected', async () => {
     await router.navigate({ to: '/dashboard' });
-    render(<RouterProvider router={router} />);
+    startGuestSession();
+    const queryClient = new QueryClient();
+    render(
+      <QueryClientProvider client={queryClient}>
+        <RouterProvider router={router} />
+      </QueryClientProvider>,
+    );
 
     expect(screen.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
 

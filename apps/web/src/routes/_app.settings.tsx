@@ -1,8 +1,8 @@
-// Maps the settings destination into the shared responsive application shell.
+// Maps the settings URL into the protected application layout.
 import { createFileRoute } from '@tanstack/react-router';
 
 import { SectionLanding } from '../features/dashboard/section-landing';
 
-export const Route = createFileRoute('/settings')({
+export const Route = createFileRoute('/_app/settings')({
   component: () => <SectionLanding title="Settings" />,
 });
