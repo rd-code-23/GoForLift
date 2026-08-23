@@ -181,6 +181,15 @@ Do not put all application state into Zustand.
 Do not duplicate TanStack Query server state inside Zustand without a specific
 reason.
 
+### JSX Readability
+
+Keep JSX focused on describing the rendered UI. Move non-trivial conditions,
+calculations, and data transformations into clearly named values in the
+component body before the `return`. Simple conditions that remain immediately
+understandable may stay inline. Use blank lines to separate distinct groups of
+component logic, such as state, derived values, event handlers, and render
+conditions.
+
 
 ## UI Components
 

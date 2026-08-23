@@ -3,12 +3,13 @@ import {
   Dumbbell,
   History,
   LayoutDashboard,
+  LogOut,
   Settings,
   UserRound,
   type LucideIcon,
 } from 'lucide-react';
 import { Link } from '@tanstack/react-router';
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 
 import wordmarkUrl from '../../assets/goforlift-wordmark.png';
 import { cn } from '../../lib/utils';
@@ -24,11 +25,13 @@ const navigationItems = [
 type ApplicationShellProps = {
   children: ReactNode;
   identity: ApplicationIdentity;
+  onExitGuest?: () => void;
 };
 
 export function ApplicationShell({
   children,
   identity,
+  onExitGuest,
 }: ApplicationShellProps) {
   return (
     <div
@@ -40,7 +43,11 @@ export function ApplicationShell({
       <aside className="hidden border-r bg-surface lg:flex lg:min-h-screen lg:flex-col">
         <Brand className="px-7 py-8" />
         <Navigation className="flex-1 space-y-1 px-4" />
-        <IdentitySummary className="border-t px-5 py-5" identity={identity} />
+        <IdentitySummary
+          className="border-t px-5 py-5"
+          identity={identity}
+          onExitGuest={onExitGuest}
+        />
       </aside>
 
       <div className="min-w-0">
@@ -56,6 +63,7 @@ export function ApplicationShell({
             className="ml-auto max-w-[180px]"
             compact
             identity={identity}
+            onExitGuest={onExitGuest}
           />
         </header>
         <main
@@ -85,13 +93,17 @@ type IdentitySummaryProps = {
   identity: ApplicationIdentity;
   className?: string;
   compact?: boolean;
+  onExitGuest?: () => void;
 };
 
 function IdentitySummary({
   className,
   compact = false,
   identity,
+  onExitGuest,
 }: IdentitySummaryProps) {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
   const isGuest = identity.kind === 'guest';
   const label = isGuest
     ? 'Guest'
@@ -99,33 +111,71 @@ function IdentitySummary({
   const detail = isGuest ? 'Progress is temporary' : identity.user.email;
   const avatarUrl = isGuest ? null : identity.user.avatarUrl;
 
+  const shouldShowGuestMenu =
+    isMenuOpen && isGuest && onExitGuest !== undefined;
+
   return (
     <section
       aria-label="Current identity"
-      className={cn('flex min-w-0 items-center gap-3', className)}
+      className={cn('relative min-w-0', className)}
     >
-      {avatarUrl ? (
-        <img
-          alt=""
-          className="size-9 shrink-0 rounded-full object-cover"
-          src={avatarUrl}
-        />
-      ) : (
-        <span className="grid size-9 shrink-0 place-items-center rounded-full bg-accent">
-          <UserRound aria-hidden="true" className="size-5" />
-        </span>
-      )}
-      <div className="min-w-0">
-        <p className="truncate text-sm font-medium">{label}</p>
-        <p
-          className={cn(
-            'truncate text-xs text-muted-foreground',
-            compact && 'hidden sm:block',
+      <button
+        aria-expanded={isMenuOpen}
+        aria-haspopup="menu"
+        aria-label="Open profile menu"
+        className={cn(
+          'flex w-full min-w-0 items-center gap-3 rounded-md text-left',
+          'transition-colors hover:bg-accent',
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+          compact ? 'p-1' : 'p-2',
+        )}
+        onClick={() => setIsMenuOpen((isOpen) => !isOpen)}
+        type="button"
+      >
+        {avatarUrl ? (
+          <img
+            alt=""
+            className="size-9 shrink-0 rounded-full object-cover"
+            src={avatarUrl}
+          />
+        ) : (
+          <span className="grid size-9 shrink-0 place-items-center rounded-full bg-accent">
+            <UserRound aria-hidden="true" className="size-5" />
+          </span>
+        )}
+        <div className="min-w-0 flex-1 text-left">
+          <p className="truncate text-sm font-medium">{label}</p>
+          {!compact && (
+            <p className="text-xs text-muted-foreground">{detail}</p>
           )}
+        </div>
+      </button>
+
+      {shouldShowGuestMenu && (
+        <div
+          className={cn(
+            'absolute z-40 min-w-44 rounded-md border bg-surface p-1 shadow-lg',
+            compact
+              ? 'right-0 top-full mt-2'
+              : 'bottom-full left-0 mb-2 w-full',
+          )}
+          role="menu"
         >
-          {detail}
-        </p>
-      </div>
+          <button
+            className={cn(
+              'flex w-full items-center gap-2 rounded px-3 py-2 text-sm text-primary',
+              'transition-colors hover:bg-accent',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+            )}
+            onClick={onExitGuest}
+            role="menuitem"
+            type="button"
+          >
+            <LogOut aria-hidden="true" className="size-4" />
+            <span>Exit guest</span>
+          </button>
+        </div>
+      )}
     </section>
   );
 }

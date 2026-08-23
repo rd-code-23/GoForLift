@@ -2,10 +2,11 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RouterProvider } from '@tanstack/react-router';
 import { cleanup, render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { router } from '../../router';
-import { startGuestSession } from '../auth/guest-session';
+import { isGuestSession, startGuestSession } from '../auth/guest-session';
 
 afterEach(() => {
   cleanup();
@@ -13,7 +14,8 @@ afterEach(() => {
 });
 
 describe('application shell', () => {
-  it('renders desktop and mobile navigation with the current page selected', async () => {
+  it('renders responsive navigation and exits guest mode', async () => {
+    const user = userEvent.setup();
     await router.navigate({ to: '/dashboard' });
     startGuestSession();
     const queryClient = new QueryClient();
@@ -25,7 +27,7 @@ describe('application shell', () => {
 
     expect(screen.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
     expect(screen.getAllByText('Guest')).toHaveLength(2);
-    expect(screen.getAllByText('Progress is temporary')).toHaveLength(2);
+    expect(screen.getByText('Progress is temporary')).toBeVisible();
 
     const navigationRegions = screen.getAllByRole('navigation', {
       name: /primary navigation/i,
@@ -46,5 +48,25 @@ describe('application shell', () => {
         within(navigation).getByRole('link', { name: 'Settings' }),
       ).toHaveAttribute('href', '/settings');
     }
+
+    expect(isGuestSession()).toBe(true);
+    const profileMenus = screen.getAllByRole('button', {
+      name: 'Open profile menu',
+    });
+    expect(profileMenus).toHaveLength(2);
+    expect(
+      screen.queryByRole('menuitem', { name: 'Exit guest' }),
+    ).not.toBeInTheDocument();
+
+    await user.click(profileMenus[0]!);
+
+    const exitAction = screen.getByRole('menuitem', { name: 'Exit guest' });
+
+    await user.click(exitAction);
+
+    expect(isGuestSession()).toBe(false);
+    expect(
+      await screen.findByRole('heading', { name: 'Train with purpose.' }),
+    ).toBeVisible();
   });
 });
