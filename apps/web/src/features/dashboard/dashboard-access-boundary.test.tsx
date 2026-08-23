@@ -38,7 +38,10 @@ describe('dashboard access boundary', () => {
       await screen.findByRole('heading', { name: 'Dashboard' }),
     ).toBeVisible();
     expect(screen.getAllByText('Go For Lifter')).toHaveLength(2);
-    expect(screen.getAllByText('lifter@example.com')).toHaveLength(2);
+    expect(screen.getByText('lifter@example.com')).toBeVisible();
+    expect(
+      screen.queryByRole('button', { name: 'Exit guest' }),
+    ).not.toBeInTheDocument();
 
     for (const identity of screen.getAllByRole('region', {
       name: 'Current identity',
@@ -62,7 +65,7 @@ describe('dashboard access boundary', () => {
       await screen.findByRole('heading', { name: 'Dashboard' }),
     ).toBeVisible();
     expect(screen.getAllByText('Guest')).toHaveLength(2);
-    expect(screen.getAllByText('Progress is temporary')).toHaveLength(2);
+    expect(screen.getByText('Progress is temporary')).toBeVisible();
   });
 
   it('redirects an anonymous visitor to the welcome page', async () => {
