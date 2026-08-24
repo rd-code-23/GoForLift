@@ -8,6 +8,7 @@ type AppDependencies = {
   checkDatabaseConnection: () => Promise<void>;
   csrfErrorHandler: express.ErrorRequestHandler;
   csrfProtection: RequestHandler;
+  exerciseRouter: Router;
   sessionMiddleware: RequestHandler;
   trustProxyHops: number;
   webOrigin: string;
@@ -18,6 +19,7 @@ export function createApp({
   checkDatabaseConnection,
   csrfErrorHandler,
   csrfProtection,
+  exerciseRouter,
   sessionMiddleware,
   trustProxyHops,
   webOrigin,
@@ -33,6 +35,7 @@ export function createApp({
   app.use(express.json());
   app.use(csrfProtection);
   app.use('/auth', authRouter);
+  app.use('/exercises', exerciseRouter);
 
   app.get('/health', async (_request, response) => {
     try {

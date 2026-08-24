@@ -17,6 +17,7 @@ describe('GET /health', () => {
     const response = await request(
       createApp({
         authRouter: Router(),
+        exerciseRouter: Router(),
         csrfErrorHandler: noOpErrorMiddleware,
         csrfProtection: noOpMiddleware,
         webOrigin: 'http://localhost:5173',
@@ -34,6 +35,7 @@ describe('GET /health', () => {
     const response = await request(
       createApp({
         authRouter: Router(),
+        exerciseRouter: Router(),
         csrfErrorHandler: noOpErrorMiddleware,
         csrfProtection: noOpMiddleware,
         webOrigin: 'http://localhost:5173',
@@ -56,6 +58,7 @@ describe('GET /health', () => {
     const response = await request(
       createApp({
         authRouter: Router(),
+        exerciseRouter: Router(),
         csrfErrorHandler: noOpErrorMiddleware,
         csrfProtection: noOpMiddleware,
         webOrigin: 'http://localhost:5173',
@@ -78,6 +81,7 @@ describe('GET /health', () => {
     const response = await request(
       createApp({
         authRouter: Router(),
+        exerciseRouter: Router(),
         csrfErrorHandler: noOpErrorMiddleware,
         csrfProtection: noOpMiddleware,
         webOrigin: 'http://localhost:5173',
