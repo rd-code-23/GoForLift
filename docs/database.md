@@ -288,7 +288,7 @@ Example:
 |---|---|---|
 | `id` | UUID | Primary identifier for the scheduled occurrence. |
 | `routine_id` | UUID, FK → `routines.id` | Identifies the routine being scheduled. |
-| `day_of_week` | SMALLINT | Day on which the routine is planned. Use a clearly documented convention such as 0–6. |
+| `day_of_week` | SMALLINT | Day on which the routine is planned: Sunday is 0 through Saturday as 6, matching JavaScript's day convention. |
 | `local_time` | TIME | User-local planned workout time. |
 | `created_at` | TIMESTAMPTZ | When the schedule was created. |
 | `updated_at` | TIMESTAMPTZ | When the schedule was last modified. |
