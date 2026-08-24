@@ -17,6 +17,8 @@ import { createSessionRouter } from './auth/session/session.routes.js';
 import { findPublicUserById } from './auth/user/current-user.service.js';
 import { env } from './config/env.js';
 import { createDatabase } from './db/client.js';
+import { createExerciseRouter } from './exercises/exercise.routes.js';
+import { listExercisesForUser } from './exercises/exercise.service.js';
 
 const { db, pool } = createDatabase(env.DATABASE_URL);
 const { middleware: sessionMiddleware, store: sessionStore } =
@@ -31,6 +33,7 @@ authRouter.use(
     provisionUser: (profile) => provisionGoogleUser(db, profile),
   }),
 );
+
 authRouter.use(
   createSessionRouter({
     cookieName: env.SESSION_COOKIE.name,
@@ -38,10 +41,16 @@ authRouter.use(
     findPublicUser: (userId) => findPublicUserById(db, userId),
   }),
 );
+
+const exerciseRouter = createExerciseRouter({
+  listExercises: (userId) => listExercisesForUser(db, userId),
+});
+
 const app = createApp({
   authRouter,
   csrfErrorHandler,
   csrfProtection,
+  exerciseRouter,
   webOrigin: env.WEB_ORIGIN,
   trustProxyHops: env.TRUST_PROXY_HOPS,
   sessionMiddleware,
