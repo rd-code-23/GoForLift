@@ -1,14 +1,11 @@
 // Allows authenticated and guest visitors into application routes while handling unresolved access.
-import type { PublicUser } from '@goforlift/contracts';
 import { Navigate } from '@tanstack/react-router';
 import type { ReactNode } from 'react';
 
 import { Button } from '../../components/ui/button';
 import { useCurrentUser } from '../auth/current-user.query';
 import { isGuestSession } from '../auth/guest-session';
-
-export type ApplicationIdentity =
-  { kind: 'guest' } | { kind: 'user'; user: PublicUser };
+import type { ApplicationIdentity } from './application-identity';
 
 type DashboardAccessBoundaryProps = {
   children: (identity: ApplicationIdentity) => ReactNode;

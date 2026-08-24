@@ -25,7 +25,9 @@ describe('application shell', () => {
       </QueryClientProvider>,
     );
 
-    expect(screen.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
+    expect(
+      screen.getByRole('heading', { name: 'Welcome, Guest' }),
+    ).toBeVisible();
     expect(screen.getAllByText('Guest')).toHaveLength(2);
     expect(screen.getByText('Progress is temporary')).toBeVisible();
 

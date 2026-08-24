@@ -2,6 +2,7 @@
 import { createFileRoute, Outlet, useNavigate } from '@tanstack/react-router';
 
 import { clearGuestSession } from '../features/auth/guest-session';
+import { ApplicationIdentityContext } from '../features/dashboard/application-identity';
 import { ApplicationShell } from '../features/dashboard/application-shell';
 import { DashboardAccessBoundary } from '../features/dashboard/dashboard-access-boundary';
 
@@ -20,12 +21,14 @@ function ProtectedApplicationLayout() {
   return (
     <DashboardAccessBoundary>
       {(identity) => (
-        <ApplicationShell
-          identity={identity}
-          onExitGuest={identity.kind === 'guest' ? exitGuest : undefined}
-        >
-          <Outlet />
-        </ApplicationShell>
+        <ApplicationIdentityContext.Provider value={identity}>
+          <ApplicationShell
+            identity={identity}
+            onExitGuest={identity.kind === 'guest' ? exitGuest : undefined}
+          >
+            <Outlet />
+          </ApplicationShell>
+        </ApplicationIdentityContext.Provider>
       )}
     </DashboardAccessBoundary>
   );
