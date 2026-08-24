@@ -43,6 +43,13 @@
       "when": 1787609439724,
       "tag": "0005_freezing_siren",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1787609706396,
+      "tag": "0006_seed_builtin_exercises",
+      "breakpoints": true
     }
   ]
 }
