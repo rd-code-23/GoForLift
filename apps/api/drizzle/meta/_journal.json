@@ -15,6 +15,13 @@
       "when": 1787093265922,
       "tag": "0001_cloudy_whirlwind",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1787607334174,
+      "tag": "0002_illegal_captain_flint",
+      "breakpoints": true
     }
   ]
 }
