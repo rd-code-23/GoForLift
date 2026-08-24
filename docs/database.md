@@ -677,10 +677,9 @@ Do not expose sequential database implementation details merely for convenience.
 Weight must not be stored using floating-point types that introduce unnecessary
 binary floating-point precision behavior.
 
-Use an appropriate PostgreSQL numeric representation.
-
-The exact precision/scale should be chosen during Drizzle schema implementation
-based on supported weight increments.
+Use `NUMERIC(8,2)` for planned and historical weight. This supports two decimal
+places without floating-point rounding behavior and provides substantially more
+range than the MVP requires.
 
 The API should expose weight through a clearly defined contract.
 
