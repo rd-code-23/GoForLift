@@ -1,4 +1,4 @@
-// Verifies dashboard access states with an isolated router and query cache for each case.
+// Verifies application access states with an isolated router and query cache for each case.
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
   createMemoryHistory,
@@ -11,10 +11,10 @@ import {
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { createPublicUser } from '../../test/fixtures/public-user.fixture';
-import { startGuestSession } from '../auth/guest-session';
+import { startGuestSession } from '../features/auth/guest-session';
+import { createPublicUser } from '../test/fixtures/public-user.fixture';
+import { ApplicationAccessBoundary } from './application-access-boundary';
 import { ApplicationShell } from './application-shell';
-import { DashboardAccessBoundary } from './dashboard-access-boundary';
 
 const publicUser = createPublicUser({
   avatarUrl: 'https://images.example.com/avatar.png',
@@ -26,7 +26,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-describe('dashboard access boundary', () => {
+describe('application access boundary', () => {
   it('allows an authenticated visitor into the dashboard', async () => {
     vi.stubGlobal(
       'fetch',
@@ -115,13 +115,13 @@ function renderDashboard() {
     getParentRoute: () => rootRoute,
     path: '/dashboard',
     component: () => (
-      <DashboardAccessBoundary>
+      <ApplicationAccessBoundary>
         {(identity) => (
           <ApplicationShell identity={identity}>
             <h1>Dashboard</h1>
           </ApplicationShell>
         )}
-      </DashboardAccessBoundary>
+      </ApplicationAccessBoundary>
     ),
   });
   const testRouter = createRouter({

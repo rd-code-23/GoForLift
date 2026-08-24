@@ -93,6 +93,11 @@ Expected high-level structure:
 
 `apps/web` is the React frontend.
 
+Within `apps/web/src`, use `app/` for application-wide composition such as the
+protected shell, access boundary, and identity shared across routed features.
+Keep `features/` reserved for product capabilities such as dashboard, routines,
+workouts, and authentication.
+
 `apps/api` is the Express backend.
 
 `packages/contracts` contains code that represents contracts shared between the
