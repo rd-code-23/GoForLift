@@ -1,4 +1,5 @@
 /** Exposes the complete Drizzle schema from feature-focused table modules. */
 export * from './exercises.js';
+export * from './routines.js';
 export * from './sessions.js';
 export * from './users.js';
