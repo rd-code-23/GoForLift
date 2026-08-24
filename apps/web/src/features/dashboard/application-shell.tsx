@@ -13,7 +13,7 @@ import { useState, type ReactNode } from 'react';
 
 import wordmarkUrl from '../../assets/goforlift-wordmark.png';
 import { cn } from '../../lib/utils';
-import type { ApplicationIdentity } from './dashboard-access-boundary';
+import type { ApplicationIdentity } from './application-identity';
 
 const navigationItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
