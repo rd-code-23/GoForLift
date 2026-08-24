@@ -2,8 +2,8 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
+import { ApplicationIdentityContext } from '../../app/application-identity';
 import { createPublicUser } from '../../test/fixtures/public-user.fixture';
-import { ApplicationIdentityContext } from './application-identity';
 import { DashboardLanding } from './dashboard-landing';
 
 describe('dashboard landing', () => {

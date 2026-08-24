@@ -1,5 +1,5 @@
 // Introduces new dashboard visitors with identity-aware onboarding copy.
-import { useApplicationIdentity } from './application-identity';
+import { useApplicationIdentity } from '../../app/application-identity';
 
 export function DashboardLanding() {
   const identity = useApplicationIdentity();

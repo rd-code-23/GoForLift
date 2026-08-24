@@ -2,18 +2,18 @@
 import { Navigate } from '@tanstack/react-router';
 import type { ReactNode } from 'react';
 
-import { Button } from '../../components/ui/button';
-import { useCurrentUser } from '../auth/current-user.query';
-import { isGuestSession } from '../auth/guest-session';
+import { Button } from '../components/ui/button';
+import { useCurrentUser } from '../features/auth/current-user.query';
+import { isGuestSession } from '../features/auth/guest-session';
 import type { ApplicationIdentity } from './application-identity';
 
-type DashboardAccessBoundaryProps = {
+type ApplicationAccessBoundaryProps = {
   children: (identity: ApplicationIdentity) => ReactNode;
 };
 
-export function DashboardAccessBoundary({
+export function ApplicationAccessBoundary({
   children,
-}: DashboardAccessBoundaryProps) {
+}: ApplicationAccessBoundaryProps) {
   const currentUser = useCurrentUser();
 
   if (isGuestSession()) {

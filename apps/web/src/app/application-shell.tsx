@@ -11,8 +11,8 @@ import {
 import { Link } from '@tanstack/react-router';
 import { useState, type ReactNode } from 'react';
 
-import wordmarkUrl from '../../assets/goforlift-wordmark.png';
-import { cn } from '../../lib/utils';
+import wordmarkUrl from '../assets/goforlift-wordmark.png';
+import { cn } from '../lib/utils';
 import type { ApplicationIdentity } from './application-identity';
 
 const navigationItems = [

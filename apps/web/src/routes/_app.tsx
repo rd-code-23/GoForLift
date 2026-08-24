@@ -1,10 +1,10 @@
 // Protects and frames every route inside the signed-in or guest application area.
 import { createFileRoute, Outlet, useNavigate } from '@tanstack/react-router';
 
+import { ApplicationAccessBoundary } from '../app/application-access-boundary';
+import { ApplicationIdentityContext } from '../app/application-identity';
+import { ApplicationShell } from '../app/application-shell';
 import { clearGuestSession } from '../features/auth/guest-session';
-import { ApplicationIdentityContext } from '../features/dashboard/application-identity';
-import { ApplicationShell } from '../features/dashboard/application-shell';
-import { DashboardAccessBoundary } from '../features/dashboard/dashboard-access-boundary';
 
 export const Route = createFileRoute('/_app')({
   component: ProtectedApplicationLayout,
@@ -19,7 +19,7 @@ function ProtectedApplicationLayout() {
   }
 
   return (
-    <DashboardAccessBoundary>
+    <ApplicationAccessBoundary>
       {(identity) => (
         <ApplicationIdentityContext.Provider value={identity}>
           <ApplicationShell
@@ -30,6 +30,6 @@ function ProtectedApplicationLayout() {
           </ApplicationShell>
         </ApplicationIdentityContext.Provider>
       )}
-    </DashboardAccessBoundary>
+    </ApplicationAccessBoundary>
   );
 }
