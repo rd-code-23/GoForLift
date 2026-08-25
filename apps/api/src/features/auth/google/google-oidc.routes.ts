@@ -12,7 +12,7 @@ import {
 } from 'openid-client';
 import { z } from 'zod';
 
-import type { Env } from '../../config/env-schema.js';
+import type { Env } from '../../../config/env-schema.js';
 import type { GoogleUserProfile } from './google-user.service.js';
 
 const GOOGLE_ISSUER = new URL('https://accounts.google.com');

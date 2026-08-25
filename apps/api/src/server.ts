@@ -6,19 +6,19 @@ import { createApp } from './app.js';
 import {
   csrfErrorHandler,
   csrfProtection,
-} from './auth/csrf/csrf.middleware.js';
+} from './features/auth/csrf/csrf.middleware.js';
 import {
   createGoogleOidcRouter,
   discoverGoogleOidc,
-} from './auth/google/google-oidc.routes.js';
-import { provisionGoogleUser } from './auth/google/google-user.service.js';
-import { createPostgresSession } from './auth/session/session.middleware.js';
-import { createSessionRouter } from './auth/session/session.routes.js';
-import { findPublicUserById } from './auth/user/current-user.service.js';
+} from './features/auth/google/google-oidc.routes.js';
+import { provisionGoogleUser } from './features/auth/google/google-user.service.js';
+import { createPostgresSession } from './features/auth/session/session.middleware.js';
+import { createSessionRouter } from './features/auth/session/session.routes.js';
+import { findPublicUserById } from './features/auth/user/current-user.service.js';
 import { env } from './config/env.js';
 import { createDatabase } from './db/client.js';
-import { createExerciseRouter } from './exercises/exercise.routes.js';
-import { listExercisesForUser } from './exercises/exercise.service.js';
+import { createExerciseRouter } from './features/exercises/exercise.routes.js';
+import { listExercisesForUser } from './features/exercises/exercise.service.js';
 
 const { db, pool } = createDatabase(env.DATABASE_URL);
 const { middleware: sessionMiddleware, store: sessionStore } =

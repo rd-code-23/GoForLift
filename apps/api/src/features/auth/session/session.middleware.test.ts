@@ -4,7 +4,7 @@ import session from 'express-session';
 import request from 'supertest';
 import { describe, expect, it } from 'vitest';
 
-import { testSessionConfiguration } from '../../test/fixtures/session-configuration.fixture.js';
+import { testSessionConfiguration } from '../../../test/fixtures/session-configuration.fixture.js';
 import { createSessionMiddleware } from './session.middleware.js';
 
 function createSessionTestApp(store: session.MemoryStore) {

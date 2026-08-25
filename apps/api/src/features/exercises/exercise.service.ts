@@ -3,7 +3,7 @@ import type { ExerciseSummary } from '@goforlift/contracts';
 import { asc, eq, isNull, or } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 
-import { exercises } from '../db/schema/index.js';
+import { exercises } from '../../db/schema/index.js';
 
 export async function listExercisesForUser(
   database: NodePgDatabase,

@@ -5,8 +5,8 @@ import request from 'supertest';
 import { describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 
-import { createPublicUser } from '../../test/fixtures/public-user.fixture.js';
-import { testSessionConfiguration } from '../../test/fixtures/session-configuration.fixture.js';
+import { createPublicUser } from '../../../test/fixtures/public-user.fixture.js';
+import { testSessionConfiguration } from '../../../test/fixtures/session-configuration.fixture.js';
 import { csrfErrorHandler, csrfProtection } from '../csrf/csrf.middleware.js';
 import { createSessionMiddleware } from './session.middleware.js';
 import { createSessionRouter } from './session.routes.js';

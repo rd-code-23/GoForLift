@@ -2,8 +2,8 @@
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { describe, expect, it, vi } from 'vitest';
 
-import { users } from '../../db/schema/index.js';
-import { createPublicUser } from '../../test/fixtures/public-user.fixture.js';
+import { users } from '../../../db/schema/index.js';
+import { createPublicUser } from '../../../test/fixtures/public-user.fixture.js';
 import { findPublicUserById } from './current-user.service.js';
 
 describe('findPublicUserById', () => {
