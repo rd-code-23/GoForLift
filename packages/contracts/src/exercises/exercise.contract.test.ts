@@ -2,9 +2,43 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  createExerciseInputSchema,
   exerciseListResponseSchema,
   exerciseSummarySchema,
 } from './exercise.contract.js';
+
+describe('createExerciseInputSchema', () => {
+  it('trims and accepts a valid custom exercise', () => {
+    expect(
+      createExerciseInputSchema.parse({
+        name: '  Cable Fly  ',
+        description: '  Keep the movement controlled.  ',
+      }),
+    ).toEqual({
+      name: 'Cable Fly',
+      description: 'Keep the movement controlled.',
+    });
+  });
+
+  it('rejects empty, oversized, and client-controlled fields', () => {
+    expect(() => createExerciseInputSchema.parse({ name: '   ' })).toThrow();
+    expect(() =>
+      createExerciseInputSchema.parse({ name: 'a'.repeat(101) }),
+    ).toThrow();
+    expect(() =>
+      createExerciseInputSchema.parse({
+        name: 'Cable Fly',
+        description: 'a'.repeat(1001),
+      }),
+    ).toThrow();
+    expect(() =>
+      createExerciseInputSchema.parse({
+        name: 'Cable Fly',
+        ownerUserId: '26d34dc0-8e4c-4bd0-9e3b-7b839b44e486',
+      }),
+    ).toThrow();
+  });
+});
 
 describe('exercise contracts', () => {
   it('accepts built-in and custom exercise summaries', () => {

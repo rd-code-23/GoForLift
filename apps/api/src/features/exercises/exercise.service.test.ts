@@ -3,7 +3,40 @@ import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { describe, expect, it, vi } from 'vitest';
 
 import { exercises } from '../../db/schema/index.js';
-import { listExercisesForUser } from './exercise.service.js';
+import {
+  createExerciseForUser,
+  listExercisesForUser,
+} from './exercise.service.js';
+
+describe('createExerciseForUser', () => {
+  it('sets ownership from the authenticated user and returns a safe summary', async () => {
+    const createdExercise = {
+      id: 'f29f209d-d1f9-4988-b693-69b291917b0f',
+      name: 'Custom Carry',
+      description: null,
+    };
+    const returning = vi.fn().mockResolvedValue([createdExercise]);
+    const values = vi.fn(() => ({ returning }));
+    const insert = vi.fn(() => ({ values }));
+    const database = { insert } as unknown as NodePgDatabase;
+    const userId = '26d34dc0-8e4c-4bd0-9e3b-7b839b44e486';
+
+    const result = await createExerciseForUser(database, userId, {
+      name: createdExercise.name,
+    });
+
+    expect(insert).toHaveBeenCalledWith(exercises);
+    expect(values).toHaveBeenCalledWith({
+      ownerUserId: userId,
+      name: createdExercise.name,
+      description: null,
+    });
+    expect(result).toEqual({
+      ...createdExercise,
+      isCustom: true,
+    });
+  });
+});
 
 describe('listExercisesForUser', () => {
   it('selects the safe projection and identifies custom exercises', async () => {
