@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   createExerciseInputSchema,
+  EXERCISE_NAME_MAX_LENGTH,
   exerciseListResponseSchema,
   exerciseSummarySchema,
 } from './exercise.contract.js';
@@ -23,12 +24,8 @@ describe('createExerciseInputSchema', () => {
   it('rejects empty, oversized, and client-controlled fields', () => {
     expect(() => createExerciseInputSchema.parse({ name: '   ' })).toThrow();
     expect(() =>
-      createExerciseInputSchema.parse({ name: 'a'.repeat(101) }),
-    ).toThrow();
-    expect(() =>
       createExerciseInputSchema.parse({
-        name: 'Cable Fly',
-        description: 'a'.repeat(1001),
+        name: 'a'.repeat(EXERCISE_NAME_MAX_LENGTH + 1),
       }),
     ).toThrow();
     expect(() =>
@@ -71,5 +68,16 @@ describe('exercise contracts', () => {
     });
 
     expect(result.success).toBe(false);
+  });
+
+  it('rejects exercise names that exceed the product limit', () => {
+    expect(() =>
+      exerciseSummarySchema.parse({
+        id: 'bde77251-e433-4f39-b1cb-41a2f2ad5462',
+        name: 'a'.repeat(EXERCISE_NAME_MAX_LENGTH + 1),
+        description: null,
+        isCustom: false,
+      }),
+    ).toThrow();
   });
 });

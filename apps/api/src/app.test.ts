@@ -98,3 +98,37 @@ describe('GET /health', () => {
     expect(errorLog).toHaveBeenCalledWith('API request failed');
   });
 });
+
+describe('JSON request parsing', () => {
+  function createTestApp() {
+    return createApp({
+      authRouter: Router(),
+      exerciseRouter: Router(),
+      csrfErrorHandler: noOpErrorMiddleware,
+      csrfProtection: noOpMiddleware,
+      webOrigin: 'http://localhost:5173',
+      trustProxyHops: 0,
+      sessionMiddleware: noOpMiddleware,
+      checkDatabaseConnection: vi.fn().mockResolvedValue(undefined),
+    });
+  }
+
+  it('returns a client error for malformed JSON', async () => {
+    const response = await request(createTestApp())
+      .post('/exercises')
+      .set('Content-Type', 'application/json')
+      .send('{"name":');
+
+    expect(response.status).toBe(400);
+    expect(response.body).toEqual({ error: 'invalid_json' });
+  });
+
+  it('rejects JSON bodies larger than the configured limit', async () => {
+    const response = await request(createTestApp())
+      .post('/exercises')
+      .send({ description: 'a'.repeat(101 * 1024) });
+
+    expect(response.status).toBe(413);
+    expect(response.body).toEqual({ error: 'request_too_large' });
+  });
+});

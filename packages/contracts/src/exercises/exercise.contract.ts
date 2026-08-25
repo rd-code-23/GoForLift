@@ -1,16 +1,18 @@
 /** Defines browser-safe exercise-list contracts shared across applications. */
 import { z } from 'zod';
 
+export const EXERCISE_NAME_MAX_LENGTH = 100;
+
 export const createExerciseInputSchema = z
   .object({
-    name: z.string().trim().min(1).max(100),
-    description: z.string().trim().max(1000).nullable().optional(),
+    name: z.string().trim().min(1).max(EXERCISE_NAME_MAX_LENGTH),
+    description: z.string().trim().nullable().optional(),
   })
   .strict();
 
 export const exerciseSummarySchema = z.object({
   id: z.uuid(),
-  name: z.string().min(1),
+  name: z.string().min(1).max(EXERCISE_NAME_MAX_LENGTH),
   description: z.string().nullable(),
   isCustom: z.boolean(),
 });
