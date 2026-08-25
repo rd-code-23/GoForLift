@@ -22,6 +22,8 @@ import {
   createExerciseForUser,
   listExercisesForUser,
 } from './features/exercises/exercise.service.js';
+import { createRoutineRouter } from './features/routines/routine.routes.js';
+import { listRoutinesForUser } from './features/routines/routine.service.js';
 
 const { db, pool } = createDatabase(env.DATABASE_URL);
 const { middleware: sessionMiddleware, store: sessionStore } =
@@ -50,11 +52,16 @@ const exerciseRouter = createExerciseRouter({
   listExercises: (userId) => listExercisesForUser(db, userId),
 });
 
+const routineRouter = createRoutineRouter({
+  listRoutines: (userId) => listRoutinesForUser(db, userId),
+});
+
 const app = createApp({
   authRouter,
   csrfErrorHandler,
   csrfProtection,
   exerciseRouter,
+  routineRouter,
   webOrigin: env.WEB_ORIGIN,
   trustProxyHops: env.TRUST_PROXY_HOPS,
   sessionMiddleware,

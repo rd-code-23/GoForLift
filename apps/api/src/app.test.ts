@@ -18,6 +18,7 @@ describe('GET /health', () => {
       createApp({
         authRouter: Router(),
         exerciseRouter: Router(),
+        routineRouter: Router(),
         csrfErrorHandler: noOpErrorMiddleware,
         csrfProtection: noOpMiddleware,
         webOrigin: 'http://localhost:5173',
@@ -36,6 +37,7 @@ describe('GET /health', () => {
       createApp({
         authRouter: Router(),
         exerciseRouter: Router(),
+        routineRouter: Router(),
         csrfErrorHandler: noOpErrorMiddleware,
         csrfProtection: noOpMiddleware,
         webOrigin: 'http://localhost:5173',
@@ -59,6 +61,7 @@ describe('GET /health', () => {
       createApp({
         authRouter: Router(),
         exerciseRouter: Router(),
+        routineRouter: Router(),
         csrfErrorHandler: noOpErrorMiddleware,
         csrfProtection: noOpMiddleware,
         webOrigin: 'http://localhost:5173',
@@ -82,6 +85,7 @@ describe('GET /health', () => {
       createApp({
         authRouter: Router(),
         exerciseRouter: Router(),
+        routineRouter: Router(),
         csrfErrorHandler: noOpErrorMiddleware,
         csrfProtection: noOpMiddleware,
         webOrigin: 'http://localhost:5173',
@@ -104,6 +108,7 @@ describe('JSON request parsing', () => {
     return createApp({
       authRouter: Router(),
       exerciseRouter: Router(),
+      routineRouter: Router(),
       csrfErrorHandler: noOpErrorMiddleware,
       csrfProtection: noOpMiddleware,
       webOrigin: 'http://localhost:5173',

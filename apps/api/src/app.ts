@@ -19,6 +19,7 @@ type AppDependencies = {
   csrfErrorHandler: express.ErrorRequestHandler;
   csrfProtection: RequestHandler;
   exerciseRouter: Router;
+  routineRouter: Router;
   sessionMiddleware: RequestHandler;
   trustProxyHops: number;
   webOrigin: string;
@@ -30,6 +31,7 @@ export function createApp({
   csrfErrorHandler,
   csrfProtection,
   exerciseRouter,
+  routineRouter,
   sessionMiddleware,
   trustProxyHops,
   webOrigin,
@@ -46,6 +48,7 @@ export function createApp({
   app.use(csrfProtection);
   app.use('/auth', authRouter);
   app.use('/exercises', exerciseRouter);
+  app.use('/routines', routineRouter);
 
   app.get('/health', async (_request, response) => {
     try {
