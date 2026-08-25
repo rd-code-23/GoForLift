@@ -3,6 +3,16 @@ import { healthResponseSchema } from '@goforlift/contracts';
 import cors from 'cors';
 import express, { type RequestHandler, type Router } from 'express';
 
+const JSON_BODY_LIMIT = '100kb';
+
+type ExpressBodyError = Error & {
+  type?: string;
+};
+
+function isExpressBodyError(error: unknown, type: string) {
+  return error instanceof Error && (error as ExpressBodyError).type === type;
+}
+
 type AppDependencies = {
   authRouter: Router;
   checkDatabaseConnection: () => Promise<void>;
@@ -32,7 +42,7 @@ export function createApp({
   }
   app.use(cors({ origin: webOrigin, credentials: true }));
   app.use(sessionMiddleware);
-  app.use(express.json());
+  app.use(express.json({ limit: JSON_BODY_LIMIT }));
   app.use(csrfProtection);
   app.use('/auth', authRouter);
   app.use('/exercises', exerciseRouter);
@@ -57,8 +67,18 @@ export function createApp({
 
   app.use(csrfErrorHandler);
   app.use(((error, _request, response, next) => {
-    void error;
     void next;
+
+    if (isExpressBodyError(error, 'entity.parse.failed')) {
+      response.status(400).json({ error: 'invalid_json' });
+      return;
+    }
+
+    if (isExpressBodyError(error, 'entity.too.large')) {
+      response.status(413).json({ error: 'request_too_large' });
+      return;
+    }
+
     console.error('API request failed');
     response.status(500).json({ error: 'internal_server_error' });
   }) satisfies express.ErrorRequestHandler);
