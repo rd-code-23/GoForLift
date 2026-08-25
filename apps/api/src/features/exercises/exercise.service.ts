@@ -1,9 +1,40 @@
 /** Lists exercises visible to the authenticated user. */
-import type { ExerciseSummary } from '@goforlift/contracts';
+import type {
+  CreateExerciseInput,
+  ExerciseSummary,
+} from '@goforlift/contracts';
 import { asc, eq, isNull, or } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 
 import { exercises } from '../../db/schema/index.js';
+
+export async function createExerciseForUser(
+  database: NodePgDatabase,
+  userId: string,
+  input: CreateExerciseInput,
+): Promise<ExerciseSummary> {
+  const [createdExercise] = await database
+    .insert(exercises)
+    .values({
+      ownerUserId: userId,
+      name: input.name,
+      description: input.description ?? null,
+    })
+    .returning({
+      id: exercises.id,
+      name: exercises.name,
+      description: exercises.description,
+    });
+
+  if (!createdExercise) {
+    throw new Error('Exercise creation did not return a row.');
+  }
+
+  return {
+    ...createdExercise,
+    isCustom: true,
+  };
+}
 
 export async function listExercisesForUser(
   database: NodePgDatabase,

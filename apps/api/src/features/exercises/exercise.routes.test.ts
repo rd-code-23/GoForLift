@@ -10,25 +10,26 @@ import { testSessionConfiguration } from '../../test/fixtures/session-configurat
 import { createExerciseRouter } from './exercise.routes.js';
 
 const userId = '26d34dc0-8e4c-4bd0-9e3b-7b839b44e486';
-const exerciseList = [
-  {
-    id: 'bde77251-e433-4f39-b1cb-41a2f2ad5462',
-    name: 'Bench Press',
-    description: 'Press a barbell from chest level.',
-    isCustom: false,
-  },
-  {
-    id: 'f29f209d-d1f9-4988-b693-69b291917b0f',
-    name: 'Custom Carry',
-    description: null,
-    isCustom: true,
-  },
-];
+const builtInExercise = {
+  id: 'bde77251-e433-4f39-b1cb-41a2f2ad5462',
+  name: 'Bench Press',
+  description: 'Press a barbell from chest level.',
+  isCustom: false,
+};
+const customExercise = {
+  id: 'f29f209d-d1f9-4988-b693-69b291917b0f',
+  name: 'Custom Carry',
+  description: null,
+  isCustom: true,
+};
+const exerciseList = [builtInExercise, customExercise];
 
 function createTestApp(
+  createExercise = vi.fn(() => Promise.resolve(customExercise)),
   listExercises = vi.fn(() => Promise.resolve(exerciseList)),
 ) {
   const app = express();
+  app.use(express.json());
   app.use(
     createSessionMiddleware(
       new session.MemoryStore(),
@@ -36,10 +37,65 @@ function createTestApp(
     ),
   );
   app.use(establishAuthenticatedTestSession());
-  app.use('/exercises', createExerciseRouter({ listExercises }));
+  app.use(
+    '/exercises',
+    createExerciseRouter({ createExercise, listExercises }),
+  );
 
-  return { app, listExercises };
+  return { app, createExercise, listExercises };
 }
+
+describe('POST /exercises', () => {
+  it('rejects anonymous requests', async () => {
+    const { app, createExercise } = createTestApp();
+
+    const response = await request(app)
+      .post('/exercises')
+      .send({ name: 'Custom Carry' });
+
+    expect(response.status).toBe(401);
+    expect(response.body).toEqual({ error: 'authentication_required' });
+    expect(createExercise).not.toHaveBeenCalled();
+  });
+
+  it('rejects invalid input and client-controlled ownership', async () => {
+    const { app, createExercise } = createTestApp();
+
+    const emptyName = await request(app)
+      .post('/exercises')
+      .set('x-test-authenticated-user-id', userId)
+      .send({ name: '   ' });
+    const suppliedOwner = await request(app)
+      .post('/exercises')
+      .set('x-test-authenticated-user-id', userId)
+      .send({ name: 'Custom Carry', ownerUserId: userId });
+
+    expect(emptyName.status).toBe(400);
+    expect(emptyName.body).toEqual({ error: 'invalid_request' });
+    expect(suppliedOwner.status).toBe(400);
+    expect(suppliedOwner.body).toEqual({ error: 'invalid_request' });
+    expect(createExercise).not.toHaveBeenCalled();
+  });
+
+  it('creates an exercise owned by the authenticated user', async () => {
+    const { app, createExercise } = createTestApp();
+
+    const response = await request(app)
+      .post('/exercises')
+      .set('x-test-authenticated-user-id', userId)
+      .send({
+        name: '  Custom Carry  ',
+        description: '  A custom loaded carry.  ',
+      });
+
+    expect(response.status).toBe(201);
+    expect(response.body).toEqual(customExercise);
+    expect(createExercise).toHaveBeenCalledWith(userId, {
+      name: 'Custom Carry',
+      description: 'A custom loaded carry.',
+    });
+  });
+});
 
 describe('GET /exercises', () => {
   it('rejects anonymous requests', async () => {

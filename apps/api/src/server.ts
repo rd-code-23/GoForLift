@@ -18,7 +18,10 @@ import { findPublicUserById } from './features/auth/user/current-user.service.js
 import { env } from './config/env.js';
 import { createDatabase } from './db/client.js';
 import { createExerciseRouter } from './features/exercises/exercise.routes.js';
-import { listExercisesForUser } from './features/exercises/exercise.service.js';
+import {
+  createExerciseForUser,
+  listExercisesForUser,
+} from './features/exercises/exercise.service.js';
 
 const { db, pool } = createDatabase(env.DATABASE_URL);
 const { middleware: sessionMiddleware, store: sessionStore } =
@@ -43,6 +46,7 @@ authRouter.use(
 );
 
 const exerciseRouter = createExerciseRouter({
+  createExercise: (userId, input) => createExerciseForUser(db, userId, input),
   listExercises: (userId) => listExercisesForUser(db, userId),
 });
 
