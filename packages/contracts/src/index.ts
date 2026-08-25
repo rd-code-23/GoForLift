@@ -2,3 +2,4 @@
 export * from './auth/auth.contract.js';
 export * from './exercises/exercise.contract.js';
 export * from './health/health.contract.js';
+export * from './routines/routine.contract.js';
