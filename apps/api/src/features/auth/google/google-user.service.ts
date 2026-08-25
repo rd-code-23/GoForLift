@@ -1,7 +1,7 @@
 /** Atomically provisions or updates a user identified by Google's stable subject. */
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 
-import { users } from '../../db/schema/index.js';
+import { users } from '../../../db/schema/index.js';
 
 export type GoogleUserProfile = {
   avatarUrl?: string;

@@ -5,8 +5,8 @@ import request from 'supertest';
 import { describe, expect, it, vi } from 'vitest';
 
 import { createSessionMiddleware } from '../auth/session/session.middleware.js';
-import { establishAuthenticatedTestSession } from '../test/authenticated-session.test-helper.js';
-import { testSessionConfiguration } from '../test/fixtures/session-configuration.fixture.js';
+import { establishAuthenticatedTestSession } from '../../test/authenticated-session.test-helper.js';
+import { testSessionConfiguration } from '../../test/fixtures/session-configuration.fixture.js';
 import { createExerciseRouter } from './exercise.routes.js';
 
 const userId = '26d34dc0-8e4c-4bd0-9e3b-7b839b44e486';

@@ -2,7 +2,7 @@
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { describe, expect, it, vi } from 'vitest';
 
-import { exercises } from '../db/schema/index.js';
+import { exercises } from '../../db/schema/index.js';
 import { listExercisesForUser } from './exercise.service.js';
 
 describe('listExercisesForUser', () => {

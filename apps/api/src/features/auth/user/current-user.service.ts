@@ -3,7 +3,7 @@ import type { PublicUser } from '@goforlift/contracts';
 import { eq } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 
-import { users } from '../../db/schema/index.js';
+import { users } from '../../../db/schema/index.js';
 
 export async function findPublicUserById(
   database: NodePgDatabase,

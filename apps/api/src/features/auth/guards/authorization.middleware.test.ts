@@ -8,8 +8,8 @@ import { createSessionMiddleware } from '../session/session.middleware.js';
 import {
   establishAuthenticatedTestSession,
   withAuthenticatedTestUser,
-} from '../../test/authenticated-session.test-helper.js';
-import { testSessionConfiguration } from '../../test/fixtures/session-configuration.fixture.js';
+} from '../../../test/authenticated-session.test-helper.js';
+import { testSessionConfiguration } from '../../../test/fixtures/session-configuration.fixture.js';
 import {
   getAuthenticatedUserId,
   requireAuthentication,

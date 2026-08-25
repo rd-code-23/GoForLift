@@ -12,7 +12,7 @@ import {
   validateReturnTo,
 } from './google-oidc.routes.js';
 import { createSessionMiddleware } from '../session/session.middleware.js';
-import { testSessionConfiguration } from '../../test/fixtures/session-configuration.fixture.js';
+import { testSessionConfiguration } from '../../../test/fixtures/session-configuration.fixture.js';
 
 const redirectUri = 'http://localhost:3000/auth/google/callback';
 type TestContextOptions = {
