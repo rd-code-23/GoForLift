@@ -23,7 +23,10 @@ import {
   listExercisesForUser,
 } from './features/exercises/exercise.service.js';
 import { createRoutineRouter } from './features/routines/routine.routes.js';
-import { listRoutinesForUser } from './features/routines/routine.service.js';
+import {
+  createRoutineForUser,
+  listRoutinesForUser,
+} from './features/routines/routine.service.js';
 
 const { db, pool } = createDatabase(env.DATABASE_URL);
 const { middleware: sessionMiddleware, store: sessionStore } =
@@ -53,6 +56,7 @@ const exerciseRouter = createExerciseRouter({
 });
 
 const routineRouter = createRoutineRouter({
+  createRoutine: (userId, input) => createRoutineForUser(db, userId, input),
   listRoutines: (userId) => listRoutinesForUser(db, userId),
 });
 
