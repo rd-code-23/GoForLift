@@ -66,9 +66,11 @@ function ExerciseSection() {
         <h2>Exercises (0)</h2>
       </Label>
       <div className="mt-3">
-        <AddActionButton disabled>
-          <Plus aria-hidden="true" />
-          Add Exercise
+        <AddActionButton asChild>
+          <Link to="/routines/new/exercises">
+            <Plus aria-hidden="true" />
+            Add Exercise
+          </Link>
         </AddActionButton>
       </div>
     </div>

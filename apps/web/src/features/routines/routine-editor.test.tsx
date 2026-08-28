@@ -28,7 +28,10 @@ describe('routine editor', () => {
       screen.getByRole('heading', { name: 'Exercises (0)' }),
     ).toBeVisible();
     expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Add Exercise' })).toBeDisabled();
+    expect(screen.getByRole('link', { name: 'Add Exercise' })).toHaveAttribute(
+      'href',
+      '/routines/new/exercises',
+    );
     expect(screen.getByRole('button', { name: 'Add schedule' })).toBeDisabled();
     expect(
       screen.getByRole('link', { name: 'Back to routines' }),
