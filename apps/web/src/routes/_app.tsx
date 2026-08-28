@@ -5,6 +5,7 @@ import { ApplicationAccessBoundary } from '../app/application-access-boundary';
 import { ApplicationIdentityContext } from '../app/application-identity';
 import { ApplicationShell } from '../app/application-shell';
 import { clearGuestSession } from '../features/auth/guest-session';
+import { useLogoutMutation } from '../features/auth/logout.mutation';
 
 export const Route = createFileRoute('/_app')({
   component: ProtectedApplicationLayout,
@@ -12,10 +13,15 @@ export const Route = createFileRoute('/_app')({
 
 function ProtectedApplicationLayout() {
   const navigate = useNavigate();
+  const logoutMutation = useLogoutMutation();
 
   function exitGuest() {
     clearGuestSession();
     void navigate({ to: '/', replace: true });
+  }
+
+  function logoutUser() {
+    logoutMutation.mutate();
   }
 
   return (
@@ -25,6 +31,7 @@ function ProtectedApplicationLayout() {
           <ApplicationShell
             identity={identity}
             onExitGuest={identity.kind === 'guest' ? exitGuest : undefined}
+            onLogout={identity.kind === 'user' ? logoutUser : undefined}
           >
             <Outlet />
           </ApplicationShell>
