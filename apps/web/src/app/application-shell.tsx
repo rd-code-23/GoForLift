@@ -26,12 +26,14 @@ type ApplicationShellProps = {
   children: ReactNode;
   identity: ApplicationIdentity;
   onExitGuest?: () => void;
+  onLogout?: () => void;
 };
 
 export function ApplicationShell({
   children,
   identity,
   onExitGuest,
+  onLogout,
 }: ApplicationShellProps) {
   return (
     <div
@@ -47,6 +49,7 @@ export function ApplicationShell({
           className="border-t px-5 py-5"
           identity={identity}
           onExitGuest={onExitGuest}
+          onLogout={onLogout}
         />
       </aside>
 
@@ -64,6 +67,7 @@ export function ApplicationShell({
             compact
             identity={identity}
             onExitGuest={onExitGuest}
+            onLogout={onLogout}
           />
         </header>
         <main
@@ -94,6 +98,7 @@ type IdentitySummaryProps = {
   className?: string;
   compact?: boolean;
   onExitGuest?: () => void;
+  onLogout?: () => void;
 };
 
 function IdentitySummary({
@@ -101,6 +106,7 @@ function IdentitySummary({
   compact = false,
   identity,
   onExitGuest,
+  onLogout,
 }: IdentitySummaryProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -111,8 +117,9 @@ function IdentitySummary({
   const detail = isGuest ? 'Progress is temporary' : identity.user.email;
   const avatarUrl = isGuest ? null : identity.user.avatarUrl;
 
-  const shouldShowGuestMenu =
-    isMenuOpen && isGuest && onExitGuest !== undefined;
+  const menuAction = isGuest ? onExitGuest : onLogout;
+  const menuLabel = isGuest ? 'Exit guest' : 'Sign out';
+  const shouldShowIdentityMenu = isMenuOpen && menuAction !== undefined;
 
   return (
     <section
@@ -151,7 +158,7 @@ function IdentitySummary({
         </div>
       </button>
 
-      {shouldShowGuestMenu && (
+      {shouldShowIdentityMenu && (
         <div
           className={cn(
             'absolute z-40 min-w-44 rounded-md border bg-surface p-1 shadow-lg',
@@ -167,12 +174,12 @@ function IdentitySummary({
               'transition-colors hover:bg-accent',
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
             )}
-            onClick={onExitGuest}
+            onClick={menuAction}
             role="menuitem"
             type="button"
           >
             <LogOut aria-hidden="true" className="size-4" />
-            <span>Exit guest</span>
+            <span>{menuLabel}</span>
           </button>
         </div>
       )}

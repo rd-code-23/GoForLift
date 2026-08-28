@@ -14,11 +14,15 @@ type ApplicationAccessBoundaryProps = {
 export function ApplicationAccessBoundary({
   children,
 }: ApplicationAccessBoundaryProps) {
-  const currentUser = useCurrentUser();
-
   if (isGuestSession()) {
     return children({ kind: 'guest' });
   }
+
+  return <RegisteredUserAccess>{children}</RegisteredUserAccess>;
+}
+
+function RegisteredUserAccess({ children }: ApplicationAccessBoundaryProps) {
+  const currentUser = useCurrentUser();
 
   if (currentUser.authenticationStatus === 'loading') {
     return <AccessStatus message="Checking your session…" />;
