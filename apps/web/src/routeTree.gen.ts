@@ -15,6 +15,7 @@ import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppHistoryRouteImport } from './routes/_app.history'
 import { Route as AppRoutinesRouteImport } from './routes/_app.routines'
 import { Route as AppSettingsRouteImport } from './routes/_app.settings'
+import { Route as AppRoutinesNewRouteImport } from './routes/_app.routines_.new'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -45,6 +46,11 @@ const AppSettingsRoute = AppSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AppRoute,
 } as any)
+const AppRoutinesNewRoute = AppRoutinesNewRouteImport.update({
+  id: '/routines_/new',
+  path: '/routines/new',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -52,6 +58,7 @@ export interface FileRoutesByFullPath {
   '/history': typeof AppHistoryRoute
   '/routines': typeof AppRoutinesRoute
   '/settings': typeof AppSettingsRoute
+  '/routines/new': typeof AppRoutinesNewRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -59,6 +66,7 @@ export interface FileRoutesByTo {
   '/history': typeof AppHistoryRoute
   '/routines': typeof AppRoutinesRoute
   '/settings': typeof AppSettingsRoute
+  '/routines/new': typeof AppRoutinesNewRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -68,12 +76,25 @@ export interface FileRoutesById {
   '/_app/history': typeof AppHistoryRoute
   '/_app/routines': typeof AppRoutinesRoute
   '/_app/settings': typeof AppSettingsRoute
+  '/_app/routines_/new': typeof AppRoutinesNewRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/dashboard' | '/history' | '/routines' | '/settings'
+  fullPaths:
+    | '/'
+    | '/dashboard'
+    | '/history'
+    | '/routines'
+    | '/settings'
+    | '/routines/new'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/dashboard' | '/history' | '/routines' | '/settings'
+  to:
+    | '/'
+    | '/dashboard'
+    | '/history'
+    | '/routines'
+    | '/settings'
+    | '/routines/new'
   id:
     | '__root__'
     | '/'
@@ -82,6 +103,7 @@ export interface FileRouteTypes {
     | '/_app/history'
     | '/_app/routines'
     | '/_app/settings'
+    | '/_app/routines_/new'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -133,6 +155,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSettingsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/routines_/new': {
+      id: '/_app/routines_/new'
+      path: '/routines/new'
+      fullPath: '/routines/new'
+      preLoaderRoute: typeof AppRoutinesNewRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
@@ -141,6 +170,7 @@ interface AppRouteChildren {
   AppHistoryRoute: typeof AppHistoryRoute
   AppRoutinesRoute: typeof AppRoutinesRoute
   AppSettingsRoute: typeof AppSettingsRoute
+  AppRoutinesNewRoute: typeof AppRoutinesNewRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
@@ -148,6 +178,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppHistoryRoute: AppHistoryRoute,
   AppRoutinesRoute: AppRoutinesRoute,
   AppSettingsRoute: AppSettingsRoute,
+  AppRoutinesNewRoute: AppRoutinesNewRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)

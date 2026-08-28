@@ -1,39 +1,31 @@
 /** Displays the routine collection with intentional guest, loading, error, and empty states. */
 import type { RoutineSummary } from '@goforlift/contracts';
-import { CalendarDays, Dumbbell } from 'lucide-react';
+import { Link } from '@tanstack/react-router';
+import { CalendarDays, Dumbbell, Plus } from 'lucide-react';
 import type { ReactNode } from 'react';
 
 import { useApplicationIdentity } from '../../app/application-identity';
+import { AddActionButton } from '../../components/ui/add-action-button';
+import { PageTitle } from '../../components/ui/page-title';
 import { useRoutines } from './routines.query';
 
 const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 export function RoutinesLanding() {
   const identity = useApplicationIdentity();
+  const isRegisteredUser = identity.kind === 'user';
 
-  const routineContent =
-    identity.kind === 'guest' ? (
-      <GuestRoutinesMessage />
-    ) : (
-      <RegisteredUserRoutines />
-    );
+  const routineContent = !isRegisteredUser ? (
+    <GuestRoutinesMessage />
+  ) : (
+    <RegisteredUserRoutines />
+  );
 
   return (
     <section>
-      <RoutinesHeader />
+      <PageTitle className="mb-6">Routines</PageTitle>
       {routineContent}
     </section>
-  );
-}
-
-function RoutinesHeader() {
-  return (
-    <header className="mb-6">
-      <p className="text-sm font-medium text-primary">Training plan</p>
-      <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">
-        Routines
-      </h1>
-    </header>
   );
 }
 
@@ -86,10 +78,12 @@ function RoutineLoadError({ onRetry }: { onRetry: () => unknown }) {
 
 function EmptyRoutineList() {
   return (
-    <RoutineMessage
-      detail="Create your first routine to get ready for liftoff."
-      title="No routines yet."
-    />
+    <AddActionButton asChild>
+      <Link to="/routines/new">
+        <Plus aria-hidden="true" />
+        Add Routine
+      </Link>
+    </AddActionButton>
   );
 }
 

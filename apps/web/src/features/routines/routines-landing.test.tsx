@@ -1,6 +1,12 @@
 /** Verifies the routine page's registered-user and guest-facing states. */
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
+  createMemoryHistory,
+  createRootRoute,
+  createRouter,
+  RouterProvider,
+} from '@tanstack/react-router';
+import {
   cleanup,
   fireEvent,
   render,
@@ -29,10 +35,16 @@ function createWrapper(identity: 'guest' | 'user' = 'user') {
       : ({ kind: 'user', user: createPublicUser() } as const);
 
   return function Wrapper({ children }: PropsWithChildren) {
+    const rootRoute = createRootRoute({ component: () => children });
+    const testRouter = createRouter({
+      history: createMemoryHistory({ initialEntries: ['/'] }),
+      routeTree: rootRoute,
+    });
+
     return (
       <QueryClientProvider client={queryClient}>
         <ApplicationIdentityContext.Provider value={identityValue}>
-          {children}
+          <RouterProvider router={testRouter} />
         </ApplicationIdentityContext.Provider>
       </QueryClientProvider>
     );
@@ -40,7 +52,7 @@ function createWrapper(identity: 'guest' | 'user' = 'user') {
 }
 
 describe('routines landing', () => {
-  it('shows a localized loading state', () => {
+  it('shows a localized loading state', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn(() => new Promise(() => {})),
@@ -48,10 +60,10 @@ describe('routines landing', () => {
 
     render(<RoutinesLanding />, { wrapper: createWrapper() });
 
-    expect(screen.getByLabelText('Loading routines')).toBeVisible();
+    expect(await screen.findByLabelText('Loading routines')).toBeVisible();
   });
 
-  it('shows the documented empty state', async () => {
+  it('shows only the add-routine action for an empty routine list', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn().mockResolvedValue(Response.json({ routines: [] })),
@@ -59,10 +71,10 @@ describe('routines landing', () => {
 
     render(<RoutinesLanding />, { wrapper: createWrapper() });
 
-    expect(await screen.findByText('No routines yet.')).toBeVisible();
     expect(
-      screen.getByText('Create your first routine to get ready for liftoff.'),
+      await screen.findByRole('link', { name: 'Add Routine' }),
     ).toBeVisible();
+    expect(screen.queryByText('No routines yet.')).not.toBeInTheDocument();
   });
 
   it('shows routine summaries returned by the API', async () => {
@@ -106,16 +118,20 @@ describe('routines landing', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Try again' }));
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
-    expect(await screen.findByText('No routines yet.')).toBeVisible();
+    expect(
+      await screen.findByRole('link', { name: 'Add Routine' }),
+    ).toBeVisible();
   });
 
-  it('does not request persistent routines for a guest', () => {
+  it('does not request persistent routines for a guest', async () => {
     const fetchMock = vi.fn();
     vi.stubGlobal('fetch', fetchMock);
 
     render(<RoutinesLanding />, { wrapper: createWrapper('guest') });
 
-    expect(screen.getByText('Guest routines are coming later.')).toBeVisible();
+    expect(
+      await screen.findByText('Guest routines are coming later.'),
+    ).toBeVisible();
     expect(fetchMock).not.toHaveBeenCalled();
   });
 });
