@@ -20,10 +20,17 @@ export default defineConfig({
       '@': path.resolve(import.meta.dirname, './src'),
     },
   },
+
   server: {
     proxy: {
       '/auth': 'http://localhost:3000',
       '/health': 'http://localhost:3000',
+      // Keep API requests distinct from React page URLs; Vite removes the
+      // frontend-only /api prefix before forwarding to Express on port 3000.
+      '/api': {
+        target: 'http://localhost:3000',
+        rewrite: (requestPath) => requestPath.replace(/^\/api/, ''),
+      },
     },
   },
   test: {
