@@ -88,19 +88,25 @@ function ExerciseList({ exercises }: { exercises: ExerciseSummary[] }) {
     <ul>
       {exercises.map((exercise) => (
         <li
-          className="relative flex min-h-12 items-center gap-3 rounded-md px-2 py-1.5 transition-colors after:absolute after:bottom-0 after:left-[12.5%] after:h-0.5 after:w-3/4 after:bg-border/20 after:content-[''] last:after:hidden hover:bg-accent/50 lg:min-h-14 lg:gap-4 lg:px-3 lg:py-2"
+          className="relative after:absolute after:bottom-0 after:left-[12.5%] after:h-0.5 after:w-3/4 after:bg-border/20 after:content-[''] last:after:hidden"
           key={exercise.id}
         >
-          <div className="flex size-9 shrink-0 items-center justify-center rounded-md bg-surface-elevated text-primary lg:size-10">
-            <Dumbbell aria-hidden="true" className="size-5 lg:size-6" />
-          </div>
-          <p className="min-w-0 flex-1 truncate text-[15px] font-normal text-muted-foreground lg:text-base">
-            {exercise.name}
-          </p>
-          <ChevronRight
-            aria-hidden="true"
-            className="size-4 shrink-0 text-muted-foreground lg:size-5"
-          />
+          <Link
+            className="flex min-h-12 items-center gap-3 rounded-md px-2 py-1.5 transition-colors hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:min-h-14 lg:gap-4 lg:px-3 lg:py-2"
+            params={{ exerciseId: exercise.id }}
+            to="/routines/new/exercises/$exerciseId"
+          >
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-md bg-surface-elevated text-primary lg:size-10">
+              <Dumbbell aria-hidden="true" className="size-5 lg:size-6" />
+            </div>
+            <p className="min-w-0 flex-1 truncate text-[15px] font-normal text-muted-foreground lg:text-base">
+              {exercise.name}
+            </p>
+            <ChevronRight
+              aria-hidden="true"
+              className="size-4 shrink-0 text-muted-foreground lg:size-5"
+            />
+          </Link>
         </li>
       ))}
     </ul>

@@ -1,4 +1,4 @@
-/** Verifies exercise loading and client-side search in the routine picker. */
+/** Verifies selected exercise data is shown in the configuration shell. */
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
   createMemoryHistory,
@@ -6,11 +6,11 @@ import {
   createRouter,
   RouterProvider,
 } from '@tanstack/react-router';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, render, screen } from '@testing-library/react';
 import type { PropsWithChildren } from 'react';
 import { afterEach, expect, it, vi } from 'vitest';
 
-import { ExercisePicker } from './exercise-picker';
+import { ExerciseConfiguration } from './exercise-configuration';
 
 afterEach(() => {
   cleanup();
@@ -34,21 +34,16 @@ function Wrapper({ children }: PropsWithChildren) {
   );
 }
 
-it('filters available exercises by name', async () => {
+it('shows the selected exercise and initial configuration fields', async () => {
+  const exerciseId = '26d34dc0-8e4c-4bd0-9e3b-7b839b44e486';
   vi.stubGlobal(
     'fetch',
     vi.fn().mockResolvedValue(
       Response.json({
         exercises: [
           {
-            id: '26d34dc0-8e4c-4bd0-9e3b-7b839b44e486',
+            id: exerciseId,
             name: 'Bicep Curl',
-            description: null,
-            isCustom: false,
-          },
-          {
-            id: '43805735-8ee9-4cbd-9da1-c7ec5965cb03',
-            name: 'Shoulder Press',
             description: null,
             isCustom: false,
           },
@@ -57,22 +52,12 @@ it('filters available exercises by name', async () => {
     ),
   );
 
-  render(<ExercisePicker />, { wrapper: Wrapper });
+  render(<ExerciseConfiguration exerciseId={exerciseId} />, {
+    wrapper: Wrapper,
+  });
 
   expect(await screen.findByText('Bicep Curl')).toBeVisible();
-  expect(screen.getByText('Shoulder Press')).toBeVisible();
-  expect(screen.getByRole('link', { name: 'Bicep Curl' })).toHaveAttribute(
-    'href',
-    '/routines/new/exercises/26d34dc0-8e4c-4bd0-9e3b-7b839b44e486',
-  );
-
-  fireEvent.change(
-    screen.getByRole('searchbox', { name: 'Search exercises' }),
-    {
-      target: { value: 'shoulder' },
-    },
-  );
-
-  expect(screen.queryByText('Bicep Curl')).not.toBeInTheDocument();
-  expect(screen.getByText('Shoulder Press')).toBeVisible();
+  expect(screen.getByLabelText('Sets')).toHaveValue(3);
+  expect(screen.getByLabelText('Reps')).toHaveValue(8);
+  expect(screen.getByRole('button', { name: 'Done' })).toBeDisabled();
 });
