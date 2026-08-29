@@ -17,6 +17,7 @@ import { Route as AppRoutinesRouteImport } from './routes/_app.routines'
 import { Route as AppSettingsRouteImport } from './routes/_app.settings'
 import { Route as AppRoutinesNewRouteImport } from './routes/_app.routines_.new'
 import { Route as AppRoutinesNewExercisesRouteImport } from './routes/_app.routines_.new_.exercises'
+import { Route as AppRoutinesNewExercisesExerciseIdRouteImport } from './routes/_app.routines_.new_.exercises_.$exerciseId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -57,6 +58,12 @@ const AppRoutinesNewExercisesRoute = AppRoutinesNewExercisesRouteImport.update({
   path: '/routines/new/exercises',
   getParentRoute: () => AppRoute,
 } as any)
+const AppRoutinesNewExercisesExerciseIdRoute =
+  AppRoutinesNewExercisesExerciseIdRouteImport.update({
+    id: '/routines_/new_/exercises_/$exerciseId',
+    path: '/routines/new/exercises/$exerciseId',
+    getParentRoute: () => AppRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -66,6 +73,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AppSettingsRoute
   '/routines/new': typeof AppRoutinesNewRoute
   '/routines/new/exercises': typeof AppRoutinesNewExercisesRoute
+  '/routines/new/exercises/$exerciseId': typeof AppRoutinesNewExercisesExerciseIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -75,6 +83,7 @@ export interface FileRoutesByTo {
   '/settings': typeof AppSettingsRoute
   '/routines/new': typeof AppRoutinesNewRoute
   '/routines/new/exercises': typeof AppRoutinesNewExercisesRoute
+  '/routines/new/exercises/$exerciseId': typeof AppRoutinesNewExercisesExerciseIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -86,6 +95,7 @@ export interface FileRoutesById {
   '/_app/settings': typeof AppSettingsRoute
   '/_app/routines_/new': typeof AppRoutinesNewRoute
   '/_app/routines_/new_/exercises': typeof AppRoutinesNewExercisesRoute
+  '/_app/routines_/new_/exercises_/$exerciseId': typeof AppRoutinesNewExercisesExerciseIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -97,6 +107,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/routines/new'
     | '/routines/new/exercises'
+    | '/routines/new/exercises/$exerciseId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -106,6 +117,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/routines/new'
     | '/routines/new/exercises'
+    | '/routines/new/exercises/$exerciseId'
   id:
     | '__root__'
     | '/'
@@ -116,6 +128,7 @@ export interface FileRouteTypes {
     | '/_app/settings'
     | '/_app/routines_/new'
     | '/_app/routines_/new_/exercises'
+    | '/_app/routines_/new_/exercises_/$exerciseId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -181,6 +194,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppRoutinesNewExercisesRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/routines_/new_/exercises_/$exerciseId': {
+      id: '/_app/routines_/new_/exercises_/$exerciseId'
+      path: '/routines/new/exercises/$exerciseId'
+      fullPath: '/routines/new/exercises/$exerciseId'
+      preLoaderRoute: typeof AppRoutinesNewExercisesExerciseIdRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
@@ -191,6 +211,7 @@ interface AppRouteChildren {
   AppSettingsRoute: typeof AppSettingsRoute
   AppRoutinesNewRoute: typeof AppRoutinesNewRoute
   AppRoutinesNewExercisesRoute: typeof AppRoutinesNewExercisesRoute
+  AppRoutinesNewExercisesExerciseIdRoute: typeof AppRoutinesNewExercisesExerciseIdRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
@@ -200,6 +221,8 @@ const AppRouteChildren: AppRouteChildren = {
   AppSettingsRoute: AppSettingsRoute,
   AppRoutinesNewRoute: AppRoutinesNewRoute,
   AppRoutinesNewExercisesRoute: AppRoutinesNewExercisesRoute,
+  AppRoutinesNewExercisesExerciseIdRoute:
+    AppRoutinesNewExercisesExerciseIdRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
