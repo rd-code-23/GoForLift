@@ -281,6 +281,13 @@ defining the appropriate Zod schema in:
 
 and infer TypeScript types from that schema.
 
+Form validation that represents an API or domain constraint must reuse the
+field schemas from `packages/contracts`. Do not recreate constraints such as
+required values, trimming, minimums, maximums, or allowed values inside a
+frontend feature. Frontend-only presentation behavior may wrap shared field
+schemas in a form-specific object schema, but the underlying validation rules
+must remain shared.
+
 Example:
 
     export const CreateRoutineSchema = z.object({

@@ -74,6 +74,7 @@ describe('routines landing', () => {
     expect(
       await screen.findByRole('link', { name: 'Add Routine' }),
     ).toBeVisible();
+
     expect(screen.queryByText('No routines yet.')).not.toBeInTheDocument();
   });
 

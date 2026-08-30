@@ -3,7 +3,9 @@ import { describe, expect, it } from 'vitest';
 
 import {
   createRoutineInputSchema,
+  ROUTINE_NAME_MAX_LENGTH,
   routineListResponseSchema,
+  routineNameSchema,
   routineSummarySchema,
 } from './routine.contract.js';
 
@@ -22,6 +24,23 @@ const validCreateRoutineInput = {
   ],
   schedules: [{ dayOfWeek: 1, localTime: '18:30:00' }],
 };
+
+describe('routineNameSchema', () => {
+  it('normalizes valid names and rejects empty names', () => {
+    expect(routineNameSchema.parse('  Upper Body  ')).toBe('Upper Body');
+    expect(() => routineNameSchema.parse('   ')).toThrow();
+  });
+
+  it('returns a clear maximum-length message', () => {
+    const result = routineNameSchema.safeParse(
+      'x'.repeat(ROUTINE_NAME_MAX_LENGTH + 1),
+    );
+
+    expect(result.error?.issues[0]?.message).toBe(
+      `Maximum length is ${ROUTINE_NAME_MAX_LENGTH} characters`,
+    );
+  });
+});
 
 describe('createRoutineInputSchema', () => {
   it('normalizes a valid routine and applies rest defaults', () => {
