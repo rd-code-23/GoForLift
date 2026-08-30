@@ -4,10 +4,10 @@ import { Link } from '@tanstack/react-router';
 import { CalendarDays, Dumbbell, Plus } from 'lucide-react';
 import type { ReactNode } from 'react';
 
-import { useApplicationIdentity } from '../../app/application-identity';
-import { AddActionButton } from '../../components/ui/add-action-button';
-import { PageTitle } from '../../components/ui/page-title';
-import { useRoutines } from './routines.query';
+import { useApplicationIdentity } from '@/app/application-identity';
+import { AddActionButton } from '@/components/ui/add-action-button';
+import { PageTitle } from '@/components/ui/page-title';
+import { useRoutines } from '../api/routines.query';
 
 const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 

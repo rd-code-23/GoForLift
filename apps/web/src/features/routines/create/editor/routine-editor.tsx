@@ -3,13 +3,13 @@ import { Link, useNavigate } from '@tanstack/react-router';
 import { ArrowLeft, Plus } from 'lucide-react';
 import { useFormContext } from 'react-hook-form';
 
-import { AddActionButton } from '../../components/ui/add-action-button';
-import { Button } from '../../components/ui/button';
-import { Input } from '../../components/ui/input';
-import { Label } from '../../components/ui/label';
-import { PageTitle } from '../../components/ui/page-title';
-import { cn } from '../../lib/utils';
-import type { RoutineDraftFormValues } from './routine-draft-form';
+import { AddActionButton } from '@/components/ui/add-action-button';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { PageTitle } from '@/components/ui/page-title';
+import { cn } from '@/lib/utils';
+import type { RoutineDraftFormValues } from '../routine-draft-form';
 import { RoutineScheduleField } from './routine-schedule-field';
 
 export function RoutineEditor() {
