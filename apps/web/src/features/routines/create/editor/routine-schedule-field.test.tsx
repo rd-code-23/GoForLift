@@ -18,6 +18,7 @@ it('opens a weekly schedule dialog and reveals time controls for selected days',
   ).toBeVisible();
   expect(screen.getAllByRole('switch', { name: /^Schedule / })).toHaveLength(7);
   expect(screen.queryByLabelText('Monday time')).toBeNull();
+  expect(screen.getByRole('button', { name: 'Save Schedule' })).toBeEnabled();
 
   await user.click(screen.getByRole('switch', { name: 'Schedule Monday' }));
 
@@ -84,6 +85,22 @@ it('discards unsaved schedule changes when cancelled', async () => {
     screen.getByRole('switch', { name: 'Schedule Tuesday' }),
   ).not.toBeChecked();
   expect(screen.queryByLabelText('Tuesday time')).toBeNull();
+});
+
+it('allows every schedule to be removed because scheduling is optional', async () => {
+  const user = userEvent.setup();
+  renderScheduleField();
+
+  await user.click(screen.getByRole('button', { name: 'Add schedule' }));
+  await user.click(screen.getByRole('switch', { name: 'Schedule Monday' }));
+  await user.click(screen.getByRole('button', { name: 'Save Schedule' }));
+  expect(screen.getByText('Mon')).toBeVisible();
+
+  await user.click(screen.getByRole('button', { name: 'Add schedule' }));
+  await user.click(screen.getByRole('switch', { name: 'Schedule Monday' }));
+  await user.click(screen.getByRole('button', { name: 'Save Schedule' }));
+
+  expect(screen.queryByText('Mon')).toBeNull();
 });
 
 function renderScheduleField() {

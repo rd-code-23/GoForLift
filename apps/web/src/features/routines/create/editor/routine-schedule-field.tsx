@@ -70,7 +70,6 @@ function ScheduleDialog() {
   // `control` tells useWatch which RHF form instance to read schedules from.
   const { control, setValue } = useFormContext<RoutineDraftFormValues>();
   const savedSchedules = useWatch({ control, name: 'schedules' });
-  const hasSelectedDays = state.days.some((day) => day.isSelected);
 
   function handleOpenChange(nextIsOpen: boolean) {
     if (nextIsOpen) {
@@ -191,11 +190,7 @@ function ScheduleDialog() {
               Cancel
             </Button>
           </DialogClose>
-          <Button
-            disabled={!hasSelectedDays}
-            onClick={saveSchedules}
-            type="button"
-          >
+          <Button onClick={saveSchedules} type="button">
             Save Schedule
           </Button>
         </div>
