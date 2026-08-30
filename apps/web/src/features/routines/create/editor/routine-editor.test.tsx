@@ -35,6 +35,9 @@ describe('routine editor', () => {
       screen.getByRole('heading', { name: 'Exercises (0)' }),
     ).toBeVisible();
     expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled();
+    expect(
+      screen.queryByRole('button', { name: 'Preview' }),
+    ).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Add Exercise' })).toBeVisible();
     expect(screen.getByRole('button', { name: 'Add schedule' })).toBeDisabled();
     expect(
@@ -68,6 +71,21 @@ describe('routine editor', () => {
     expect(routineNameInput).not.toHaveAttribute('aria-invalid');
   });
 
+  it('clears the draft and its validation state when requested', async () => {
+    const user = userEvent.setup();
+    renderEditor();
+    const routineNameInput = await screen.findByLabelText('Routine Name');
+
+    await user.type(routineNameInput, 'x'.repeat(ROUTINE_NAME_MAX_LENGTH + 1));
+    expect(await screen.findByRole('alert')).toBeVisible();
+
+    await user.click(screen.getByRole('button', { name: 'Clear' }));
+
+    expect(routineNameInput).toHaveValue('');
+    expect(routineNameInput).not.toHaveAttribute('aria-invalid');
+    expect(screen.queryByRole('alert')).toBeNull();
+  });
+
   it('keeps the current draft and opens exercises when the name is invalid', async () => {
     const user = userEvent.setup();
     const router = renderEditor();
@@ -89,29 +107,49 @@ describe('routine editor', () => {
     expect(await screen.findByRole('alert')).toBeVisible();
     expect(screen.getByLabelText('Routine Name')).toHaveValue(invalidName);
   });
+
+  it('keeps the draft while visiting a different application page', async () => {
+    const user = userEvent.setup();
+    const router = renderEditor();
+    const invalidName = 'x'.repeat(ROUTINE_NAME_MAX_LENGTH + 1);
+
+    await user.type(await screen.findByLabelText('Routine Name'), invalidName);
+    expect(await screen.findByRole('alert')).toBeVisible();
+
+    await router.navigate({ to: '/history' });
+    expect(
+      await screen.findByRole('heading', { name: 'History' }),
+    ).toBeVisible();
+
+    await router.navigate({ to: '/routines/new' });
+    expect(await screen.findByRole('alert')).toBeVisible();
+    expect(screen.getByLabelText('Routine Name')).toHaveValue(invalidName);
+  });
 });
 
 function renderEditor() {
-  const rootRoute = createRootRoute();
-  const routineCreationRoute = createRoute({
-    getParentRoute: () => rootRoute,
-    id: 'routine-creation',
-    component: TestRoutineCreationLayout,
-  });
+  const rootRoute = createRootRoute({ component: TestApplicationLayout });
   const editorRoute = createRoute({
-    getParentRoute: () => routineCreationRoute,
+    getParentRoute: () => rootRoute,
     path: '/routines/new',
     component: RoutineEditor,
   });
   const exercisePickerRoute = createRoute({
-    getParentRoute: () => routineCreationRoute,
+    getParentRoute: () => rootRoute,
     path: '/routines/new/exercises',
     component: () => <Link to="/routines/new">Back to editor</Link>,
+  });
+  const historyRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/history',
+    component: () => <h1>History</h1>,
   });
   const testRouter = createRouter({
     history: createMemoryHistory({ initialEntries: ['/routines/new'] }),
     routeTree: rootRoute.addChildren([
-      routineCreationRoute.addChildren([editorRoute, exercisePickerRoute]),
+      editorRoute,
+      exercisePickerRoute,
+      historyRoute,
     ]),
   });
 
@@ -120,7 +158,7 @@ function renderEditor() {
   return testRouter;
 }
 
-function TestRoutineCreationLayout() {
+function TestApplicationLayout() {
   return (
     <RoutineDraftFormProvider>
       <Outlet />

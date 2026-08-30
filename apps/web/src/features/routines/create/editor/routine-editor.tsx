@@ -14,6 +14,7 @@ import { RoutineScheduleField } from './routine-schedule-field';
 
 export function RoutineEditor() {
   const navigate = useNavigate();
+  const { reset } = useFormContext<RoutineDraftFormValues>();
 
   const addExercise = async () => {
     await navigate({ to: '/routines/new/exercises' });
@@ -21,7 +22,7 @@ export function RoutineEditor() {
 
   return (
     <section className="mx-auto w-full max-w-5xl">
-      <EditorHeader />
+      <EditorHeader onClear={() => reset()} />
 
       <form className="grid gap-6 lg:grid-cols-2">
         <div className="space-y-6">
@@ -35,7 +36,7 @@ export function RoutineEditor() {
   );
 }
 
-function EditorHeader() {
+function EditorHeader({ onClear }: { onClear: () => void }) {
   return (
     <header className="mb-7 flex items-center gap-3 border-b pb-5">
       <Button aria-label="Back to routines" asChild size="icon" variant="ghost">
@@ -45,8 +46,8 @@ function EditorHeader() {
       </Button>
       <PageTitle>Create Routine</PageTitle>
       <div className="ml-auto flex gap-2">
-        <Button className="hidden sm:inline-flex" disabled variant="outline">
-          Preview
+        <Button onClick={onClear} type="button" variant="ghost">
+          Clear
         </Button>
         <Button disabled>Save</Button>
       </div>
