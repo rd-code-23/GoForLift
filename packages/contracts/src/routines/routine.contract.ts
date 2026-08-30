@@ -3,6 +3,15 @@ import { z } from 'zod';
 
 export const ROUTINE_NAME_MAX_LENGTH = 100;
 
+export const routineNameSchema = z
+  .string()
+  .trim()
+  .min(1, 'Enter a routine name.')
+  .max(
+    ROUTINE_NAME_MAX_LENGTH,
+    `Maximum length is ${ROUTINE_NAME_MAX_LENGTH} characters`,
+  );
+
 export const createRoutineExerciseInputSchema = z
   .object({
     exerciseId: z.uuid(),
@@ -26,7 +35,7 @@ export const createRoutineScheduleInputSchema = z
 
 export const createRoutineInputSchema = z
   .object({
-    name: z.string().trim().min(1).max(ROUTINE_NAME_MAX_LENGTH),
+    name: routineNameSchema,
     description: z.string().trim().nullable().optional(),
     exercises: z.array(createRoutineExerciseInputSchema).min(1),
     schedules: z.array(createRoutineScheduleInputSchema).default([]),

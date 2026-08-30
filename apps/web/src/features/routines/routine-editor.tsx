@@ -1,27 +1,36 @@
 /** Presents the responsive visual shell for creating a registered-user routine. */
-import { Link } from '@tanstack/react-router';
+import { Link, useNavigate } from '@tanstack/react-router';
 import { ArrowLeft, Plus } from 'lucide-react';
+import { useFormContext } from 'react-hook-form';
 
 import { AddActionButton } from '../../components/ui/add-action-button';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { PageTitle } from '../../components/ui/page-title';
+import { cn } from '../../lib/utils';
+import type { RoutineDraftFormValues } from './routine-draft-form';
 import { RoutineScheduleField } from './routine-schedule-field';
 
 export function RoutineEditor() {
+  const navigate = useNavigate();
+
+  const addExercise = async () => {
+    await navigate({ to: '/routines/new/exercises' });
+  };
+
   return (
     <section className="mx-auto w-full max-w-5xl">
       <EditorHeader />
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <form className="grid gap-6 lg:grid-cols-2">
         <div className="space-y-6">
           <RoutineDetails />
-          <ExerciseSection />
+          <ExerciseSection onAddExercise={() => void addExercise()} />
         </div>
 
         <RoutineScheduleField />
-      </div>
+      </form>
     </section>
   );
 }
@@ -46,31 +55,52 @@ function EditorHeader() {
 }
 
 function RoutineDetails() {
+  const {
+    formState: { errors },
+    register,
+  } = useFormContext<RoutineDraftFormValues>();
+
+  const errorMessage = errors.name?.message;
+
   return (
     <div>
       <Label htmlFor="routine-name">Routine Name</Label>
       <Input
-        className="mt-2"
+        aria-describedby={errorMessage ? 'routine-name-error' : undefined}
+        aria-invalid={errorMessage ? true : undefined}
+        className={cn(
+          'mt-2',
+          'focus-visible:border-foreground/40 focus-visible:ring-foreground/10',
+          'aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/30',
+          'aria-invalid:focus-visible:border-destructive aria-invalid:focus-visible:ring-destructive/30',
+        )}
         id="routine-name"
-        maxLength={100}
         placeholder="e.g., Upper Body"
+        {...register('name')}
       />
+      {errorMessage && (
+        <p
+          className="mt-2 text-sm text-destructive"
+          id="routine-name-error"
+          role="alert"
+        >
+          {errorMessage}
+        </p>
+      )}
     </div>
   );
 }
 
-function ExerciseSection() {
+function ExerciseSection({ onAddExercise }: { onAddExercise: () => void }) {
   return (
     <div>
       <Label asChild>
         <h2>Exercises (0)</h2>
       </Label>
       <div className="mt-3">
-        <AddActionButton asChild>
-          <Link to="/routines/new/exercises">
-            <Plus aria-hidden="true" />
-            Add Exercise
-          </Link>
+        <AddActionButton onClick={onAddExercise} type="button">
+          <Plus aria-hidden="true" />
+          Add Exercise
         </AddActionButton>
       </div>
     </div>

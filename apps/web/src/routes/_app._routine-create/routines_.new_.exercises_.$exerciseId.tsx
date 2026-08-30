@@ -1,10 +1,10 @@
-/** Registers the selected-exercise configuration route. */
+/** Registers exercise configuration inside the persistent routine form flow. */
 import { createFileRoute } from '@tanstack/react-router';
 
-import { ExerciseConfiguration } from '../features/routines/exercise-configuration';
+import { ExerciseConfiguration } from '../../features/routines/exercise-configuration';
 
 export const Route = createFileRoute(
-  '/_app/routines_/new_/exercises_/$exerciseId',
+  '/_app/_routine-create/routines_/new_/exercises_/$exerciseId',
 )({
   component: ExerciseConfigurationRoute,
 });
