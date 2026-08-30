@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, expect, it } from 'vitest';
 
@@ -15,11 +15,39 @@ it('opens a weekly schedule dialog and reveals time controls for selected days',
   expect(
     screen.getByRole('heading', { name: 'Schedule Routine' }),
   ).toBeVisible();
-  expect(screen.getAllByRole('switch')).toHaveLength(7);
+  expect(screen.getAllByRole('switch', { name: /^Schedule / })).toHaveLength(7);
   expect(screen.queryByLabelText('Monday time')).toBeNull();
 
   await user.click(screen.getByRole('switch', { name: 'Schedule Monday' }));
 
   expect(screen.getByLabelText('Monday time')).toHaveValue('18:00');
   expect(screen.getByRole('button', { name: 'Save Schedule' })).toBeDisabled();
+});
+
+it('keeps selected days synchronized until shared time is disabled', async () => {
+  const user = userEvent.setup();
+  render(<RoutineScheduleField />);
+
+  await user.click(screen.getByRole('button', { name: 'Add schedule' }));
+  await user.click(screen.getByRole('switch', { name: 'Schedule Monday' }));
+  await user.click(screen.getByRole('switch', { name: 'Schedule Wednesday' }));
+
+  fireEvent.change(screen.getByLabelText('Monday time'), {
+    target: { value: '07:30' },
+  });
+
+  expect(screen.getByLabelText('Monday time')).toHaveValue('07:30');
+  expect(screen.getByLabelText('Wednesday time')).toHaveValue('07:30');
+
+  await user.click(
+    screen.getByRole('switch', {
+      name: 'Use same time for selected days',
+    }),
+  );
+  fireEvent.change(screen.getByLabelText('Monday time'), {
+    target: { value: '08:15' },
+  });
+
+  expect(screen.getByLabelText('Monday time')).toHaveValue('08:15');
+  expect(screen.getByLabelText('Wednesday time')).toHaveValue('07:30');
 });
