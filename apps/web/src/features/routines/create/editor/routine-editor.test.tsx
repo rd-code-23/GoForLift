@@ -79,11 +79,17 @@ describe('routine editor', () => {
     await user.type(routineNameInput, 'x'.repeat(ROUTINE_NAME_MAX_LENGTH + 1));
     expect(await screen.findByRole('alert')).toBeVisible();
 
+    await user.click(screen.getByRole('button', { name: 'Add schedule' }));
+    await user.click(screen.getByRole('switch', { name: 'Schedule Monday' }));
+    await user.click(screen.getByRole('button', { name: 'Save Schedule' }));
+    expect(screen.getByText('Mon')).toBeVisible();
+
     await user.click(screen.getByRole('button', { name: 'Clear' }));
 
     expect(routineNameInput).toHaveValue('');
     expect(routineNameInput).not.toHaveAttribute('aria-invalid');
     expect(screen.queryByRole('alert')).toBeNull();
+    expect(screen.queryByText('Mon')).toBeNull();
   });
 
   it('keeps the current draft and opens exercises when the name is invalid', async () => {

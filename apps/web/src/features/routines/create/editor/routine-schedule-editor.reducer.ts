@@ -1,4 +1,8 @@
+import type { CreateRoutineInput } from '@goforlift/contracts';
+
 export const DEFAULT_SCHEDULE_TIME = '18:00';
+
+type RoutineSchedule = CreateRoutineInput['schedules'][number];
 
 export type ScheduleEditorDay = {
   dayOfWeek: number;
@@ -12,24 +16,21 @@ export type ScheduleEditorState = {
 };
 
 export type ScheduleEditorAction =
+  | { type: 'draft-loaded'; schedules: RoutineSchedule[] }
   | { type: 'day-toggled'; dayOfWeek: number; isSelected: boolean }
   | { type: 'time-changed'; dayOfWeek: number; time: string }
   | { type: 'shared-time-toggled'; isEnabled: boolean };
 
-export const INITIAL_SCHEDULE_EDITOR_STATE: ScheduleEditorState = {
-  days: Array.from({ length: 7 }, (_, dayOfWeek) => ({
-    dayOfWeek,
-    isSelected: false,
-    time: DEFAULT_SCHEDULE_TIME,
-  })),
-  useSameTime: true,
-};
+export const INITIAL_SCHEDULE_EDITOR_STATE = createScheduleEditorState([]);
 
 export function scheduleEditorReducer(
   state: ScheduleEditorState,
   action: ScheduleEditorAction,
 ): ScheduleEditorState {
   switch (action.type) {
+    case 'draft-loaded':
+      return createScheduleEditorState(action.schedules);
+
     case 'day-toggled':
       return {
         ...state,
@@ -51,6 +52,29 @@ export function scheduleEditorReducer(
           : state.days,
       };
   }
+}
+
+export function createScheduleEditorState(
+  schedules: RoutineSchedule[],
+): ScheduleEditorState {
+  return {
+    days: Array.from({ length: 7 }, (_, dayOfWeek) => {
+      const savedSchedule = schedules.find(
+        (schedule) => schedule.dayOfWeek === dayOfWeek,
+      );
+
+      return {
+        dayOfWeek,
+        isSelected: Boolean(savedSchedule),
+        time: savedSchedule?.localTime.slice(0, 5) ?? DEFAULT_SCHEDULE_TIME,
+      };
+    }),
+    useSameTime: hasOneSelectedTime(schedules),
+  };
+}
+
+function hasOneSelectedTime(schedules: RoutineSchedule[]) {
+  return new Set(schedules.map((schedule) => schedule.localTime)).size <= 1;
 }
 
 function toggleDay(
