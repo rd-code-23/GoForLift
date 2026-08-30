@@ -39,7 +39,7 @@ describe('routine editor', () => {
       screen.queryByRole('button', { name: 'Preview' }),
     ).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Add Exercise' })).toBeVisible();
-    expect(screen.getByRole('button', { name: 'Add schedule' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Add schedule' })).toBeEnabled();
     expect(
       screen.getByRole('link', { name: 'Back to routines' }),
     ).toHaveAttribute('href', '/routines');
