@@ -1,8 +1,8 @@
 /** Displays routine schedule selections and the entry point for adding one. */
 import { Plus } from 'lucide-react';
 
-import { Button } from '../../components/ui/button';
-import { Label } from '../../components/ui/label';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
 
 export function RoutineScheduleField() {
   return (

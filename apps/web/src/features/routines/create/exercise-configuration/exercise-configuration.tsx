@@ -5,13 +5,13 @@ import { Dumbbell, X } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 
-import { Button } from '../../components/ui/button';
-import { Label } from '../../components/ui/label';
-import { LoadingState } from '../../components/ui/loading-state';
-import { NumberStepper } from '../../components/ui/number-stepper';
-import { PageTitle } from '../../components/ui/page-title';
-import { PositiveIntegerInput } from '../../components/ui/positive-integer-input';
-import { useExercises } from '../exercises/exercises.query';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { LoadingState } from '@/components/ui/loading-state';
+import { NumberStepper } from '@/components/ui/number-stepper';
+import { PageTitle } from '@/components/ui/page-title';
+import { PositiveIntegerInput } from '@/components/ui/positive-integer-input';
+import { useExercises } from '@/features/exercises/exercises.query';
 
 type ExerciseConfigurationProps = {
   exerciseId: string;
