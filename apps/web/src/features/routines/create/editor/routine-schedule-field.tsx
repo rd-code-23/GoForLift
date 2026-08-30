@@ -1,6 +1,7 @@
 /** Displays routine schedules and opens the responsive weekly schedule editor. */
 import { Plus } from 'lucide-react';
-import { useReducer } from 'react';
+import { useReducer, useState } from 'react';
+import { useFormContext, useWatch } from 'react-hook-form';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -14,6 +15,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
+import type { RoutineDraftFormValues } from '../routine-draft-form';
 import {
   INITIAL_SCHEDULE_EDITOR_STATE,
   scheduleEditorReducer,
@@ -30,11 +32,29 @@ const WEEKDAYS = [
 ] as const;
 
 export function RoutineScheduleField() {
+  // `control` is RHF's reference to this specific form instance. useWatch uses
+  // it to subscribe to this form's schedules and rerender when they change.
+  const { control } = useFormContext<RoutineDraftFormValues>();
+  const schedules = useWatch({ control, name: 'schedules' });
+
   return (
     <div>
       <Label isOptional>Schedule</Label>
 
-      <div className="mt-2 flex min-h-14 items-center">
+      <div className="mt-2 flex min-h-14 flex-wrap items-center gap-2">
+        {schedules.map((schedule) => (
+          <div
+            className="min-w-20 rounded-lg border border-border/60 bg-surface-elevated px-3 py-2 text-center"
+            key={schedule.dayOfWeek}
+          >
+            <p className="text-sm font-medium">
+              {WEEKDAYS[schedule.dayOfWeek]?.shortLabel}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {formatScheduleTime(schedule.localTime)}
+            </p>
+          </div>
+        ))}
         <ScheduleDialog />
       </div>
     </div>
@@ -42,13 +62,41 @@ export function RoutineScheduleField() {
 }
 
 function ScheduleDialog() {
+  const [isOpen, setIsOpen] = useState(false);
   const [state, dispatch] = useReducer(
     scheduleEditorReducer,
     INITIAL_SCHEDULE_EDITOR_STATE,
   );
+  // `control` tells useWatch which RHF form instance to read schedules from.
+  const { control, setValue } = useFormContext<RoutineDraftFormValues>();
+  const savedSchedules = useWatch({ control, name: 'schedules' });
+  const hasSelectedDays = state.days.some((day) => day.isSelected);
+
+  function handleOpenChange(nextIsOpen: boolean) {
+    if (nextIsOpen) {
+      dispatch({ type: 'draft-loaded', schedules: savedSchedules });
+    }
+
+    setIsOpen(nextIsOpen);
+  }
+
+  function saveSchedules() {
+    const schedules = state.days
+      .filter((day) => day.isSelected)
+      .map((day) => ({
+        dayOfWeek: day.dayOfWeek,
+        localTime: `${day.time}:00`,
+      }));
+
+    setValue('schedules', schedules, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+    setIsOpen(false);
+  }
 
   return (
-    <Dialog>
+    <Dialog onOpenChange={handleOpenChange} open={isOpen}>
       <DialogTrigger asChild>
         <Button
           aria-label="Add schedule"
@@ -143,11 +191,24 @@ function ScheduleDialog() {
               Cancel
             </Button>
           </DialogClose>
-          <Button disabled type="button">
+          <Button
+            disabled={!hasSelectedDays}
+            onClick={saveSchedules}
+            type="button"
+          >
             Save Schedule
           </Button>
         </div>
       </DialogContent>
     </Dialog>
   );
+}
+
+function formatScheduleTime(localTime: string) {
+  const [hourText = '0', minute = '00'] = localTime.split(':');
+  const hour = Number(hourText);
+  const period = hour >= 12 ? 'PM' : 'AM';
+  const displayHour = hour % 12 || 12;
+
+  return `${displayHour}:${minute} ${period}`;
 }
