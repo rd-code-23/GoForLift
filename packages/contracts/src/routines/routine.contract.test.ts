@@ -2,6 +2,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  createRoutineExerciseInputSchema,
   createRoutineInputSchema,
   ROUTINE_NAME_MAX_LENGTH,
   routineListResponseSchema,
@@ -43,7 +44,7 @@ describe('routineNameSchema', () => {
 });
 
 describe('createRoutineInputSchema', () => {
-  it('normalizes a valid routine and applies rest defaults', () => {
+  it('normalizes a valid routine and applies exercise defaults', () => {
     expect(createRoutineInputSchema.parse(validCreateRoutineInput)).toEqual({
       ...validCreateRoutineInput,
       name: 'Upper Body',
@@ -51,10 +52,30 @@ describe('createRoutineInputSchema', () => {
       exercises: [
         {
           ...validCreateRoutineInput.exercises[0],
-          restBetweenSetsSeconds: 0,
+          restBetweenSetsSeconds: 60,
           restAfterExerciseSeconds: 0,
+          notes: null,
         },
       ],
+    });
+  });
+
+  it('provides shared defaults for a newly selected exercise', () => {
+    const exercise = createRoutineExerciseInputSchema.parse({
+      exerciseId: '9f4b5a8e-2c3d-4f10-8a11-000000000001',
+      position: 0,
+    });
+
+    expect(exercise).toEqual({
+      exerciseId: '9f4b5a8e-2c3d-4f10-8a11-000000000001',
+      position: 0,
+      sets: 3,
+      targetReps: 8,
+      weight: 10,
+      weightUnit: 'lb',
+      restBetweenSetsSeconds: 60,
+      restAfterExerciseSeconds: 0,
+      notes: null,
     });
   });
 

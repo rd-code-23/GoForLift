@@ -1,7 +1,7 @@
 /** Presents the responsive visual shell for creating a registered-user routine. */
 import { Link, useNavigate } from '@tanstack/react-router';
 import { ArrowLeft, Plus } from 'lucide-react';
-import { useFormContext } from 'react-hook-form';
+import { useFormContext, useWatch } from 'react-hook-form';
 
 import { AddActionButton } from '../../components/ui/add-action-button';
 import { Button } from '../../components/ui/button';
@@ -92,10 +92,13 @@ function RoutineDetails() {
 }
 
 function ExerciseSection({ onAddExercise }: { onAddExercise: () => void }) {
+  const { control } = useFormContext<RoutineDraftFormValues>();
+  const exercises = useWatch({ control, name: 'exercises' });
+
   return (
     <div>
       <Label asChild>
-        <h2>Exercises (0)</h2>
+        <h2>Exercises ({exercises.length})</h2>
       </Label>
       <div className="mt-3">
         <AddActionButton onClick={onAddExercise} type="button">

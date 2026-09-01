@@ -8,6 +8,7 @@ import { Button } from './button';
 type NumberStepperProps = {
   defaultValue: number;
   id: string;
+  onValueChange: (value: number) => void;
   min?: number;
 };
 
@@ -15,20 +16,26 @@ export function NumberStepper({
   defaultValue,
   id,
   min = 1,
+  onValueChange,
 }: NumberStepperProps) {
   const [value, setValue] = useState<number | string>(defaultValue);
 
   const decreaseValue = () => {
-    setValue((currentValue) => Math.max(min, Number(currentValue || min) - 1));
+    const nextValue = Math.max(min, Number(value || min) - 1);
+    setValue(nextValue);
+    onValueChange(nextValue);
   };
 
   const increaseValue = () => {
-    setValue((currentValue) => Number(currentValue || min) + 1);
+    const nextValue = Number(value || min) + 1;
+    setValue(nextValue);
+    onValueChange(nextValue);
   };
 
   const finishEditing = () => {
     if (value === '' || Number(value) < min) {
       setValue(min);
+      onValueChange(min);
     }
   };
 
@@ -62,6 +69,10 @@ export function NumberStepper({
 
           if (nextValue === '' || /^\d+$/.test(nextValue)) {
             setValue(nextValue);
+
+            if (nextValue !== '') {
+              onValueChange(Number(nextValue));
+            }
           }
         }}
         type="number"
