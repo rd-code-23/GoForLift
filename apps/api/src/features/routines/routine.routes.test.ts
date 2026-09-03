@@ -86,8 +86,9 @@ describe('POST /routines', () => {
       exercises: [
         {
           ...createRoutineInput.exercises[0],
-          restBetweenSetsSeconds: 0,
+          restBetweenSetsSeconds: 60,
           restAfterExerciseSeconds: 0,
+          notes: null,
         },
       ],
       schedules: [],
