@@ -16,13 +16,13 @@ export const createRoutineExerciseInputSchema = z
   .object({
     exerciseId: z.uuid(),
     position: z.number().int().nonnegative(),
-    sets: z.number().int().positive(),
-    targetReps: z.number().int().positive(),
-    weight: z.number().nonnegative(),
-    weightUnit: z.enum(['lb', 'kg']),
-    restBetweenSetsSeconds: z.number().int().nonnegative().default(0),
+    sets: z.number().int().positive().default(3),
+    targetReps: z.number().int().positive().default(8),
+    weight: z.number().nonnegative().default(10),
+    weightUnit: z.enum(['lb', 'kg']).default('lb'),
+    restBetweenSetsSeconds: z.number().int().nonnegative().default(60),
     restAfterExerciseSeconds: z.number().int().nonnegative().default(0),
-    notes: z.string().trim().nullable().optional(),
+    notes: z.string().trim().nullable().default(null),
   })
   .strict();
 

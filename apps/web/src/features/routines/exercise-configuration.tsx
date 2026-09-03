@@ -1,17 +1,34 @@
 /** Presents the configuration shell for an exercise selected for a routine. */
-import type { ExerciseSummary } from '@goforlift/contracts';
-import { Link } from '@tanstack/react-router';
+import { zodResolver } from '@hookform/resolvers/zod';
+import {
+  createRoutineExerciseInputSchema,
+  type ExerciseSummary,
+} from '@goforlift/contracts';
+import { Link, useNavigate } from '@tanstack/react-router';
 import { Dumbbell, X } from 'lucide-react';
+import {
+  type UseFormRegister,
+  type UseFormSetValue,
+  useForm,
+  useFormContext,
+} from 'react-hook-form';
 
 import { cn } from '@/lib/utils';
 
-import { Button } from '../../components/ui/button';
-import { Label } from '../../components/ui/label';
-import { LoadingState } from '../../components/ui/loading-state';
-import { NumberStepper } from '../../components/ui/number-stepper';
-import { PageTitle } from '../../components/ui/page-title';
-import { PositiveIntegerInput } from '../../components/ui/positive-integer-input';
-import { useExercises } from '../exercises/exercises.query';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { LoadingState } from '@/components/ui/loading-state';
+import { NumberStepper } from '@/components/ui/number-stepper';
+import { PageTitle } from '@/components/ui/page-title';
+import { PositiveIntegerInput } from '@/components/ui/positive-integer-input';
+import { useExercises } from '@/features/exercises/exercises.query';
+import type { RoutineDraftFormValues } from './routine-draft-form';
+import { z } from 'zod';
+
+type RoutineExerciseFormValues = z.input<
+  typeof createRoutineExerciseInputSchema
+>;
+type RoutineExerciseInput = z.output<typeof createRoutineExerciseInputSchema>;
 
 type ExerciseConfigurationProps = {
   exerciseId: string;
@@ -71,14 +88,46 @@ function ExerciseConfigurationForm({
 }: {
   exercise: ExerciseSummary;
 }) {
+  const navigate = useNavigate();
+  const { getValues, setValue: setDraftValue } =
+    useFormContext<RoutineDraftFormValues>();
+  const defaultValues = createRoutineExerciseInputSchema.parse({
+    exerciseId: exercise.id,
+    position: getValues('exercises').length,
+  });
+  const {
+    handleSubmit,
+    register,
+    setValue: setConfigurationValue,
+  } = useForm<RoutineExerciseFormValues, unknown, RoutineExerciseInput>({
+    defaultValues,
+    mode: 'onChange',
+    resolver: zodResolver(createRoutineExerciseInputSchema),
+  });
+
+  async function saveExercise(input: RoutineExerciseInput) {
+    setDraftValue('exercises', [...getValues('exercises'), input], {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+    await navigate({ to: '/routines/new' });
+  }
+
   return (
-    <div className="lg:grid lg:grid-cols-[1fr_3fr] lg:divide-x lg:divide-border/40">
+    <form
+      className="lg:grid lg:grid-cols-[1fr_3fr] lg:divide-x lg:divide-border/40"
+      onSubmit={(event) => void handleSubmit(saveExercise)(event)}
+    >
       <ExerciseIdentity exercise={exercise} />
 
       <div className="mt-7 lg:mt-0 lg:pl-8">
-        <ExerciseFields />
+        <ExerciseFields
+          defaultValues={defaultValues}
+          register={register}
+          setValue={setConfigurationValue}
+        />
       </div>
-    </div>
+    </form>
   );
 }
 
@@ -110,12 +159,32 @@ function ExerciseIdentity({ exercise }: { exercise: ExerciseSummary }) {
   );
 }
 
-function ExerciseFields() {
+function ExerciseFields({
+  defaultValues,
+  register,
+  setValue,
+}: {
+  defaultValues: RoutineExerciseInput;
+  register: UseFormRegister<RoutineExerciseFormValues>;
+  setValue: UseFormSetValue<RoutineExerciseFormValues>;
+}) {
   return (
     <div>
       <div className="space-y-5">
-        <NumberField defaultValue={3} id="exercise-sets" label="Sets" />
-        <NumberField defaultValue={8} id="exercise-reps" label="Reps" />
+        <NumberField
+          defaultValue={defaultValues.sets}
+          field="sets"
+          id="exercise-sets"
+          label="Sets"
+          setValue={setValue}
+        />
+        <NumberField
+          defaultValue={defaultValues.targetReps}
+          field="targetReps"
+          id="exercise-reps"
+          label="Reps"
+          setValue={setValue}
+        />
 
         <div className="flex items-center justify-between gap-6">
           <Label htmlFor="exercise-weight">Weight</Label>
@@ -127,13 +196,17 @@ function ExerciseFields() {
           >
             <PositiveIntegerInput
               className="h-full min-w-0 rounded-none border-0 bg-transparent shadow-none"
-              defaultValue={10}
+              defaultValue={defaultValues.weight}
               id="exercise-weight"
+              onValueChange={(value) =>
+                setValue('weight', value, { shouldValidate: true })
+              }
             />
             <select
               aria-label="Weight unit"
               className="h-full border-0 border-l border-input bg-surface-elevated px-3 text-sm outline-none"
-              defaultValue="lb"
+              defaultValue={defaultValues.weightUnit}
+              {...register('weightUnit')}
             >
               <option value="lb">lb</option>
               <option value="kg">kg</option>
@@ -142,9 +215,11 @@ function ExerciseFields() {
         </div>
 
         <NumberField
-          defaultValue={60}
+          defaultValue={defaultValues.restBetweenSetsSeconds}
+          field="restBetweenSetsSeconds"
           id="exercise-rest"
           label="Rest Between Sets"
+          setValue={setValue}
           suffix="seconds"
         />
 
@@ -160,6 +235,7 @@ function ExerciseFields() {
             )}
             id="exercise-notes"
             placeholder="E.g., keep elbows tucked in."
+            {...register('notes')}
           />
         </div>
       </div>
@@ -168,7 +244,7 @@ function ExerciseFields() {
         <Button asChild variant="outline">
           <Link to="/routines/new/exercises">Cancel</Link>
         </Button>
-        <Button disabled>Done</Button>
+        <Button type="submit">Done</Button>
       </div>
     </div>
   );
@@ -176,12 +252,21 @@ function ExerciseFields() {
 
 type NumberFieldProps = {
   defaultValue: number;
+  field: 'sets' | 'targetReps' | 'restBetweenSetsSeconds';
   id: string;
   label: string;
+  setValue: UseFormSetValue<RoutineExerciseFormValues>;
   suffix?: string;
 };
 
-function NumberField({ defaultValue, id, label, suffix }: NumberFieldProps) {
+function NumberField({
+  defaultValue,
+  field,
+  id,
+  label,
+  setValue,
+  suffix,
+}: NumberFieldProps) {
   return (
     <div className="flex items-center justify-between gap-6">
       <Label className="whitespace-nowrap" htmlFor={id}>
@@ -199,13 +284,22 @@ function NumberField({ defaultValue, id, label, suffix }: NumberFieldProps) {
             className="h-full rounded-none border-0 bg-transparent shadow-none"
             defaultValue={defaultValue}
             id={id}
+            onValueChange={(value) =>
+              setValue(field, value, { shouldValidate: true })
+            }
           />
           <span className="flex items-center border-l px-3 text-sm text-muted-foreground">
             {suffix}
           </span>
         </div>
       ) : (
-        <NumberStepper defaultValue={defaultValue} id={id} />
+        <NumberStepper
+          defaultValue={defaultValue}
+          id={id}
+          onValueChange={(value) =>
+            setValue(field, value, { shouldValidate: true })
+          }
+        />
       )}
     </div>
   );
