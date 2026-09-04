@@ -12,10 +12,10 @@ import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, expect, it, vi } from 'vitest';
 
-import { RoutineDraftFormProvider } from './routine-draft-form';
-import { RoutineEditor } from './routine-editor';
+import { RoutineEditor } from '../editor/routine-editor';
+import { ExercisePicker } from '../exercise-picker/exercise-picker';
+import { RoutineDraftFormProvider } from '../routine-draft-form';
 import { ExerciseConfiguration } from './exercise-configuration';
-import { ExercisePicker } from './exercise-picker';
 
 afterEach(() => {
   cleanup();

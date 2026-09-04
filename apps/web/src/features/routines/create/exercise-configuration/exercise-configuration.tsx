@@ -22,8 +22,9 @@ import { NumberStepper } from '@/components/ui/number-stepper';
 import { PageTitle } from '@/components/ui/page-title';
 import { PositiveIntegerInput } from '@/components/ui/positive-integer-input';
 import { useExercises } from '@/features/exercises/exercises.query';
-import type { RoutineDraftFormValues } from './routine-draft-form';
 import { z } from 'zod';
+
+import type { RoutineDraftFormValues } from '../routine-draft-form';
 
 type RoutineExerciseFormValues = z.input<
   typeof createRoutineExerciseInputSchema
