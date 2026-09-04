@@ -29,7 +29,7 @@ function renderConfiguration(exerciseId: string) {
   const rootRoute = createRootRoute({ component: TestLayout });
   const configurationRoute = createRoute({
     getParentRoute: () => rootRoute,
-    path: '/configure',
+    path: '/routines/new/exercises/$exerciseId',
     component: () => <ExerciseConfiguration exerciseId={exerciseId} />,
   });
   const editorRoute = createRoute({
@@ -43,7 +43,7 @@ function renderConfiguration(exerciseId: string) {
     component: ExercisePicker,
   });
   const router = createRouter({
-    history: createMemoryHistory({ initialEntries: ['/configure'] }),
+    history: createMemoryHistory({ initialEntries: ['/routines/new'] }),
     routeTree: rootRoute.addChildren([
       configurationRoute,
       editorRoute,
@@ -84,6 +84,10 @@ it('shows the selected exercise and initial configuration fields', async () => {
   vi.stubGlobal('fetch', fetchMock);
 
   renderConfiguration(exerciseId);
+
+  await user.type(await screen.findByLabelText('Routine Name'), 'Upper Body');
+  await user.click(screen.getByRole('button', { name: 'Add Exercise' }));
+  await user.click(await screen.findByRole('link', { name: /Bicep Curl/ }));
 
   expect(await screen.findByText('Bicep Curl')).toBeVisible();
   expect(screen.getByLabelText('Sets')).toHaveValue(3);

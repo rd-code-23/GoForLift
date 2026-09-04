@@ -11,16 +11,13 @@ import { FormProvider, useForm } from 'react-hook-form';
 import { z } from 'zod';
 
 // The form draft keeps the exercise name so the editor can display it without
-// reading the exercise catalog again. The create-routine API accepts only the
-// exercise ID and configuration, so the transform removes this UI-only name
-// from the validated output before that data is submitted.
-// When the complete form is successfully parsed by the Zod resolver, .transform() removes name.
-const routineDraftExerciseSchema = createRoutineExerciseInputSchema
-  .extend({ name: exerciseSummarySchema.shape.name })
-  .transform(({ name, ...exercise }) => {
-    void name;
-    return exercise;
-  });
+// reading the exercise catalog again. It must remain in both the input and
+// parsed form values because RHF runs this schema while the user edits. The
+// eventual save handler will map the draft to createRoutineInputSchema and
+// remove this UI-only field at the API boundary.
+const routineDraftExerciseSchema = createRoutineExerciseInputSchema.extend({
+  name: exerciseSummarySchema.shape.name,
+});
 
 const routineDraftFormSchema = z.object({
   name: routineNameSchema,
