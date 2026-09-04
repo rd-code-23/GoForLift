@@ -16,8 +16,8 @@ import {
 import type { PropsWithChildren } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { ApplicationIdentityContext } from '../../app/application-identity';
-import { createPublicUser } from '../../test/fixtures/public-user.fixture';
+import { ApplicationIdentityContext } from '@/app/application-identity';
+import { createPublicUser } from '@/test/fixtures/public-user.fixture';
 import { RoutinesLanding } from './routines-landing';
 
 afterEach(() => {

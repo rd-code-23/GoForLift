@@ -1,8 +1,8 @@
 /** Displays configured exercises in the routine draft. */
 import { Dumbbell, GripVertical, MoreHorizontal } from 'lucide-react';
 
-import { cn } from '../../lib/utils';
-import type { RoutineDraftExerciseFormValues } from './routine-draft-form';
+import { cn } from '@/lib/utils';
+import type { RoutineDraftExerciseFormValues } from '../routine-draft-form';
 
 export function RoutineExerciseList({
   exercises,

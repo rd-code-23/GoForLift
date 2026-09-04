@@ -12,10 +12,10 @@ import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, expect, it, vi } from 'vitest';
 
-import { RoutineDraftFormProvider } from './routine-draft-form';
-import { RoutineEditor } from './routine-editor';
+import { RoutineEditor } from '../editor/routine-editor';
+import { ExercisePicker } from '../exercise-picker/exercise-picker';
+import { RoutineDraftFormProvider } from '../routine-draft-form';
 import { ExerciseConfiguration } from './exercise-configuration';
-import { ExercisePicker } from './exercise-picker';
 
 afterEach(() => {
   cleanup();
@@ -29,7 +29,7 @@ function renderConfiguration(exerciseId: string) {
   const rootRoute = createRootRoute({ component: TestLayout });
   const configurationRoute = createRoute({
     getParentRoute: () => rootRoute,
-    path: '/configure',
+    path: '/routines/new/exercises/$exerciseId',
     component: () => <ExerciseConfiguration exerciseId={exerciseId} />,
   });
   const editorRoute = createRoute({
@@ -43,7 +43,7 @@ function renderConfiguration(exerciseId: string) {
     component: ExercisePicker,
   });
   const router = createRouter({
-    history: createMemoryHistory({ initialEntries: ['/configure'] }),
+    history: createMemoryHistory({ initialEntries: ['/routines/new'] }),
     routeTree: rootRoute.addChildren([
       configurationRoute,
       editorRoute,
@@ -84,6 +84,10 @@ it('shows the selected exercise and initial configuration fields', async () => {
   vi.stubGlobal('fetch', fetchMock);
 
   renderConfiguration(exerciseId);
+
+  await user.type(await screen.findByLabelText('Routine Name'), 'Upper Body');
+  await user.click(screen.getByRole('button', { name: 'Add Exercise' }));
+  await user.click(await screen.findByRole('link', { name: /Bicep Curl/ }));
 
   expect(await screen.findByText('Bicep Curl')).toBeVisible();
   expect(screen.getByLabelText('Sets')).toHaveValue(3);

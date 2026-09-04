@@ -4,12 +4,12 @@ import { Link } from '@tanstack/react-router';
 import { ChevronRight, Dumbbell, Plus, Search, X } from 'lucide-react';
 import { useState } from 'react';
 
-import { AddActionButton } from '../../components/ui/add-action-button';
-import { Button } from '../../components/ui/button';
-import { Input } from '../../components/ui/input';
-import { LoadingState } from '../../components/ui/loading-state';
-import { PageTitle } from '../../components/ui/page-title';
-import { useExercises } from '../exercises/exercises.query';
+import { AddActionButton } from '@/components/ui/add-action-button';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { LoadingState } from '@/components/ui/loading-state';
+import { PageTitle } from '@/components/ui/page-title';
+import { useExercises } from '@/features/exercises/exercises.query';
 
 export function ExercisePicker() {
   const [searchTerm, setSearchTerm] = useState('');

@@ -6,6 +6,7 @@ import { ApplicationIdentityContext } from '../app/application-identity';
 import { ApplicationShell } from '../app/application-shell';
 import { clearGuestSession } from '../features/auth/guest-session';
 import { useLogoutMutation } from '../features/auth/logout.mutation';
+import { RoutineDraftFormProvider } from '../features/routines/create/routine-draft-form';
 
 export const Route = createFileRoute('/_app')({
   component: ProtectedApplicationLayout,
@@ -28,13 +29,15 @@ function ProtectedApplicationLayout() {
     <ApplicationAccessBoundary>
       {(identity) => (
         <ApplicationIdentityContext.Provider value={identity}>
-          <ApplicationShell
-            identity={identity}
-            onExitGuest={identity.kind === 'guest' ? exitGuest : undefined}
-            onLogout={identity.kind === 'user' ? logoutUser : undefined}
-          >
-            <Outlet />
-          </ApplicationShell>
+          <RoutineDraftFormProvider>
+            <ApplicationShell
+              identity={identity}
+              onExitGuest={identity.kind === 'guest' ? exitGuest : undefined}
+              onLogout={identity.kind === 'user' ? logoutUser : undefined}
+            >
+              <Outlet />
+            </ApplicationShell>
+          </RoutineDraftFormProvider>
         </ApplicationIdentityContext.Provider>
       )}
     </ApplicationAccessBoundary>
