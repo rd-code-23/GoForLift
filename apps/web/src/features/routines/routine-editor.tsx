@@ -10,6 +10,7 @@ import { Label } from '../../components/ui/label';
 import { PageTitle } from '../../components/ui/page-title';
 import { cn } from '../../lib/utils';
 import type { RoutineDraftFormValues } from './routine-draft-form';
+import { RoutineExerciseList } from './routine-exercise-list';
 import { RoutineScheduleField } from './routine-schedule-field';
 
 export function RoutineEditor() {
@@ -100,7 +101,10 @@ function ExerciseSection({ onAddExercise }: { onAddExercise: () => void }) {
       <Label asChild>
         <h2>Exercises ({exercises.length})</h2>
       </Label>
-      <div className="mt-3">
+
+      {exercises.length > 0 && <RoutineExerciseList exercises={exercises} />}
+
+      <div className={exercises.length > 0 ? 'mt-1' : 'mt-3'}>
         <AddActionButton onClick={onAddExercise} type="button">
           <Plus aria-hidden="true" />
           Add Exercise

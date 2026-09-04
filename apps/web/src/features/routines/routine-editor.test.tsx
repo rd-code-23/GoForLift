@@ -1,5 +1,6 @@
 /** Verifies the routine editor shell exposes its initial responsive workflow. */
 import { ROUTINE_NAME_MAX_LENGTH } from '@goforlift/contracts';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
   createMemoryHistory,
   createRootRoute,
@@ -11,17 +12,21 @@ import {
 } from '@tanstack/react-router';
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { RoutineDraftFormProvider } from './routine-draft-form';
 import { RoutineEditor } from './routine-editor';
+import { exercisesQueryKey } from '../exercises/exercises.query';
 
 afterEach(() => {
   cleanup();
+  vi.unstubAllGlobals();
 });
 
 describe('routine editor', () => {
   it('shows the initial editor shell without enabling unfinished actions', async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
     renderEditor();
 
     expect(
@@ -40,6 +45,7 @@ describe('routine editor', () => {
     expect(
       screen.getByRole('link', { name: 'Back to routines' }),
     ).toHaveAttribute('href', '/routines');
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it('shows live validation and clears the error after correction', async () => {
@@ -92,6 +98,10 @@ describe('routine editor', () => {
 });
 
 function renderEditor() {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+  queryClient.setQueryData(exercisesQueryKey, { exercises: [] });
   const rootRoute = createRootRoute();
   const routineCreationRoute = createRoute({
     getParentRoute: () => rootRoute,
@@ -115,7 +125,11 @@ function renderEditor() {
     ]),
   });
 
-  render(<RouterProvider router={testRouter} />);
+  render(
+    <QueryClientProvider client={queryClient}>
+      <RouterProvider router={testRouter} />
+    </QueryClientProvider>,
+  );
 
   return testRouter;
 }
