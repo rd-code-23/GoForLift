@@ -10,14 +10,12 @@ import {
 } from '@tanstack/react-router';
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { useFormContext, useWatch } from 'react-hook-form';
 import { afterEach, expect, it, vi } from 'vitest';
 
-import {
-  RoutineDraftFormProvider,
-  type RoutineDraftFormValues,
-} from './routine-draft-form';
+import { RoutineDraftFormProvider } from './routine-draft-form';
+import { RoutineEditor } from './routine-editor';
 import { ExerciseConfiguration } from './exercise-configuration';
+import { ExercisePicker } from './exercise-picker';
 
 afterEach(() => {
   cleanup();
@@ -37,11 +35,20 @@ function renderConfiguration(exerciseId: string) {
   const editorRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: '/routines/new',
-    component: DraftExerciseCount,
+    component: RoutineEditor,
+  });
+  const exercisePickerRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/routines/new/exercises',
+    component: ExercisePicker,
   });
   const router = createRouter({
     history: createMemoryHistory({ initialEntries: ['/configure'] }),
-    routeTree: rootRoute.addChildren([configurationRoute, editorRoute]),
+    routeTree: rootRoute.addChildren([
+      configurationRoute,
+      editorRoute,
+      exercisePickerRoute,
+    ]),
   });
 
   render(
@@ -59,31 +66,22 @@ function TestLayout() {
   );
 }
 
-function DraftExerciseCount() {
-  const { control } = useFormContext<RoutineDraftFormValues>();
-  const exercises = useWatch({ control, name: 'exercises' });
-
-  return <p>Saved exercises: {exercises.length}</p>;
-}
-
 it('shows the selected exercise and initial configuration fields', async () => {
   const user = userEvent.setup();
   const exerciseId = '26d34dc0-8e4c-4bd0-9e3b-7b839b44e486';
-  vi.stubGlobal(
-    'fetch',
-    vi.fn().mockResolvedValue(
-      Response.json({
-        exercises: [
-          {
-            id: exerciseId,
-            name: 'Bicep Curl',
-            description: null,
-            isCustom: false,
-          },
-        ],
-      }),
-    ),
+  const fetchMock = vi.fn().mockResolvedValue(
+    Response.json({
+      exercises: [
+        {
+          id: exerciseId,
+          name: 'Bicep Curl',
+          description: null,
+          isCustom: false,
+        },
+      ],
+    }),
   );
+  vi.stubGlobal('fetch', fetchMock);
 
   renderConfiguration(exerciseId);
 
@@ -94,5 +92,15 @@ it('shows the selected exercise and initial configuration fields', async () => {
 
   await user.click(screen.getByRole('button', { name: 'Done' }));
 
-  expect(await screen.findByText('Saved exercises: 1')).toBeVisible();
+  expect(
+    await screen.findByRole('heading', { name: 'Exercises (1)' }),
+  ).toBeVisible();
+  expect(screen.getByText('Bicep Curl')).toBeVisible();
+  expect(screen.getByText('10 lb')).toBeVisible();
+  expect(screen.getByText('60s')).toBeVisible();
+
+  await user.click(screen.getByRole('button', { name: 'Add Exercise' }));
+
+  expect(await screen.findByLabelText('Search exercises')).toBeVisible();
+  expect(fetchMock).toHaveBeenCalledTimes(1);
 });

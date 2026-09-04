@@ -91,10 +91,12 @@ function ExerciseConfigurationForm({
   const navigate = useNavigate();
   const { getValues, setValue: setDraftValue } =
     useFormContext<RoutineDraftFormValues>();
+
   const defaultValues = createRoutineExerciseInputSchema.parse({
     exerciseId: exercise.id,
     position: getValues('exercises').length,
   });
+
   const {
     handleSubmit,
     register,
@@ -106,10 +108,14 @@ function ExerciseConfigurationForm({
   });
 
   async function saveExercise(input: RoutineExerciseInput) {
-    setDraftValue('exercises', [...getValues('exercises'), input], {
-      shouldDirty: true,
-      shouldValidate: true,
-    });
+    setDraftValue(
+      'exercises',
+      [...getValues('exercises'), { ...input, name: exercise.name }],
+      {
+        shouldDirty: true,
+        shouldValidate: true,
+      },
+    );
     await navigate({ to: '/routines/new' });
   }
 
