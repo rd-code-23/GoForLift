@@ -26,12 +26,12 @@ export function RoutineEditor() {
       <EditorHeader onClear={() => reset()} />
 
       <form className="grid gap-6 lg:grid-cols-2">
-        <div className="space-y-6">
-          <RoutineDetails />
+        <RoutineDetails />
+        <RoutineScheduleField />
+
+        <div className="lg:col-span-2">
           <ExerciseSection onAddExercise={() => void addExercise()} />
         </div>
-
-        <RoutineScheduleField />
       </form>
     </section>
   );
