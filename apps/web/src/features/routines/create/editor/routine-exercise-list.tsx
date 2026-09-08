@@ -1,16 +1,27 @@
 /** Displays configured exercises in the routine draft. */
 import { Dumbbell, GripVertical, MoreHorizontal } from 'lucide-react';
 
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import type { RoutineDraftExerciseFormValues } from '../routine-draft-form';
 
 export function RoutineExerciseList({
   exercises,
+  onEdit,
+  onRemove,
 }: {
   exercises: RoutineDraftExerciseFormValues[];
+  onEdit: (exercise: RoutineDraftExerciseFormValues) => void;
+  onRemove: (position: number) => void;
 }) {
   return (
-    <div className="mt-3 overflow-hidden rounded-lg bg-surface-elevated">
+    <div className="mt-3 w-full overflow-hidden rounded-lg bg-surface-elevated lg:w-fit lg:max-w-3xl">
       <div
         className={cn(
           'hidden grid-cols-[minmax(0,1fr)_3.5rem_3.5rem_5rem_4rem_2rem] items-center gap-2 px-3 py-2',
@@ -28,7 +39,12 @@ export function RoutineExerciseList({
 
       <ul>
         {exercises.map((exercise) => (
-          <RoutineExerciseRow exercise={exercise} key={exercise.position} />
+          <RoutineExerciseRow
+            exercise={exercise}
+            key={exercise.position}
+            onEdit={onEdit}
+            onRemove={onRemove}
+          />
         ))}
       </ul>
     </div>
@@ -37,13 +53,17 @@ export function RoutineExerciseList({
 
 function RoutineExerciseRow({
   exercise,
+  onEdit,
+  onRemove,
 }: {
   exercise: RoutineDraftExerciseFormValues;
+  onEdit: (exercise: RoutineDraftExerciseFormValues) => void;
+  onRemove: (position: number) => void;
 }) {
   return (
     <li
       className={cn(
-        'grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 border-t border-border/30 px-3 py-3 first:border-t-0',
+        'relative grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 border-t border-border/30 px-3 py-3 first:border-t-0',
         'sm:grid-cols-[minmax(0,1fr)_3.5rem_3.5rem_5rem_4rem_2rem] sm:gap-2 sm:py-2.5',
       )}
     >
@@ -64,22 +84,58 @@ function RoutineExerciseRow({
         </div>
       </div>
 
-      <span className="hidden text-center text-sm sm:block">
+      <span
+        className="hidden min-w-0 truncate px-1 text-center text-sm sm:block"
+        title={String(exercise.sets)}
+      >
         {exercise.sets}
       </span>
-      <span className="hidden text-center text-sm sm:block">
+      <span
+        className="hidden min-w-0 truncate px-1 text-center text-sm sm:block"
+        title={String(exercise.targetReps)}
+      >
         {exercise.targetReps}
       </span>
-      <span className="hidden text-center text-sm sm:block">
+      <span
+        className="hidden min-w-0 truncate px-1 text-center text-sm sm:block"
+        title={`${exercise.weight} ${exercise.weightUnit}`}
+      >
         {exercise.weight} {exercise.weightUnit}
       </span>
-      <span className="hidden text-center text-sm sm:block">
+      <span
+        className="hidden min-w-0 truncate px-1 text-center text-sm sm:block"
+        title={`${exercise.restBetweenSetsSeconds}s`}
+      >
         {exercise.restBetweenSetsSeconds}s
       </span>
-      <MoreHorizontal
-        aria-hidden="true"
-        className="size-4 text-muted-foreground"
-      />
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            aria-label={`Actions for ${exercise.name}`}
+            className={cn(
+              'absolute top-1/2 right-1 size-8 -translate-y-1/2',
+              'text-muted-foreground',
+              'sm:static sm:translate-y-0 sm:justify-self-end',
+            )}
+            size="icon"
+            type="button"
+            variant="ghost"
+          >
+            <MoreHorizontal aria-hidden="true" className="size-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem onSelect={() => onEdit(exercise)}>
+            Edit
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            className="text-destructive focus:text-destructive"
+            onSelect={() => onRemove(exercise.position)}
+          >
+            Remove
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </li>
   );
 }

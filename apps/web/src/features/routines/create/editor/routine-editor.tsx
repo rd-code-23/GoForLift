@@ -9,7 +9,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PageTitle } from '@/components/ui/page-title';
 import { cn } from '@/lib/utils';
-import type { RoutineDraftFormValues } from '../routine-draft-form';
+import type {
+  RoutineDraftExerciseFormValues,
+  RoutineDraftFormValues,
+} from '../routine-draft-form';
 import { RoutineExerciseList } from './routine-exercise-list';
 import { RoutineScheduleField } from './routine-schedule-field';
 
@@ -21,17 +24,28 @@ export function RoutineEditor() {
     await navigate({ to: '/routines/new/exercises' });
   };
 
+  const editExercise = async (exercise: RoutineDraftExerciseFormValues) => {
+    await navigate({
+      params: { exerciseId: exercise.exerciseId },
+      search: { position: exercise.position },
+      to: '/routines/new/exercises/$exerciseId',
+    });
+  };
+
   return (
     <section className="mx-auto w-full max-w-5xl">
       <EditorHeader onClear={() => reset()} />
 
       <form className="grid gap-6 lg:grid-cols-2">
-        <div className="space-y-6">
-          <RoutineDetails />
-          <ExerciseSection onAddExercise={() => void addExercise()} />
-        </div>
-
+        <RoutineDetails />
         <RoutineScheduleField />
+
+        <div className="lg:col-span-2">
+          <ExerciseSection
+            onAddExercise={() => void addExercise()}
+            onEditExercise={(exercise) => void editExercise(exercise)}
+          />
+        </div>
       </form>
     </section>
   );
@@ -93,9 +107,30 @@ function RoutineDetails() {
   );
 }
 
-function ExerciseSection({ onAddExercise }: { onAddExercise: () => void }) {
-  const { control } = useFormContext<RoutineDraftFormValues>();
+function ExerciseSection({
+  onAddExercise,
+  onEditExercise,
+}: {
+  onAddExercise: () => void;
+  onEditExercise: (exercise: RoutineDraftExerciseFormValues) => void;
+}) {
+  const { control, getValues, setValue } =
+    useFormContext<RoutineDraftFormValues>();
   const exercises = useWatch({ control, name: 'exercises' });
+
+  function removeExercise(position: number) {
+    const remainingExercises = getValues('exercises')
+      .filter((exercise) => exercise.position !== position)
+      .map((exercise, nextPosition) => ({
+        ...exercise,
+        position: nextPosition,
+      }));
+
+    setValue('exercises', remainingExercises, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+  }
 
   return (
     <div>
@@ -103,7 +138,13 @@ function ExerciseSection({ onAddExercise }: { onAddExercise: () => void }) {
         <h2>Exercises ({exercises.length})</h2>
       </Label>
 
-      {exercises.length > 0 && <RoutineExerciseList exercises={exercises} />}
+      {exercises.length > 0 && (
+        <RoutineExerciseList
+          exercises={exercises}
+          onEdit={onEditExercise}
+          onRemove={removeExercise}
+        />
+      )}
 
       <div className={exercises.length > 0 ? 'mt-1' : 'mt-3'}>
         <AddActionButton onClick={onAddExercise} type="button">

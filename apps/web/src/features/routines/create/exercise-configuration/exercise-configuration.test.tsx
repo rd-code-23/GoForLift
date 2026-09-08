@@ -30,8 +30,16 @@ function renderConfiguration(exerciseId: string) {
   const configurationRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: '/routines/new/exercises/$exerciseId',
-    component: () => <ExerciseConfiguration exerciseId={exerciseId} />,
+    component: ConfigurationRoute,
   });
+
+  function ConfigurationRoute() {
+    const { position } = configurationRoute.useSearch();
+
+    return (
+      <ExerciseConfiguration editPosition={position} exerciseId={exerciseId} />
+    );
+  }
   const editorRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: '/routines/new',
@@ -102,6 +110,30 @@ it('shows the selected exercise and initial configuration fields', async () => {
   expect(screen.getByText('Bicep Curl')).toBeVisible();
   expect(screen.getByText('10 lb')).toBeVisible();
   expect(screen.getByText('60s')).toBeVisible();
+
+  await user.click(
+    screen.getByRole('button', { name: 'Actions for Bicep Curl' }),
+  );
+  await user.click(screen.getByRole('menuitem', { name: 'Edit' }));
+
+  const setsInput = await screen.findByLabelText('Sets');
+  await user.clear(setsInput);
+  await user.type(setsInput, '5');
+  await user.click(screen.getByRole('button', { name: 'Done' }));
+
+  expect(
+    await screen.findByRole('heading', { name: 'Exercises (1)' }),
+  ).toBeVisible();
+  expect(screen.getByTitle('5')).toBeVisible();
+
+  await user.click(
+    screen.getByRole('button', { name: 'Actions for Bicep Curl' }),
+  );
+  await user.click(screen.getByRole('menuitem', { name: 'Remove' }));
+
+  expect(
+    await screen.findByRole('heading', { name: 'Exercises (0)' }),
+  ).toBeVisible();
 
   await user.click(screen.getByRole('button', { name: 'Add Exercise' }));
 
