@@ -33,10 +33,12 @@ type RoutineExerciseInput = z.output<typeof createRoutineExerciseInputSchema>;
 
 type ExerciseConfigurationProps = {
   exerciseId: string;
+  editPosition?: number;
 };
 
 export function ExerciseConfiguration({
   exerciseId,
+  editPosition,
 }: ExerciseConfigurationProps) {
   const exercisesQuery = useExercises();
   const exercise = exercisesQuery.data?.exercises.find(
@@ -54,7 +56,12 @@ export function ExerciseConfiguration({
       </p>
     );
   } else if (exercise) {
-    content = <ExerciseConfigurationForm exercise={exercise} />;
+    content = (
+      <ExerciseConfigurationForm
+        editPosition={editPosition}
+        exercise={exercise}
+      />
+    );
   }
 
   return (
@@ -86,17 +93,27 @@ function ConfigurationHeader() {
 
 function ExerciseConfigurationForm({
   exercise,
+  editPosition,
 }: {
   exercise: ExerciseSummary;
+  editPosition?: number;
 }) {
   const navigate = useNavigate();
   const { getValues, setValue: setDraftValue } =
     useFormContext<RoutineDraftFormValues>();
 
-  const defaultValues = createRoutineExerciseInputSchema.parse({
-    exerciseId: exercise.id,
-    position: getValues('exercises').length,
-  });
+  const existingExercise = getValues('exercises').find(
+    (draftExercise) =>
+      draftExercise.position === editPosition &&
+      draftExercise.exerciseId === exercise.id,
+  );
+
+  const defaultValues = existingExercise
+    ? createRoutineExerciseInputSchema.strip().parse(existingExercise)
+    : createRoutineExerciseInputSchema.parse({
+        exerciseId: exercise.id,
+        position: getValues('exercises').length,
+      });
 
   const {
     handleSubmit,
@@ -108,15 +125,25 @@ function ExerciseConfigurationForm({
     resolver: zodResolver(createRoutineExerciseInputSchema),
   });
 
+  if (editPosition !== undefined && !existingExercise) {
+    return <ExerciseNotFound />;
+  }
+
   async function saveExercise(input: RoutineExerciseInput) {
-    setDraftValue(
-      'exercises',
-      [...getValues('exercises'), { ...input, name: exercise.name }],
-      {
-        shouldDirty: true,
-        shouldValidate: true,
-      },
-    );
+    const configuredExercise = { ...input, name: exercise.name };
+    const currentExercises = getValues('exercises');
+    const exercises = existingExercise
+      ? currentExercises.map((draftExercise) =>
+          draftExercise.position === existingExercise.position
+            ? configuredExercise
+            : draftExercise,
+        )
+      : [...currentExercises, configuredExercise];
+
+    setDraftValue('exercises', exercises, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
     await navigate({ to: '/routines/new' });
   }
 

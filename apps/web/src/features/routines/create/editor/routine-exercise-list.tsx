@@ -1,13 +1,24 @@
 /** Displays configured exercises in the routine draft. */
 import { Dumbbell, GripVertical, MoreHorizontal } from 'lucide-react';
 
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import type { RoutineDraftExerciseFormValues } from '../routine-draft-form';
 
 export function RoutineExerciseList({
   exercises,
+  onEdit,
+  onRemove,
 }: {
   exercises: RoutineDraftExerciseFormValues[];
+  onEdit: (exercise: RoutineDraftExerciseFormValues) => void;
+  onRemove: (position: number) => void;
 }) {
   return (
     <div className="mt-3 w-full overflow-hidden rounded-lg bg-surface-elevated lg:w-fit lg:max-w-3xl">
@@ -28,7 +39,12 @@ export function RoutineExerciseList({
 
       <ul>
         {exercises.map((exercise) => (
-          <RoutineExerciseRow exercise={exercise} key={exercise.position} />
+          <RoutineExerciseRow
+            exercise={exercise}
+            key={exercise.position}
+            onEdit={onEdit}
+            onRemove={onRemove}
+          />
         ))}
       </ul>
     </div>
@@ -37,8 +53,12 @@ export function RoutineExerciseList({
 
 function RoutineExerciseRow({
   exercise,
+  onEdit,
+  onRemove,
 }: {
   exercise: RoutineDraftExerciseFormValues;
+  onEdit: (exercise: RoutineDraftExerciseFormValues) => void;
+  onRemove: (position: number) => void;
 }) {
   return (
     <li
@@ -88,14 +108,34 @@ function RoutineExerciseRow({
       >
         {exercise.restBetweenSetsSeconds}s
       </span>
-      <MoreHorizontal
-        aria-hidden="true"
-        className={cn(
-          'absolute top-1/2 right-3 size-4 -translate-y-1/2',
-          'text-muted-foreground',
-          'sm:static sm:translate-y-0 sm:justify-self-end',
-        )}
-      />
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            aria-label={`Actions for ${exercise.name}`}
+            className={cn(
+              'absolute top-1/2 right-1 size-8 -translate-y-1/2',
+              'text-muted-foreground',
+              'sm:static sm:translate-y-0 sm:justify-self-end',
+            )}
+            size="icon"
+            type="button"
+            variant="ghost"
+          >
+            <MoreHorizontal aria-hidden="true" className="size-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem onSelect={() => onEdit(exercise)}>
+            Edit
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            className="text-destructive focus:text-destructive"
+            onSelect={() => onRemove(exercise.position)}
+          >
+            Remove
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </li>
   );
 }
