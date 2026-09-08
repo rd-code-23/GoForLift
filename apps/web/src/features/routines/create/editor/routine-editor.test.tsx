@@ -25,6 +25,7 @@ afterEach(() => {
 
 describe('routine editor', () => {
   it('shows the initial editor shell without enabling unfinished actions', async () => {
+    const user = userEvent.setup();
     const fetchMock = vi.fn();
     vi.stubGlobal('fetch', fetchMock);
     renderEditor();
@@ -39,6 +40,8 @@ describe('routine editor', () => {
     expect(
       screen.getByRole('heading', { name: 'Exercises (0)' }),
     ).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled();
+    await user.type(screen.getByLabelText('Routine Name'), 'Push Day');
     expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled();
     expect(
       screen.queryByRole('button', { name: 'Preview' }),

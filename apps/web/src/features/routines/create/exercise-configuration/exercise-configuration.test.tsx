@@ -110,6 +110,7 @@ it('shows the selected exercise and initial configuration fields', async () => {
   expect(screen.getByText('Bicep Curl')).toBeVisible();
   expect(screen.getByText('10 lb')).toBeVisible();
   expect(screen.getByText('60s')).toBeVisible();
+  expect(screen.getByRole('button', { name: 'Save' })).toBeEnabled();
 
   await user.click(
     screen.getByRole('button', { name: 'Actions for Bicep Curl' }),

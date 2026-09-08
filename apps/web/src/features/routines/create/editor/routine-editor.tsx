@@ -8,17 +8,29 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PageTitle } from '@/components/ui/page-title';
+import { useCreateRoutineMutation } from '@/features/routines/api/routines.mutation';
 import { cn } from '@/lib/utils';
 import type {
+  ParsedRoutineDraftFormValues,
   RoutineDraftExerciseFormValues,
   RoutineDraftFormValues,
 } from '../routine-draft-form';
+import { toCreateRoutineInput } from '../routine-draft.mapper';
 import { RoutineExerciseList } from './routine-exercise-list';
 import { RoutineScheduleField } from './routine-schedule-field';
 
 export function RoutineEditor() {
   const navigate = useNavigate();
-  const { reset } = useFormContext<RoutineDraftFormValues>();
+  const createRoutineMutation = useCreateRoutineMutation();
+  const {
+    formState: { isValid },
+    handleSubmit,
+    reset,
+  } = useFormContext<
+    RoutineDraftFormValues,
+    unknown,
+    ParsedRoutineDraftFormValues
+  >();
 
   const addExercise = async () => {
     await navigate({ to: '/routines/new/exercises' });
@@ -32,11 +44,34 @@ export function RoutineEditor() {
     });
   };
 
+  function saveRoutine(draft: ParsedRoutineDraftFormValues) {
+    createRoutineMutation.mutate(toCreateRoutineInput(draft), {
+      onSuccess: () => {
+        reset();
+        void navigate({ to: '/routines' });
+      },
+    });
+  }
+
   return (
     <section className="mx-auto w-full max-w-5xl">
-      <EditorHeader onClear={() => reset()} />
+      <EditorHeader
+        canSave={isValid}
+        isSaving={createRoutineMutation.isPending}
+        onClear={() => reset()}
+      />
 
-      <form className="grid gap-6 lg:grid-cols-2">
+      {createRoutineMutation.isError && (
+        <p className="mb-5 text-sm text-destructive" role="alert">
+          Routine could not be saved. Please try again.
+        </p>
+      )}
+
+      <form
+        className="grid gap-6 lg:grid-cols-2"
+        id="routine-editor-form"
+        onSubmit={(event) => void handleSubmit(saveRoutine)(event)}
+      >
         <RoutineDetails />
         <RoutineScheduleField />
 
@@ -51,7 +86,15 @@ export function RoutineEditor() {
   );
 }
 
-function EditorHeader({ onClear }: { onClear: () => void }) {
+function EditorHeader({
+  canSave,
+  isSaving,
+  onClear,
+}: {
+  canSave: boolean;
+  isSaving: boolean;
+  onClear: () => void;
+}) {
   return (
     <header className="mb-7 flex items-center gap-3 border-b pb-5">
       <Button aria-label="Back to routines" asChild size="icon" variant="ghost">
@@ -61,10 +104,21 @@ function EditorHeader({ onClear }: { onClear: () => void }) {
       </Button>
       <PageTitle>Create Routine</PageTitle>
       <div className="ml-auto flex gap-2">
-        <Button onClick={onClear} type="button" variant="ghost">
+        <Button
+          disabled={isSaving}
+          onClick={onClear}
+          type="button"
+          variant="ghost"
+        >
           Clear
         </Button>
-        <Button disabled>Save</Button>
+        <Button
+          disabled={!canSave || isSaving}
+          form="routine-editor-form"
+          type="submit"
+        >
+          {isSaving ? 'Saving…' : 'Save'}
+        </Button>
       </div>
     </header>
   );

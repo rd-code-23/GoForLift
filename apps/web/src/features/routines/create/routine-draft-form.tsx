@@ -1,6 +1,7 @@
 /** Provides one routine draft form across every route in the creation flow. */
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
+  createRoutineInputSchema,
   createRoutineExerciseInputSchema,
   createRoutineScheduleInputSchema,
   exerciseSummarySchema,
@@ -19,9 +20,26 @@ const routineDraftExerciseSchema = createRoutineExerciseInputSchema.extend({
   name: exerciseSummarySchema.shape.name,
 });
 
+const routineDraftExercisesSchema = z
+  .array(routineDraftExerciseSchema)
+  .superRefine((exercises, context) => {
+    const result =
+      createRoutineInputSchema.shape.exercises.safeParse(exercises);
+
+    if (!result.success) {
+      for (const issue of result.error.issues) {
+        // Exercise fields are already validated by routineDraftExerciseSchema.
+        // Reuse only collection rules, such as the shared minimum of one exercise.
+        if (issue.path.length === 0) {
+          context.addIssue({ ...issue });
+        }
+      }
+    }
+  });
+
 const routineDraftFormSchema = z.object({
   name: routineNameSchema,
-  exercises: z.array(routineDraftExerciseSchema),
+  exercises: routineDraftExercisesSchema,
   schedules: z.array(createRoutineScheduleInputSchema),
 });
 // Exercise defaults live in the shared Zod contract so every consumer uses the
@@ -33,7 +51,9 @@ export type RoutineDraftFormValues = z.input<typeof routineDraftFormSchema>;
 export type RoutineDraftExerciseFormValues = z.input<
   typeof routineDraftExerciseSchema
 >;
-type ParsedRoutineDraftFormValues = z.output<typeof routineDraftFormSchema>;
+export type ParsedRoutineDraftFormValues = z.output<
+  typeof routineDraftFormSchema
+>;
 
 export function RoutineDraftFormProvider({
   children,
