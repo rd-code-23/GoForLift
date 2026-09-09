@@ -40,9 +40,9 @@ describe('routine editor', () => {
     expect(
       screen.getByRole('heading', { name: 'Exercises (0)' }),
     ).toBeVisible();
-    expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Save' })).toBeEnabled();
     await user.type(screen.getByLabelText('Routine Name'), 'Push Day');
-    expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Save' })).toBeEnabled();
     expect(
       screen.queryByRole('button', { name: 'Preview' }),
     ).not.toBeInTheDocument();
@@ -52,6 +52,32 @@ describe('routine editor', () => {
       screen.getByRole('link', { name: 'Back to routines' }),
     ).toHaveAttribute('href', '/routines');
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('shows inline errors when saving an incomplete routine', async () => {
+    const user = userEvent.setup();
+    renderEditor();
+
+    await user.click(await screen.findByRole('button', { name: 'Save' }));
+
+    expect(screen.getByText('Enter a routine name.')).toBeVisible();
+    expect(screen.getByText('Add at least one exercise.')).toBeVisible();
+    expect(screen.getByText('Complete required fields.')).toBeVisible();
+
+    await user.type(screen.getByLabelText('Routine Name'), 'Push Day');
+    expect(screen.getByText('Complete required fields.')).toHaveClass(
+      'invisible',
+    );
+
+    await user.clear(screen.getByLabelText('Routine Name'));
+    expect(screen.getByText('Complete required fields.')).toHaveClass(
+      'invisible',
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+    expect(screen.getByText('Complete required fields.')).not.toHaveClass(
+      'invisible',
+    );
   });
 
   it('shows live validation and clears the error after correction', async () => {

@@ -37,7 +37,9 @@ export const createRoutineInputSchema = z
   .object({
     name: routineNameSchema,
     description: z.string().trim().nullable().optional(),
-    exercises: z.array(createRoutineExerciseInputSchema).min(1),
+    exercises: z
+      .array(createRoutineExerciseInputSchema)
+      .min(1, 'Add at least one exercise.'),
     schedules: z.array(createRoutineScheduleInputSchema).default([]),
   })
   .strict()

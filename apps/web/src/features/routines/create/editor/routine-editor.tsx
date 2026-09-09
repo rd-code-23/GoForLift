@@ -1,6 +1,7 @@
 /** Presents the responsive visual shell for creating a registered-user routine. */
 import { Link, useNavigate } from '@tanstack/react-router';
 import { ArrowLeft, Plus } from 'lucide-react';
+import { useState } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
 
 import { AddActionButton } from '@/components/ui/add-action-button';
@@ -21,12 +22,12 @@ import { RoutineScheduleField } from './routine-schedule-field';
 
 export function RoutineEditor() {
   const navigate = useNavigate();
+
+  const [showRequiredFieldsMessage, setShowRequiredFieldsMessage] =
+    useState(false);
+
   const createRoutineMutation = useCreateRoutineMutation();
-  const {
-    formState: { isValid },
-    handleSubmit,
-    reset,
-  } = useFormContext<
+  const { handleSubmit, reset } = useFormContext<
     RoutineDraftFormValues,
     unknown,
     ParsedRoutineDraftFormValues
@@ -45,6 +46,7 @@ export function RoutineEditor() {
   };
 
   function saveRoutine(draft: ParsedRoutineDraftFormValues) {
+    setShowRequiredFieldsMessage(false);
     createRoutineMutation.mutate(toCreateRoutineInput(draft), {
       onSuccess: () => {
         reset();
@@ -56,9 +58,12 @@ export function RoutineEditor() {
   return (
     <section className="mx-auto w-full max-w-5xl">
       <EditorHeader
-        canSave={isValid}
         isSaving={createRoutineMutation.isPending}
-        onClear={() => reset()}
+        onClear={() => {
+          reset();
+          setShowRequiredFieldsMessage(false);
+        }}
+        showRequiredFieldsMessage={showRequiredFieldsMessage}
       />
 
       {createRoutineMutation.isError && (
@@ -70,7 +75,13 @@ export function RoutineEditor() {
       <form
         className="grid gap-6 lg:grid-cols-2"
         id="routine-editor-form"
-        onSubmit={(event) => void handleSubmit(saveRoutine)(event)}
+        onChange={() => setShowRequiredFieldsMessage(false)}
+        onClick={() => setShowRequiredFieldsMessage(false)}
+        onSubmit={(event) =>
+          void handleSubmit(saveRoutine, () =>
+            setShowRequiredFieldsMessage(true),
+          )(event)
+        }
       >
         <RoutineDetails />
         <RoutineScheduleField />
@@ -87,13 +98,13 @@ export function RoutineEditor() {
 }
 
 function EditorHeader({
-  canSave,
   isSaving,
   onClear,
+  showRequiredFieldsMessage,
 }: {
-  canSave: boolean;
   isSaving: boolean;
   onClear: () => void;
+  showRequiredFieldsMessage: boolean;
 }) {
   return (
     <header className="mb-7 flex items-center gap-3 border-b pb-5">
@@ -112,13 +123,25 @@ function EditorHeader({
         >
           Clear
         </Button>
-        <Button
-          disabled={!canSave || isSaving}
-          form="routine-editor-form"
-          type="submit"
-        >
-          {isSaving ? 'Saving…' : 'Save'}
-        </Button>
+        <div className="flex w-20 flex-col items-start gap-1">
+          <Button
+            className="w-full"
+            disabled={isSaving}
+            form="routine-editor-form"
+            type="submit"
+          >
+            {isSaving ? 'Saving…' : 'Save'}
+          </Button>
+          <p
+            aria-live="polite"
+            className={cn(
+              'min-h-12 w-full text-left text-xs text-destructive',
+              !showRequiredFieldsMessage && 'invisible',
+            )}
+          >
+            Complete required fields.
+          </p>
+        </div>
       </div>
     </header>
   );
@@ -168,9 +191,14 @@ function ExerciseSection({
   onAddExercise: () => void;
   onEditExercise: (exercise: RoutineDraftExerciseFormValues) => void;
 }) {
-  const { control, getValues, setValue } =
-    useFormContext<RoutineDraftFormValues>();
+  const {
+    control,
+    formState: { errors, submitCount },
+    getValues,
+    setValue,
+  } = useFormContext<RoutineDraftFormValues>();
   const exercises = useWatch({ control, name: 'exercises' });
+  const errorMessage = errors.exercises?.message;
 
   function removeExercise(position: number) {
     const remainingExercises = getValues('exercises')
@@ -191,6 +219,12 @@ function ExerciseSection({
       <Label asChild>
         <h2>Exercises ({exercises.length})</h2>
       </Label>
+
+      {submitCount > 0 && errorMessage && (
+        <p className="mt-2 text-sm text-destructive" role="alert">
+          {errorMessage}
+        </p>
+      )}
 
       {exercises.length > 0 && (
         <RoutineExerciseList
