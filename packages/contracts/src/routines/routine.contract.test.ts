@@ -80,12 +80,14 @@ describe('createRoutineInputSchema', () => {
   });
 
   it('rejects invalid exercise configuration and schedules', () => {
-    expect(() =>
-      createRoutineInputSchema.parse({
-        ...validCreateRoutineInput,
-        exercises: [],
-      }),
-    ).toThrow();
+    const emptyExercisesResult = createRoutineInputSchema.safeParse({
+      ...validCreateRoutineInput,
+      exercises: [],
+    });
+
+    expect(emptyExercisesResult.error?.issues[0]?.message).toBe(
+      'Add at least one exercise.',
+    );
     expect(() =>
       createRoutineInputSchema.parse({
         ...validCreateRoutineInput,

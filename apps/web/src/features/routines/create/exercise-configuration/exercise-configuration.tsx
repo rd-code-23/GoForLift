@@ -130,7 +130,11 @@ function ExerciseConfigurationForm({
   }
 
   async function saveExercise(input: RoutineExerciseInput) {
-    const configuredExercise = { ...input, name: exercise.name };
+    const configuredExercise = {
+      ...input,
+      draftExerciseId: existingExercise?.draftExerciseId ?? crypto.randomUUID(),
+      name: exercise.name,
+    };
     const currentExercises = getValues('exercises');
     const exercises = existingExercise
       ? currentExercises.map((draftExercise) =>
