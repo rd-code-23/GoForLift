@@ -12,6 +12,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@dnd-kit/dom": "^0.5.0",
     "@dnd-kit/helpers": "^0.5.0",
     "@dnd-kit/react": "^0.5.0",
     "@goforlift/contracts": "workspace:*",
