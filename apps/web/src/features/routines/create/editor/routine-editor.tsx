@@ -17,6 +17,7 @@ import type {
   RoutineDraftFormValues,
 } from '../routine-draft-form';
 import { toCreateRoutineInput } from '../routine-draft.mapper';
+import { reorderRoutineExercises } from './routine-exercise-order';
 import { RoutineExerciseList } from './routine-exercise-list';
 import { RoutineScheduleField } from './routine-schedule-field';
 
@@ -214,6 +215,17 @@ function ExerciseSection({
     });
   }
 
+  function reorderExercises(fromIndex: number, toIndex: number) {
+    setValue(
+      'exercises',
+      reorderRoutineExercises(exercises, fromIndex, toIndex),
+      {
+        shouldDirty: true,
+        shouldValidate: true,
+      },
+    );
+  }
+
   return (
     <div>
       <Label asChild>
@@ -231,6 +243,7 @@ function ExerciseSection({
           exercises={exercises}
           onEdit={onEditExercise}
           onRemove={removeExercise}
+          onReorder={reorderExercises}
         />
       )}
 

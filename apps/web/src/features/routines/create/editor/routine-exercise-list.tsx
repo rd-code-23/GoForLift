@@ -1,4 +1,6 @@
 /** Displays configured exercises in the routine draft. */
+import { DragDropProvider } from '@dnd-kit/react';
+import { isSortable, useSortable } from '@dnd-kit/react/sortable';
 import { Dumbbell, GripVertical, MoreHorizontal } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -15,10 +17,12 @@ export function RoutineExerciseList({
   exercises,
   onEdit,
   onRemove,
+  onReorder,
 }: {
   exercises: RoutineDraftExerciseFormValues[];
   onEdit: (exercise: RoutineDraftExerciseFormValues) => void;
   onRemove: (position: number) => void;
+  onReorder: (fromIndex: number, toIndex: number) => void;
 }) {
   return (
     <div className="mt-3 w-full overflow-hidden rounded-lg bg-surface-elevated lg:w-fit lg:max-w-3xl">
@@ -37,41 +41,69 @@ export function RoutineExerciseList({
         <span />
       </div>
 
-      <ul>
-        {exercises.map((exercise) => (
-          <RoutineExerciseRow
-            exercise={exercise}
-            key={exercise.position}
-            onEdit={onEdit}
-            onRemove={onRemove}
-          />
-        ))}
-      </ul>
+      <DragDropProvider
+        onDragEnd={(event) => {
+          if (event.canceled) return;
+
+          const { source } = event.operation;
+
+          if (isSortable(source) && source.initialIndex !== source.index) {
+            onReorder(source.initialIndex, source.index);
+          }
+        }}
+      >
+        <ul>
+          {exercises.map((exercise, index) => (
+            <RoutineExerciseRow
+              exercise={exercise}
+              index={index}
+              key={exercise.draftExerciseId}
+              onEdit={onEdit}
+              onRemove={onRemove}
+            />
+          ))}
+        </ul>
+      </DragDropProvider>
     </div>
   );
 }
 
 function RoutineExerciseRow({
   exercise,
+  index,
   onEdit,
   onRemove,
 }: {
   exercise: RoutineDraftExerciseFormValues;
+  index: number;
   onEdit: (exercise: RoutineDraftExerciseFormValues) => void;
   onRemove: (position: number) => void;
 }) {
+  const { handleRef, isDragging, ref } = useSortable({
+    id: exercise.draftExerciseId,
+    index,
+  });
+
   return (
     <li
       className={cn(
         'relative grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 border-t border-border/30 px-3 py-3 first:border-t-0',
         'sm:grid-cols-[minmax(0,1fr)_3.5rem_3.5rem_5rem_4rem_2rem] sm:gap-2 sm:py-2.5',
+        isDragging && 'z-10 opacity-70',
       )}
+      ref={ref}
     >
       <div className="flex min-w-0 items-center gap-2.5">
-        <GripVertical
-          aria-hidden="true"
-          className="size-4 shrink-0 text-muted-foreground"
-        />
+        <Button
+          aria-label={`Reorder ${exercise.name}`}
+          className="size-7 cursor-grab touch-none text-muted-foreground active:cursor-grabbing"
+          ref={handleRef}
+          size="icon"
+          type="button"
+          variant="ghost"
+        >
+          <GripVertical aria-hidden="true" className="size-4" />
+        </Button>
         <div className="flex size-9 shrink-0 items-center justify-center rounded-md bg-background text-primary">
           <Dumbbell aria-hidden="true" className="size-5" />
         </div>
