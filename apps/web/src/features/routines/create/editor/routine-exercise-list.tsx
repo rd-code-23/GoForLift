@@ -1,4 +1,9 @@
 /** Displays configured exercises in the routine draft. */
+import {
+  KeyboardSensor,
+  PointerActivationConstraints,
+  PointerSensor,
+} from '@dnd-kit/dom';
 import { DragDropProvider } from '@dnd-kit/react';
 import { isSortable, useSortable } from '@dnd-kit/react/sortable';
 import { Dumbbell, GripVertical, MoreHorizontal } from 'lucide-react';
@@ -12,6 +17,15 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import type { RoutineDraftExerciseFormValues } from '../routine-draft-form';
+
+const reorderSensors = [
+  PointerSensor.configure({
+    activationConstraints: [
+      new PointerActivationConstraints.Distance({ value: 4 }),
+    ],
+  }),
+  KeyboardSensor,
+];
 
 export function RoutineExerciseList({
   exercises,
@@ -51,6 +65,7 @@ export function RoutineExerciseList({
             onReorder(source.initialIndex, source.index);
           }
         }}
+        sensors={reorderSensors}
       >
         <ul>
           {exercises.map((exercise, index) => (
