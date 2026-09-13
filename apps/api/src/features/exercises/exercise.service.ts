@@ -2,8 +2,9 @@
 import type {
   CreateExerciseInput,
   ExerciseSummary,
+  UpdateExerciseInput,
 } from '@goforlift/contracts';
-import { asc, eq, isNull, or } from 'drizzle-orm';
+import { and, asc, eq, isNull, or } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 
 import { exercises } from '../../db/schema/index.js';
@@ -55,4 +56,23 @@ export async function listExercisesForUser(
     ...exercise,
     isCustom: ownerUserId !== null,
   }));
+}
+
+export async function updateExerciseForUser(
+  database: NodePgDatabase,
+  userId: string,
+  exerciseId: string,
+  input: UpdateExerciseInput,
+): Promise<ExerciseSummary | null> {
+  const [updatedExercise] = await database
+    .update(exercises)
+    .set({ name: input.name, updatedAt: new Date() })
+    .where(and(eq(exercises.id, exerciseId), eq(exercises.ownerUserId, userId)))
+    .returning({
+      id: exercises.id,
+      name: exercises.name,
+      description: exercises.description,
+    });
+
+  return updatedExercise ? { ...updatedExercise, isCustom: true } : null;
 }

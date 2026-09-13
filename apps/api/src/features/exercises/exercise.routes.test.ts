@@ -27,6 +27,9 @@ const exerciseList = [builtInExercise, customExercise];
 function createTestApp(
   createExercise = vi.fn(() => Promise.resolve(customExercise)),
   listExercises = vi.fn(() => Promise.resolve(exerciseList)),
+  updateExercise = vi.fn((): Promise<typeof customExercise | null> =>
+    Promise.resolve(customExercise),
+  ),
 ) {
   const app = express();
   app.use(express.json());
@@ -39,10 +42,10 @@ function createTestApp(
   app.use(establishAuthenticatedTestSession());
   app.use(
     '/exercises',
-    createExerciseRouter({ createExercise, listExercises }),
+    createExerciseRouter({ createExercise, listExercises, updateExercise }),
   );
 
-  return { app, createExercise, listExercises };
+  return { app, createExercise, listExercises, updateExercise };
 }
 
 describe('POST /exercises', () => {
@@ -94,6 +97,36 @@ describe('POST /exercises', () => {
       name: 'Custom Carry',
       description: 'A custom loaded carry.',
     });
+  });
+});
+
+describe('PATCH /exercises/:exerciseId', () => {
+  it('updates an exercise belonging to the authenticated user', async () => {
+    const { app, updateExercise } = createTestApp();
+
+    const response = await request(app)
+      .patch(`/exercises/${customExercise.id}`)
+      .set('x-test-authenticated-user-id', userId)
+      .send({ name: '  Renamed Carry  ' });
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual(customExercise);
+    expect(updateExercise).toHaveBeenCalledWith(userId, customExercise.id, {
+      name: 'Renamed Carry',
+    });
+  });
+
+  it('returns not found when the exercise is not owned by the user', async () => {
+    const updateExercise = vi.fn(() => Promise.resolve(null));
+    const { app } = createTestApp(undefined, undefined, updateExercise);
+
+    const response = await request(app)
+      .patch(`/exercises/${builtInExercise.id}`)
+      .set('x-test-authenticated-user-id', userId)
+      .send({ name: 'Changed Built In' });
+
+    expect(response.status).toBe(404);
+    expect(response.body).toEqual({ error: 'exercise_not_found' });
   });
 });
 

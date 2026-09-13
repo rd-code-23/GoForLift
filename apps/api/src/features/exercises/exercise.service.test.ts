@@ -6,6 +6,7 @@ import { exercises } from '../../db/schema/index.js';
 import {
   createExerciseForUser,
   listExercisesForUser,
+  updateExerciseForUser,
 } from './exercise.service.js';
 
 describe('createExerciseForUser', () => {
@@ -85,5 +86,34 @@ describe('listExercisesForUser', () => {
         isCustom: true,
       },
     ]);
+  });
+});
+
+describe('updateExerciseForUser', () => {
+  it('updates only an exercise owned by the authenticated user', async () => {
+    const updatedExercise = {
+      id: 'f29f209d-d1f9-4988-b693-69b291917b0f',
+      name: 'Renamed Carry',
+      description: null,
+    };
+    const returning = vi.fn().mockResolvedValue([updatedExercise]);
+    const where = vi.fn(() => ({ returning }));
+    const set = vi.fn(() => ({ where }));
+    const update = vi.fn(() => ({ set }));
+    const database = { update } as unknown as NodePgDatabase;
+
+    const result = await updateExerciseForUser(
+      database,
+      '26d34dc0-8e4c-4bd0-9e3b-7b839b44e486',
+      updatedExercise.id,
+      { name: updatedExercise.name },
+    );
+
+    expect(update).toHaveBeenCalledWith(exercises);
+    expect(set).toHaveBeenCalledWith(
+      expect.objectContaining({ name: updatedExercise.name }),
+    );
+    expect(where).toHaveBeenCalledOnce();
+    expect(result).toEqual({ ...updatedExercise, isCustom: true });
   });
 });

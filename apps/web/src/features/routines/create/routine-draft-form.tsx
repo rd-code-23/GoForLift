@@ -4,21 +4,18 @@ import {
   createRoutineInputSchema,
   createRoutineExerciseInputSchema,
   createRoutineScheduleInputSchema,
-  exerciseSummarySchema,
   routineNameSchema,
 } from '@goforlift/contracts';
 import type { ReactNode } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { z } from 'zod';
 
-// The form draft keeps UI-only fields that the create API does not need. The
-// name displays the exercise. exerciseId identifies the exercise type, but the
-// same exercise may be added more than once, so draftExerciseId uniquely tracks
-// each configured row while its position changes during reordering. The save
-// mapper removes both UI-only fields before sending the request.
+// exerciseId identifies the server exercise, but the same exercise may appear
+// more than once in a routine. draftExerciseId therefore gives each configured
+// row a stable UI identity while its position changes during reordering. The
+// save mapper removes this UI-only ID before sending the request.
 const routineDraftExerciseSchema = createRoutineExerciseInputSchema.extend({
   draftExerciseId: z.uuid(),
-  name: exerciseSummarySchema.shape.name,
 });
 
 const routineDraftExercisesSchema = z

@@ -25,6 +25,7 @@ import { useExercises } from '@/features/exercises/exercises.query';
 import { z } from 'zod';
 
 import type { RoutineDraftFormValues } from '../routine-draft-form';
+import { EditExerciseNameDialog } from './edit-exercise-name-dialog';
 
 type RoutineExerciseFormValues = z.input<
   typeof createRoutineExerciseInputSchema
@@ -133,7 +134,6 @@ function ExerciseConfigurationForm({
     const configuredExercise = {
       ...input,
       draftExerciseId: existingExercise?.draftExerciseId ?? crypto.randomUUID(),
-      name: exercise.name,
     };
     const currentExercises = getValues('exercises');
     const exercises = existingExercise
@@ -184,13 +184,10 @@ function ExerciseIdentity({ exercise }: { exercise: ExerciseSummary }) {
       <div>
         <h2 className="text-lg font-semibold lg:text-xl">{exercise.name}</h2>
         {exercise.isCustom && (
-          <button
-            className="mt-1 text-sm text-primary disabled:opacity-100"
-            disabled
-            type="button"
-          >
-            Edit name
-          </button>
+          <EditExerciseNameDialog
+            exerciseId={exercise.id}
+            name={exercise.name}
+          />
         )}
       </div>
     </div>

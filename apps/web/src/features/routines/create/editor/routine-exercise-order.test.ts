@@ -7,7 +7,6 @@ const exercises: RoutineDraftExerciseFormValues[] = [
   {
     draftExerciseId: '06d34dc0-8e4c-4bd0-9e3b-7b839b44e481',
     exerciseId: '26d34dc0-8e4c-4bd0-9e3b-7b839b44e481',
-    name: 'Bicep Curl',
     notes: null,
     position: 0,
     restAfterExerciseSeconds: 0,
@@ -20,7 +19,6 @@ const exercises: RoutineDraftExerciseFormValues[] = [
   {
     draftExerciseId: '06d34dc0-8e4c-4bd0-9e3b-7b839b44e482',
     exerciseId: '26d34dc0-8e4c-4bd0-9e3b-7b839b44e482',
-    name: 'Lateral Raise',
     notes: null,
     position: 1,
     restAfterExerciseSeconds: 0,
@@ -33,7 +31,6 @@ const exercises: RoutineDraftExerciseFormValues[] = [
   {
     draftExerciseId: '06d34dc0-8e4c-4bd0-9e3b-7b839b44e483',
     exerciseId: '26d34dc0-8e4c-4bd0-9e3b-7b839b44e483',
-    name: 'Shoulder Press',
     notes: null,
     position: 2,
     restAfterExerciseSeconds: 0,
@@ -50,11 +47,23 @@ describe('reorderRoutineExercises', () => {
     const reorderedExercises = reorderRoutineExercises(exercises, 2, 0);
 
     expect(
-      reorderedExercises.map(({ name, position }) => ({ name, position })),
+      reorderedExercises.map(({ exerciseId, position }) => ({
+        exerciseId,
+        position,
+      })),
     ).toEqual([
-      { name: 'Shoulder Press', position: 0 },
-      { name: 'Bicep Curl', position: 1 },
-      { name: 'Lateral Raise', position: 2 },
+      {
+        exerciseId: '26d34dc0-8e4c-4bd0-9e3b-7b839b44e483',
+        position: 0,
+      },
+      {
+        exerciseId: '26d34dc0-8e4c-4bd0-9e3b-7b839b44e481',
+        position: 1,
+      },
+      {
+        exerciseId: '26d34dc0-8e4c-4bd0-9e3b-7b839b44e482',
+        position: 2,
+      },
     ]);
   });
 });

@@ -27,13 +27,17 @@ const reorderSensors = [
   KeyboardSensor,
 ];
 
+type DisplayRoutineDraftExercise = RoutineDraftExerciseFormValues & {
+  name: string;
+};
+
 export function RoutineExerciseList({
   exercises,
   onEdit,
   onRemove,
   onReorder,
 }: {
-  exercises: RoutineDraftExerciseFormValues[];
+  exercises: DisplayRoutineDraftExercise[];
   onEdit: (exercise: RoutineDraftExerciseFormValues) => void;
   onRemove: (position: number) => void;
   onReorder: (fromIndex: number, toIndex: number) => void;
@@ -89,7 +93,7 @@ function RoutineExerciseRow({
   onEdit,
   onRemove,
 }: {
-  exercise: RoutineDraftExerciseFormValues;
+  exercise: DisplayRoutineDraftExercise;
   index: number;
   onEdit: (exercise: RoutineDraftExerciseFormValues) => void;
   onRemove: (position: number) => void;

@@ -141,3 +141,66 @@ it('shows the selected exercise and initial configuration fields', async () => {
   expect(await screen.findByLabelText('Search exercises')).toBeVisible();
   expect(fetchMock).toHaveBeenCalledTimes(1);
 });
+
+it('allows a custom exercise name to be edited', async () => {
+  const user = userEvent.setup();
+  const exerciseId = '26d34dc0-8e4c-4bd0-9e3b-7b839b44e486';
+  const fetchMock = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
+    if (input === '/auth/csrf-token') {
+      return Promise.resolve(Response.json({ csrfToken: 'csrf-token' }));
+    }
+
+    if (init?.method === 'PATCH') {
+      return Promise.resolve(
+        Response.json({
+          id: exerciseId,
+          name: 'Renamed Curl',
+          description: null,
+          isCustom: true,
+        }),
+      );
+    }
+
+    return Promise.resolve(
+      Response.json({
+        exercises: [
+          {
+            id: exerciseId,
+            name: 'Custom Curl',
+            description: null,
+            isCustom: true,
+          },
+        ],
+      }),
+    );
+  });
+  vi.stubGlobal('fetch', fetchMock);
+
+  renderConfiguration(exerciseId);
+  await user.click(await screen.findByRole('button', { name: 'Add Exercise' }));
+  await user.click(await screen.findByRole('link', { name: /Custom Curl/ }));
+  await user.click(await screen.findByRole('button', { name: 'Edit name' }));
+
+  const nameInput = screen.getByLabelText('Exercise Name');
+  await user.clear(nameInput);
+  await user.type(nameInput, 'Renamed Curl');
+  await user.click(screen.getByRole('button', { name: 'Save' }));
+
+  expect(await screen.findByText('Renamed Curl')).toBeVisible();
+  expect(
+    screen.getByRole('heading', { name: 'Configure Exercise' }),
+  ).toBeVisible();
+  expect(screen.getByLabelText('Sets')).toBeVisible();
+  expect(fetchMock).toHaveBeenCalledWith(
+    `/api/exercises/${exerciseId}`,
+    expect.objectContaining({ method: 'PATCH' }),
+  );
+
+  await user.click(screen.getByRole('button', { name: 'Done' }));
+
+  expect(
+    await screen.findByRole('heading', { name: 'Exercises (1)' }),
+  ).toBeVisible();
+  expect(screen.getByText('Renamed Curl')).toBeVisible();
+  expect(fetchMock).toHaveBeenCalledTimes(3);
+});
