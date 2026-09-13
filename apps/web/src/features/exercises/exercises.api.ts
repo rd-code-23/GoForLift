@@ -66,3 +66,9 @@ export async function updateExerciseName({
 
   return exerciseSummarySchema.parse(data);
 }
+
+export async function deleteExercise(exerciseId: string): Promise<void> {
+  await requestWithCsrf(`/api/exercises/${exerciseId}`, {
+    method: 'DELETE',
+  });
+}

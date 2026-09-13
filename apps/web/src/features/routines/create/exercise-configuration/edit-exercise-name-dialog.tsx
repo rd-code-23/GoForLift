@@ -68,7 +68,14 @@ export function EditExerciseNameDialog({
   return (
     <Dialog onOpenChange={handleOpenChange} open={isOpen}>
       <DialogTrigger asChild>
-        <button className="mt-1 text-sm text-primary" type="button">
+        <button
+          className={cn(
+            'text-left',
+            'text-sm font-medium text-primary',
+            'hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+          )}
+          type="button"
+        >
           Edit name
         </button>
       </DialogTrigger>
