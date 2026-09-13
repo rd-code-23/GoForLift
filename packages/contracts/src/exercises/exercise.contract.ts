@@ -5,7 +5,14 @@ export const EXERCISE_NAME_MAX_LENGTH = 100;
 
 export const createExerciseInputSchema = z
   .object({
-    name: z.string().trim().min(1).max(EXERCISE_NAME_MAX_LENGTH),
+    name: z
+      .string()
+      .trim()
+      .min(1, 'Enter an exercise name.')
+      .max(
+        EXERCISE_NAME_MAX_LENGTH,
+        `Maximum length is ${EXERCISE_NAME_MAX_LENGTH} characters`,
+      ),
     description: z.string().trim().nullable().optional(),
   })
   .strict();

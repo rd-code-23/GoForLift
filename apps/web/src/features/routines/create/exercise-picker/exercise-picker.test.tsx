@@ -7,6 +7,7 @@ import {
   RouterProvider,
 } from '@tanstack/react-router';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import type { PropsWithChildren } from 'react';
 import { afterEach, expect, it, vi } from 'vitest';
 
@@ -75,4 +76,29 @@ it('filters available exercises by name', async () => {
 
   expect(screen.queryByText('Bicep Curl')).not.toBeInTheDocument();
   expect(screen.getByText('Shoulder Press')).toBeVisible();
+});
+
+it('opens the custom exercise form and validates its required name', async () => {
+  const user = userEvent.setup();
+  vi.stubGlobal(
+    'fetch',
+    vi.fn().mockResolvedValue(Response.json({ exercises: [] })),
+  );
+
+  render(<ExercisePicker />, { wrapper: Wrapper });
+
+  await user.click(
+    await screen.findByRole('button', { name: 'Create Custom Exercise' }),
+  );
+  expect(
+    screen.getByRole('heading', { name: 'Create Custom Exercise' }),
+  ).toBeVisible();
+
+  await user.click(screen.getByRole('button', { name: 'Create' }));
+
+  expect(screen.getByLabelText('Exercise Name')).toHaveAttribute(
+    'aria-invalid',
+    'true',
+  );
+  expect(screen.getByText('Enter an exercise name.')).toBeVisible();
 });

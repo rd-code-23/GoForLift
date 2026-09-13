@@ -1,15 +1,16 @@
 /** Lets a routine author search the exercises available to add to a routine. */
 import type { ExerciseSummary } from '@goforlift/contracts';
 import { Link } from '@tanstack/react-router';
-import { ChevronRight, Dumbbell, Plus, Search, X } from 'lucide-react';
+import { ChevronRight, Dumbbell, Search, X } from 'lucide-react';
 import { useState } from 'react';
 
-import { AddActionButton } from '@/components/ui/add-action-button';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { LoadingState } from '@/components/ui/loading-state';
 import { PageTitle } from '@/components/ui/page-title';
 import { useExercises } from '@/features/exercises/exercises.query';
+
+import { CustomExerciseDialog } from './custom-exercise-dialog';
 
 export function ExercisePicker() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -71,13 +72,7 @@ export function ExercisePicker() {
       <div className="mt-4">{content}</div>
 
       <div className="mt-7">
-        <AddActionButton
-          className="border border-dashed border-input lg:h-16 lg:text-base"
-          disabled
-        >
-          <Plus aria-hidden="true" />
-          Create Custom Exercise
-        </AddActionButton>
+        <CustomExerciseDialog />
       </div>
     </section>
   );
