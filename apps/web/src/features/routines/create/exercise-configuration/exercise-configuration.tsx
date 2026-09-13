@@ -196,17 +196,17 @@ function ExerciseIdentity({
     <div className="flex items-center gap-4 lg:flex-col lg:justify-start lg:pr-8 lg:pt-2 lg:text-center">
       <div
         className={cn(
-          'flex size-16 shrink-0 items-center justify-center rounded-xl',
+          'flex size-20 shrink-0 items-center justify-center rounded-xl',
           'bg-surface-elevated text-primary',
           'lg:size-28',
         )}
       >
-        <Dumbbell aria-hidden="true" className="size-8 lg:size-14" />
+        <Dumbbell aria-hidden="true" className="size-9 lg:size-14" />
       </div>
-      <div className="text-center">
+      <div className="text-left lg:text-center">
         <h2 className="text-lg font-semibold lg:text-xl">{exercise.name}</h2>
         {exercise.isCustom && (
-          <div className="mx-auto mt-3 flex w-fit translate-x-3 flex-col items-start gap-2 text-left">
+          <div className="mt-2 flex w-fit flex-col items-start gap-1.5 text-left lg:mx-auto lg:mt-3 lg:translate-x-3 lg:gap-2">
             <EditExerciseNameDialog
               exerciseId={exercise.id}
               name={exercise.name}
