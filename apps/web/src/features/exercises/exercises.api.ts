@@ -1,8 +1,14 @@
 /** Fetches and validates exercises available to the authenticated user. */
 import {
+  createExerciseInputSchema,
   exerciseListResponseSchema,
+  exerciseSummarySchema,
+  type CreateExerciseInput,
   type ExerciseListResponse,
+  type ExerciseSummary,
 } from '@goforlift/contracts';
+
+import { requestWithCsrf } from '@/features/auth/auth.api';
 
 export class ExercisesApiError extends Error {
   constructor(public readonly status: number) {
@@ -25,4 +31,18 @@ export async function fetchExercises(
 
   const data: unknown = await response.json();
   return exerciseListResponseSchema.parse(data);
+}
+
+export async function createExercise(
+  input: CreateExerciseInput,
+): Promise<ExerciseSummary> {
+  const validatedInput = createExerciseInputSchema.parse(input);
+  const response = await requestWithCsrf('/api/exercises', {
+    body: JSON.stringify(validatedInput),
+    headers: { 'Content-Type': 'application/json' },
+    method: 'POST',
+  });
+  const data: unknown = await response.json();
+
+  return exerciseSummarySchema.parse(data);
 }
