@@ -20,6 +20,7 @@ import { createDatabase } from './db/client.js';
 import { createExerciseRouter } from './features/exercises/exercise.routes.js';
 import {
   createExerciseForUser,
+  deleteExerciseForUser,
   listExercisesForUser,
   updateExerciseForUser,
 } from './features/exercises/exercise.service.js';
@@ -53,6 +54,8 @@ authRouter.use(
 
 const exerciseRouter = createExerciseRouter({
   createExercise: (userId, input) => createExerciseForUser(db, userId, input),
+  deleteExercise: (userId, exerciseId) =>
+    deleteExerciseForUser(db, userId, exerciseId),
   listExercises: (userId) => listExercisesForUser(db, userId),
   updateExercise: (userId, exerciseId, input) =>
     updateExerciseForUser(db, userId, exerciseId, input),
