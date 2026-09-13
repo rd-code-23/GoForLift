@@ -3,8 +3,10 @@ import {
   createExerciseInputSchema,
   exerciseListResponseSchema,
   exerciseSummarySchema,
+  updateExerciseInputSchema,
   type CreateExerciseInput,
   type ExerciseSummary,
+  type UpdateExerciseInput,
 } from '@goforlift/contracts';
 import { Router } from 'express';
 
@@ -19,11 +21,17 @@ type ExerciseRouterDependencies = {
     input: CreateExerciseInput,
   ) => Promise<ExerciseSummary>;
   listExercises: (userId: string) => Promise<ExerciseSummary[]>;
+  updateExercise: (
+    userId: string,
+    exerciseId: string,
+    input: UpdateExerciseInput,
+  ) => Promise<ExerciseSummary | null>;
 };
 
 export function createExerciseRouter({
   createExercise,
   listExercises,
+  updateExercise,
 }: ExerciseRouterDependencies) {
   const router = Router();
 
@@ -59,6 +67,40 @@ export function createExerciseRouter({
       next(error);
     }
   });
+
+  router.patch(
+    '/:exerciseId',
+    requireAuthentication,
+    async (request, response, next) => {
+      const exerciseIdResult = exerciseSummarySchema.shape.id.safeParse(
+        request.params.exerciseId,
+      );
+      const inputResult = updateExerciseInputSchema.safeParse(request.body);
+
+      if (!exerciseIdResult.success || !inputResult.success) {
+        response.status(400).json({ error: 'invalid_request' });
+        return;
+      }
+
+      try {
+        const userId = getAuthenticatedUserId(request);
+        const exercise = await updateExercise(
+          userId,
+          exerciseIdResult.data,
+          inputResult.data,
+        );
+
+        if (!exercise) {
+          response.status(404).json({ error: 'exercise_not_found' });
+          return;
+        }
+
+        response.status(200).json(exerciseSummarySchema.parse(exercise));
+      } catch (error) {
+        next(error);
+      }
+    },
+  );
 
   return router;
 }

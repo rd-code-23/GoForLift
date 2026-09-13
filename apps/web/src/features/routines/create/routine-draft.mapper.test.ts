@@ -10,7 +10,6 @@ describe('toCreateRoutineInput', () => {
         {
           draftExerciseId: '06d34dc0-8e4c-4bd0-9e3b-7b839b44e486',
           exerciseId: '16d34dc0-8e4c-4bd0-9e3b-7b839b44e486',
-          name: 'Bicep Curl',
           position: 0,
           sets: 3,
           targetReps: 8,
@@ -36,6 +35,5 @@ describe('toCreateRoutineInput', () => {
       notes: null,
     });
     expect(input.exercises[0]).not.toHaveProperty('draftExerciseId');
-    expect(input.exercises[0]).not.toHaveProperty('name');
   });
 });

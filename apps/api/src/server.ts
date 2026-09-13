@@ -21,6 +21,7 @@ import { createExerciseRouter } from './features/exercises/exercise.routes.js';
 import {
   createExerciseForUser,
   listExercisesForUser,
+  updateExerciseForUser,
 } from './features/exercises/exercise.service.js';
 import { createRoutineRouter } from './features/routines/routine.routes.js';
 import {
@@ -53,6 +54,8 @@ authRouter.use(
 const exerciseRouter = createExerciseRouter({
   createExercise: (userId, input) => createExerciseForUser(db, userId, input),
   listExercises: (userId) => listExercisesForUser(db, userId),
+  updateExercise: (userId, exerciseId, input) =>
+    updateExerciseForUser(db, userId, exerciseId, input),
 });
 
 const routineRouter = createRoutineRouter({

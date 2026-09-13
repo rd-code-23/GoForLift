@@ -5,6 +5,7 @@ import {
   createExercise,
   ExercisesApiError,
   fetchExercises,
+  updateExerciseName,
 } from './exercises.api';
 
 afterEach(() => {
@@ -80,5 +81,34 @@ it('creates and validates a custom exercise', async () => {
     2,
     '/api/exercises',
     expect.objectContaining({ method: 'POST' }),
+  );
+});
+
+it('updates a custom exercise name', async () => {
+  const exerciseId = '26d34dc0-8e4c-4bd0-9e3b-7b839b44e486';
+  const fetchMock = vi
+    .fn()
+    .mockResolvedValueOnce(Response.json({ csrfToken: 'csrf-token' }))
+    .mockResolvedValueOnce(
+      Response.json({
+        id: exerciseId,
+        name: 'Renamed Pullover',
+        description: null,
+        isCustom: true,
+      }),
+    );
+  vi.stubGlobal('fetch', fetchMock);
+
+  await expect(
+    updateExerciseName({
+      exerciseId,
+      input: { name: 'Renamed Pullover' },
+    }),
+  ).resolves.toMatchObject({ name: 'Renamed Pullover' });
+
+  expect(fetchMock).toHaveBeenNthCalledWith(
+    2,
+    `/api/exercises/${exerciseId}`,
+    expect.objectContaining({ method: 'PATCH' }),
   );
 });

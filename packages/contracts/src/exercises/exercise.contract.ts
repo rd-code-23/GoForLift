@@ -17,6 +17,12 @@ export const createExerciseInputSchema = z
   })
   .strict();
 
+export const updateExerciseInputSchema = z
+  .object({
+    name: createExerciseInputSchema.shape.name,
+  })
+  .strict();
+
 export const exerciseSummarySchema = z.object({
   id: z.uuid(),
   name: z.string().min(1).max(EXERCISE_NAME_MAX_LENGTH),
@@ -31,3 +37,4 @@ export const exerciseListResponseSchema = z.object({
 export type ExerciseSummary = z.infer<typeof exerciseSummarySchema>;
 export type ExerciseListResponse = z.infer<typeof exerciseListResponseSchema>;
 export type CreateExerciseInput = z.infer<typeof createExerciseInputSchema>;
+export type UpdateExerciseInput = z.infer<typeof updateExerciseInputSchema>;

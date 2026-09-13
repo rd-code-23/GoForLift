@@ -1,4 +1,5 @@
 /** Presents the responsive visual shell for creating a registered-user routine. */
+import { useQuery } from '@tanstack/react-query';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { ArrowLeft, Plus } from 'lucide-react';
 import { useState } from 'react';
@@ -9,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PageTitle } from '@/components/ui/page-title';
+import { exercisesQueryOptions } from '@/features/exercises/exercises.query';
 import { useCreateRoutineMutation } from '@/features/routines/api/routines.mutation';
 import { cn } from '@/lib/utils';
 import type {
@@ -199,6 +201,24 @@ function ExerciseSection({
     setValue,
   } = useFormContext<RoutineDraftFormValues>();
   const exercises = useWatch({ control, name: 'exercises' });
+
+  const exercisesQuery = useQuery({
+    ...exercisesQueryOptions,
+    enabled: false,
+  });
+
+  const exerciseNames = new Map(
+    exercisesQuery.data?.exercises.map((exercise) => [
+      exercise.id,
+      exercise.name,
+    ]),
+  );
+
+  const displayedExercises = exercises.map((exercise) => ({
+    ...exercise,
+    name: exerciseNames.get(exercise.exerciseId) ?? 'Exercise unavailable',
+  }));
+
   const errorMessage = errors.exercises?.message;
 
   function removeExercise(position: number) {
@@ -240,7 +260,7 @@ function ExerciseSection({
 
       {exercises.length > 0 && (
         <RoutineExerciseList
-          exercises={exercises}
+          exercises={displayedExercises}
           onEdit={onEditExercise}
           onRemove={removeExercise}
           onReorder={reorderExercises}
