@@ -11,6 +11,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { useDeleteExerciseMutation } from '@/features/exercises/exercises.mutation';
+import { cn } from '@/lib/utils';
 
 type DeleteExerciseDialogProps = {
   exerciseId: string;
@@ -51,7 +52,14 @@ export function DeleteExerciseDialog({
   return (
     <Dialog onOpenChange={handleOpenChange} open={isOpen}>
       <DialogTrigger asChild>
-        <button className="mt-2 text-sm text-destructive" type="button">
+        <button
+          className={cn(
+            'text-left',
+            'text-sm font-medium text-primary',
+            'hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+          )}
+          type="button"
+        >
           Delete exercise
         </button>
       </DialogTrigger>

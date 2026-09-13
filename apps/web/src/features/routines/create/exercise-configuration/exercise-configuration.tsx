@@ -203,10 +203,10 @@ function ExerciseIdentity({
       >
         <Dumbbell aria-hidden="true" className="size-8 lg:size-14" />
       </div>
-      <div>
+      <div className="text-center">
         <h2 className="text-lg font-semibold lg:text-xl">{exercise.name}</h2>
         {exercise.isCustom && (
-          <div className="flex flex-col items-start lg:items-center">
+          <div className="mx-auto mt-3 flex w-fit translate-x-3 flex-col items-start gap-2 text-left">
             <EditExerciseNameDialog
               exerciseId={exercise.id}
               name={exercise.name}
