@@ -11,13 +11,7 @@ import {
 } from '@goforlift/contracts';
 
 import { requestWithCsrf } from '@/features/auth/auth.api';
-
-export class ExercisesApiError extends Error {
-  constructor(public readonly status: number) {
-    super(`Exercises API request failed with status ${status}`);
-    this.name = 'ExercisesApiError';
-  }
-}
+import { parseApiJsonResponse } from '@/lib/api-error';
 
 export async function fetchExercises(
   signal?: AbortSignal,
@@ -27,12 +21,7 @@ export async function fetchExercises(
     signal,
   });
 
-  if (!response.ok) {
-    throw new ExercisesApiError(response.status);
-  }
-
-  const data: unknown = await response.json();
-  return exerciseListResponseSchema.parse(data);
+  return parseApiJsonResponse(response, exerciseListResponseSchema);
 }
 
 export async function createExercise(

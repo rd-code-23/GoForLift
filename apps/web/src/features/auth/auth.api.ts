@@ -4,20 +4,16 @@ import {
   currentUserResponseSchema,
   type CurrentUserResponse,
 } from '@goforlift/contracts';
-import type { ZodType } from 'zod';
+
+import {
+  ensureSuccessfulResponse,
+  isAuthenticationRequiredError,
+  parseApiJsonResponse,
+} from '@/lib/api-error';
 
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 
-export class AuthApiError extends Error {
-  constructor(public readonly status: number) {
-    super(`Authentication API request failed with status ${status}`);
-    this.name = 'AuthApiError';
-  }
-}
-
-export function isAuthenticationRequiredError(error: unknown) {
-  return error instanceof AuthApiError && error.status === 401;
-}
+export { isAuthenticationRequiredError };
 
 export async function fetchCurrentUser(): Promise<CurrentUserResponse> {
   const response = await credentialedFetch('/auth/me');
@@ -25,7 +21,7 @@ export async function fetchCurrentUser(): Promise<CurrentUserResponse> {
     return { user: null };
   }
 
-  return parseJsonResponse(response, currentUserResponseSchema);
+  return parseApiJsonResponse(response, currentUserResponseSchema);
 }
 
 export async function requestWithCsrf(
@@ -37,7 +33,7 @@ export async function requestWithCsrf(
 
   if (!SAFE_METHODS.has(method)) {
     const csrfResponse = await credentialedFetch('/auth/csrf-token');
-    const { csrfToken } = await parseJsonResponse(
+    const { csrfToken } = await parseApiJsonResponse(
       csrfResponse,
       csrfTokenResponseSchema,
     );
@@ -45,11 +41,7 @@ export async function requestWithCsrf(
   }
 
   const response = await credentialedFetch(input, { ...init, method, headers });
-  if (!response.ok) {
-    throw new AuthApiError(response.status);
-  }
-
-  return response;
+  return ensureSuccessfulResponse(response);
 }
 
 export async function logout() {
@@ -61,13 +53,4 @@ async function credentialedFetch(
   init: RequestInit = {},
 ) {
   return fetch(input, { ...init, credentials: 'include' });
-}
-
-async function parseJsonResponse<T>(response: Response, schema: ZodType<T>) {
-  if (!response.ok) {
-    throw new AuthApiError(response.status);
-  }
-
-  const data: unknown = await response.json();
-  return schema.parse(data);
 }
