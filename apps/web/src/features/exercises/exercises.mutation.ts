@@ -2,7 +2,11 @@
 import type { ExerciseListResponse } from '@goforlift/contracts';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-import { createExercise, updateExerciseName } from './exercises.api';
+import {
+  createExercise,
+  deleteExercise,
+  updateExerciseName,
+} from './exercises.api';
 import { exercisesQueryKey } from './exercises.query';
 
 export function useCreateExerciseMutation() {
@@ -35,6 +39,25 @@ export function useUpdateExerciseNameMutation() {
           currentData && {
             exercises: currentData.exercises.map((exercise) =>
               exercise.id === updatedExercise.id ? updatedExercise : exercise,
+            ),
+          },
+      );
+    },
+  });
+}
+
+export function useDeleteExerciseMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: deleteExercise,
+    onSuccess: (_, deletedExerciseId) => {
+      queryClient.setQueryData<ExerciseListResponse>(
+        exercisesQueryKey,
+        (currentData) =>
+          currentData && {
+            exercises: currentData.exercises.filter(
+              (exercise) => exercise.id !== deletedExerciseId,
             ),
           },
       );

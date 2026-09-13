@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { exercises } from '../../db/schema/index.js';
 import {
   createExerciseForUser,
+  deleteExerciseForUser,
   listExercisesForUser,
   updateExerciseForUser,
 } from './exercise.service.js';
@@ -115,5 +116,24 @@ describe('updateExerciseForUser', () => {
     );
     expect(where).toHaveBeenCalledOnce();
     expect(result).toEqual({ ...updatedExercise, isCustom: true });
+  });
+});
+
+describe('deleteExerciseForUser', () => {
+  it('deletes only an exercise owned by the authenticated user', async () => {
+    const returning = vi.fn().mockResolvedValue([{ id: 'exercise-id' }]);
+    const where = vi.fn(() => ({ returning }));
+    const deleteFrom = vi.fn(() => ({ where }));
+    const database = { delete: deleteFrom } as unknown as NodePgDatabase;
+
+    const result = await deleteExerciseForUser(
+      database,
+      '26d34dc0-8e4c-4bd0-9e3b-7b839b44e486',
+      'f29f209d-d1f9-4988-b693-69b291917b0f',
+    );
+
+    expect(deleteFrom).toHaveBeenCalledWith(exercises);
+    expect(where).toHaveBeenCalledOnce();
+    expect(result).toBe(true);
   });
 });

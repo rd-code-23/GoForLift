@@ -76,3 +76,16 @@ export async function updateExerciseForUser(
 
   return updatedExercise ? { ...updatedExercise, isCustom: true } : null;
 }
+
+export async function deleteExerciseForUser(
+  database: NodePgDatabase,
+  userId: string,
+  exerciseId: string,
+): Promise<boolean> {
+  const deletedExercises = await database
+    .delete(exercises)
+    .where(and(eq(exercises.id, exerciseId), eq(exercises.ownerUserId, userId)))
+    .returning({ id: exercises.id });
+
+  return deletedExercises.length > 0;
+}

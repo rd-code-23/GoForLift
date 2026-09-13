@@ -26,6 +26,7 @@ const exerciseList = [builtInExercise, customExercise];
 
 function createTestApp(
   createExercise = vi.fn(() => Promise.resolve(customExercise)),
+  deleteExercise = vi.fn(() => Promise.resolve(true)),
   listExercises = vi.fn(() => Promise.resolve(exerciseList)),
   updateExercise = vi.fn((): Promise<typeof customExercise | null> =>
     Promise.resolve(customExercise),
@@ -42,10 +43,21 @@ function createTestApp(
   app.use(establishAuthenticatedTestSession());
   app.use(
     '/exercises',
-    createExerciseRouter({ createExercise, listExercises, updateExercise }),
+    createExerciseRouter({
+      createExercise,
+      deleteExercise,
+      listExercises,
+      updateExercise,
+    }),
   );
 
-  return { app, createExercise, listExercises, updateExercise };
+  return {
+    app,
+    createExercise,
+    deleteExercise,
+    listExercises,
+    updateExercise,
+  };
 }
 
 describe('POST /exercises', () => {
@@ -118,12 +130,42 @@ describe('PATCH /exercises/:exerciseId', () => {
 
   it('returns not found when the exercise is not owned by the user', async () => {
     const updateExercise = vi.fn(() => Promise.resolve(null));
-    const { app } = createTestApp(undefined, undefined, updateExercise);
+    const { app } = createTestApp(
+      undefined,
+      undefined,
+      undefined,
+      updateExercise,
+    );
 
     const response = await request(app)
       .patch(`/exercises/${builtInExercise.id}`)
       .set('x-test-authenticated-user-id', userId)
       .send({ name: 'Changed Built In' });
+
+    expect(response.status).toBe(404);
+    expect(response.body).toEqual({ error: 'exercise_not_found' });
+  });
+});
+
+describe('DELETE /exercises/:exerciseId', () => {
+  it('deletes an exercise belonging to the authenticated user', async () => {
+    const { app, deleteExercise } = createTestApp();
+
+    const response = await request(app)
+      .delete(`/exercises/${customExercise.id}`)
+      .set('x-test-authenticated-user-id', userId);
+
+    expect(response.status).toBe(204);
+    expect(deleteExercise).toHaveBeenCalledWith(userId, customExercise.id);
+  });
+
+  it('returns not found when the exercise is not owned by the user', async () => {
+    const deleteExercise = vi.fn(() => Promise.resolve(false));
+    const { app } = createTestApp(undefined, deleteExercise);
+
+    const response = await request(app)
+      .delete(`/exercises/${builtInExercise.id}`)
+      .set('x-test-authenticated-user-id', userId);
 
     expect(response.status).toBe(404);
     expect(response.body).toEqual({ error: 'exercise_not_found' });
