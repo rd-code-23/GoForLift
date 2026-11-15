@@ -25,6 +25,7 @@ import { useExercises } from '@/features/exercises/exercises.query';
 import { z } from 'zod';
 
 import type { RoutineDraftFormValues } from '../routine-draft-form';
+import { DeleteExerciseDialog } from './delete-exercise-dialog';
 import { EditExerciseNameDialog } from './edit-exercise-name-dialog';
 
 type RoutineExerciseFormValues = z.input<
@@ -151,12 +152,27 @@ function ExerciseConfigurationForm({
     await navigate({ to: '/routines/new' });
   }
 
+  async function removeDeletedExerciseFromDraft() {
+    const exercises = getValues('exercises')
+      .filter((draftExercise) => draftExercise.exerciseId !== exercise.id)
+      .map((draftExercise, position) => ({ ...draftExercise, position }));
+
+    setDraftValue('exercises', exercises, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+    await navigate({ to: '/routines/new' });
+  }
+
   return (
     <form
       className="lg:grid lg:grid-cols-[1fr_3fr] lg:divide-x lg:divide-border/40"
       onSubmit={(event) => void handleSubmit(saveExercise)(event)}
     >
-      <ExerciseIdentity exercise={exercise} />
+      <ExerciseIdentity
+        exercise={exercise}
+        onDeleted={removeDeletedExerciseFromDraft}
+      />
 
       <div className="mt-7 lg:mt-0 lg:pl-8">
         <ExerciseFields
@@ -169,7 +185,13 @@ function ExerciseConfigurationForm({
   );
 }
 
-function ExerciseIdentity({ exercise }: { exercise: ExerciseSummary }) {
+function ExerciseIdentity({
+  exercise,
+  onDeleted,
+}: {
+  exercise: ExerciseSummary;
+  onDeleted: () => Promise<void>;
+}) {
   return (
     <div className="flex items-center gap-4 lg:flex-col lg:justify-start lg:pr-8 lg:pt-2 lg:text-center">
       <div
@@ -181,13 +203,20 @@ function ExerciseIdentity({ exercise }: { exercise: ExerciseSummary }) {
       >
         <Dumbbell aria-hidden="true" className="size-8 lg:size-14" />
       </div>
-      <div>
+      <div className="text-center">
         <h2 className="text-lg font-semibold lg:text-xl">{exercise.name}</h2>
         {exercise.isCustom && (
-          <EditExerciseNameDialog
-            exerciseId={exercise.id}
-            name={exercise.name}
-          />
+          <div className="mx-auto mt-3 flex w-fit translate-x-3 flex-col items-start gap-2 text-left">
+            <EditExerciseNameDialog
+              exerciseId={exercise.id}
+              name={exercise.name}
+            />
+            <DeleteExerciseDialog
+              exerciseId={exercise.id}
+              name={exercise.name}
+              onDeleted={onDeleted}
+            />
+          </div>
         )}
       </div>
     </div>

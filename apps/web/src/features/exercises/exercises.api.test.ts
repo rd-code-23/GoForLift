@@ -5,6 +5,8 @@ import { ApiError } from '@/lib/api-error';
 
 import {
   createExercise,
+  deleteExercise,
+  ExercisesApiError,
   fetchExercises,
   updateExerciseName,
 } from './exercises.api';
@@ -111,5 +113,21 @@ it('updates a custom exercise name', async () => {
     2,
     `/api/exercises/${exerciseId}`,
     expect.objectContaining({ method: 'PATCH' }),
+  );
+});
+
+it('deletes a custom exercise', async () => {
+  const exerciseId = '26d34dc0-8e4c-4bd0-9e3b-7b839b44e486';
+  const fetchMock = vi
+    .fn()
+    .mockResolvedValueOnce(Response.json({ csrfToken: 'csrf-token' }))
+    .mockResolvedValueOnce(new Response(null, { status: 204 }));
+  vi.stubGlobal('fetch', fetchMock);
+
+  await expect(deleteExercise(exerciseId)).resolves.toBeUndefined();
+  expect(fetchMock).toHaveBeenNthCalledWith(
+    2,
+    `/api/exercises/${exerciseId}`,
+    expect.objectContaining({ method: 'DELETE' }),
   );
 });

@@ -204,3 +204,56 @@ it('allows a custom exercise name to be edited', async () => {
   expect(screen.getByText('Renamed Curl')).toBeVisible();
   expect(fetchMock).toHaveBeenCalledTimes(3);
 });
+
+it('deletes a custom exercise and removes it from the routine draft', async () => {
+  const user = userEvent.setup();
+  const exerciseId = '26d34dc0-8e4c-4bd0-9e3b-7b839b44e486';
+  const fetchMock = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
+    if (input === '/auth/csrf-token') {
+      return Promise.resolve(Response.json({ csrfToken: 'csrf-token' }));
+    }
+
+    if (init?.method === 'DELETE') {
+      return Promise.resolve(new Response(null, { status: 204 }));
+    }
+
+    return Promise.resolve(
+      Response.json({
+        exercises: [
+          {
+            id: exerciseId,
+            name: 'Custom Curl',
+            description: null,
+            isCustom: true,
+          },
+        ],
+      }),
+    );
+  });
+  vi.stubGlobal('fetch', fetchMock);
+
+  renderConfiguration(exerciseId);
+  await user.click(await screen.findByRole('button', { name: 'Add Exercise' }));
+  await user.click(await screen.findByRole('link', { name: /Custom Curl/ }));
+  await user.click(await screen.findByRole('button', { name: 'Done' }));
+  await user.click(
+    await screen.findByRole('button', { name: 'Actions for Custom Curl' }),
+  );
+  await user.click(screen.getByRole('menuitem', { name: 'Edit' }));
+  await user.click(
+    await screen.findByRole('button', { name: 'Delete exercise' }),
+  );
+
+  expect(
+    screen.getByRole('heading', { name: 'Delete Custom Exercise?' }),
+  ).toBeVisible();
+  await user.click(screen.getByRole('button', { name: 'Delete' }));
+
+  expect(
+    await screen.findByRole('heading', { name: 'Exercises (0)' }),
+  ).toBeVisible();
+  expect(fetchMock).toHaveBeenCalledWith(
+    `/api/exercises/${exerciseId}`,
+    expect.objectContaining({ method: 'DELETE' }),
+  );
+});
