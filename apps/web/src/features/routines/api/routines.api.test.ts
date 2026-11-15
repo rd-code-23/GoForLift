@@ -1,7 +1,9 @@
 /** Verifies routine requests include credentials and validate backend responses. */
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { createRoutine, fetchRoutines, RoutinesApiError } from './routines.api';
+import { ApiError } from '@/lib/api-error';
+
+import { createRoutine, fetchRoutines } from './routines.api';
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -40,7 +42,7 @@ describe('fetchRoutines', () => {
       vi.fn().mockResolvedValue(new Response(null, { status: 500 })),
     );
 
-    await expect(fetchRoutines()).rejects.toEqual(new RoutinesApiError(500));
+    await expect(fetchRoutines()).rejects.toEqual(new ApiError(500));
   });
 
   it('rejects a response that violates the shared contract', async () => {

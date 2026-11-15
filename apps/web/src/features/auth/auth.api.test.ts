@@ -2,12 +2,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { createPublicUser } from '../../test/fixtures/public-user.fixture';
-import {
-  AuthApiError,
-  fetchCurrentUser,
-  logout,
-  requestWithCsrf,
-} from './auth.api';
+import { ApiError } from '../../lib/api-error';
+import { fetchCurrentUser, logout, requestWithCsrf } from './auth.api';
 
 const publicUser = createPublicUser();
 
@@ -89,6 +85,6 @@ describe('requestWithCsrf', () => {
       .mockResolvedValueOnce(new Response(null, { status: 401 }));
     vi.stubGlobal('fetch', fetchMock);
 
-    await expect(logout()).rejects.toEqual(new AuthApiError(401));
+    await expect(logout()).rejects.toEqual(new ApiError(401));
   });
 });

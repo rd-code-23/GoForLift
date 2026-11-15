@@ -1,10 +1,11 @@
 /** Verifies exercise API status and shared-contract handling. */
 import { afterEach, expect, it, vi } from 'vitest';
 
+import { ApiError } from '@/lib/api-error';
+
 import {
   createExercise,
   deleteExercise,
-  ExercisesApiError,
   fetchExercises,
   updateExerciseName,
 } from './exercises.api';
@@ -48,7 +49,9 @@ it('throws a typed error when the request fails', async () => {
     vi.fn().mockResolvedValue(new Response(null, { status: 500 })),
   );
 
-  await expect(fetchExercises()).rejects.toEqual(new ExercisesApiError(500));
+  const request = fetchExercises();
+  await expect(request).rejects.toBeInstanceOf(ApiError);
+  await expect(request).rejects.toMatchObject({ status: 500 });
 });
 
 it('creates and validates a custom exercise', async () => {

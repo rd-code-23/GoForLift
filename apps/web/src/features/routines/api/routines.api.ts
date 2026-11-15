@@ -9,13 +9,7 @@ import {
 } from '@goforlift/contracts';
 
 import { requestWithCsrf } from '@/features/auth/auth.api';
-
-export class RoutinesApiError extends Error {
-  constructor(public readonly status: number) {
-    super(`Routines API request failed with status ${status}`);
-    this.name = 'RoutinesApiError';
-  }
-}
+import { parseApiJsonResponse } from '@/lib/api-error';
 
 export async function fetchRoutines(
   signal?: AbortSignal,
@@ -25,12 +19,7 @@ export async function fetchRoutines(
     signal,
   });
 
-  if (!response.ok) {
-    throw new RoutinesApiError(response.status);
-  }
-
-  const data: unknown = await response.json();
-  return routineListResponseSchema.parse(data);
+  return parseApiJsonResponse(response, routineListResponseSchema);
 }
 
 export async function createRoutine(
