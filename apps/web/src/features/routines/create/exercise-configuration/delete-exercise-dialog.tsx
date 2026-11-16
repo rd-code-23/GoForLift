@@ -11,6 +11,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { useDeleteExerciseMutation } from '@/features/exercises/exercises.mutation';
+import { getApiErrorMessage } from '@/lib/api-error-message';
 import { cn } from '@/lib/utils';
 
 type DeleteExerciseDialogProps = {
@@ -27,6 +28,16 @@ export function DeleteExerciseDialog({
   const [isOpen, setIsOpen] = useState(false);
   const deleteExerciseMutation = useDeleteExerciseMutation();
 
+  const deleteErrorMessage = deleteExerciseMutation.isError
+    ? getApiErrorMessage(
+        deleteExerciseMutation.error,
+        "We couldn't delete the exercise. Try again.",
+        {
+          exercise_not_found: 'This exercise has already been deleted.',
+        },
+      )
+    : undefined;
+
   function handleOpenChange(open: boolean) {
     setIsOpen(open);
 
@@ -35,18 +46,13 @@ export function DeleteExerciseDialog({
     }
   }
 
-  async function deleteExercise() {
-    const wasDeleted = await deleteExerciseMutation
-      .mutateAsync(exerciseId)
-      .then(() => true)
-      .catch(() => false);
-
-    if (!wasDeleted) {
-      return;
-    }
-
-    handleOpenChange(false);
-    await onDeleted();
+  function deleteExercise() {
+    deleteExerciseMutation.mutate(exerciseId, {
+      onSuccess: () => {
+        handleOpenChange(false);
+        void onDeleted();
+      },
+    });
   }
 
   return (
@@ -71,9 +77,9 @@ export function DeleteExerciseDialog({
           list. This action cannot be undone.
         </DialogDescription>
 
-        {deleteExerciseMutation.isError && (
+        {deleteErrorMessage && (
           <p className="mt-4 text-sm text-destructive" role="alert">
-            Exercise could not be deleted. Please try again.
+            {deleteErrorMessage}
           </p>
         )}
 
@@ -85,7 +91,7 @@ export function DeleteExerciseDialog({
           </DialogClose>
           <Button
             disabled={deleteExerciseMutation.isPending}
-            onClick={() => void deleteExercise()}
+            onClick={deleteExercise}
             type="button"
             variant="destructive"
           >
