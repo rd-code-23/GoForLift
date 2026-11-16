@@ -94,6 +94,24 @@ export const routineListResponseSchema = z.object({
   routines: z.array(routineSummarySchema),
 });
 
+export const routineDetailExerciseSchema = createRoutineExerciseInputSchema
+  .extend({
+    name: z.string().min(1),
+    description: z.string().nullable(),
+  })
+  .strict();
+
+export const routineDetailSchema = z.object({
+  id: z.uuid(),
+  name: z.string().min(1),
+  description: z.string().nullable(),
+  exercises: z.array(routineDetailExerciseSchema),
+  schedules: z.array(createRoutineScheduleInputSchema),
+  createdAt: z.iso.datetime(),
+  updatedAt: z.iso.datetime(),
+});
+
 export type RoutineSummary = z.infer<typeof routineSummarySchema>;
 export type RoutineListResponse = z.infer<typeof routineListResponseSchema>;
 export type CreateRoutineInput = z.infer<typeof createRoutineInputSchema>;
+export type RoutineDetail = z.infer<typeof routineDetailSchema>;

@@ -7,6 +7,7 @@ import type { ReactNode } from 'react';
 import { useApplicationIdentity } from '@/app/application-identity';
 import { AddActionButton } from '@/components/ui/add-action-button';
 import { PageTitle } from '@/components/ui/page-title';
+import { cn } from '@/lib/utils';
 import { useRoutines } from '../api/routines.query';
 
 const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -112,25 +113,35 @@ function RoutineCard({ routine }: RoutineCardProps) {
   const exerciseLabel = routine.exerciseCount === 1 ? 'exercise' : 'exercises';
 
   return (
-    <li className="rounded-xl border bg-surface p-5 shadow-sm">
-      <h2 className="text-lg font-semibold">{routine.name}</h2>
-      {routine.description && (
-        <p className="mt-1 text-sm text-muted-foreground">
-          {routine.description}
-        </p>
-      )}
-      <div className="mt-4 flex flex-wrap gap-4 text-sm text-muted-foreground">
-        <span className="flex items-center gap-2">
-          <Dumbbell aria-hidden="true" className="size-4" />
-          {routine.exerciseCount} {exerciseLabel}
-        </span>
-        {schedule && (
-          <span className="flex items-center gap-2">
-            <CalendarDays aria-hidden="true" className="size-4" />
-            {schedule}
-          </span>
+    <li>
+      <Link
+        className={cn(
+          'block rounded-xl border p-5 shadow-sm',
+          'bg-surface',
+          'transition-colors hover:border-primary/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
         )}
-      </div>
+        params={{ routineId: routine.id }}
+        to="/routines/$routineId"
+      >
+        <h2 className="text-lg font-semibold">{routine.name}</h2>
+        {routine.description && (
+          <p className="mt-1 text-sm text-muted-foreground">
+            {routine.description}
+          </p>
+        )}
+        <div className="mt-4 flex flex-wrap gap-4 text-sm text-muted-foreground">
+          <span className="flex items-center gap-2">
+            <Dumbbell aria-hidden="true" className="size-4" />
+            {routine.exerciseCount} {exerciseLabel}
+          </span>
+          {schedule && (
+            <span className="flex items-center gap-2">
+              <CalendarDays aria-hidden="true" className="size-4" />
+              {schedule}
+            </span>
+          )}
+        </div>
+      </Link>
     </li>
   );
 }
