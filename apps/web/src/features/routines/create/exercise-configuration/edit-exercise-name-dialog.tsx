@@ -19,6 +19,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useUpdateExerciseNameMutation } from '@/features/exercises/exercises.mutation';
+import { getApiErrorMessage } from '@/lib/api-error-message';
 import { cn } from '@/lib/utils';
 
 type EditExerciseNameDialogProps = {
@@ -43,6 +44,18 @@ export function EditExerciseNameDialog({
     resolver: zodResolver(updateExerciseInputSchema),
   });
 
+  const updateErrorMessage = updateNameMutation.isError
+    ? getApiErrorMessage(
+        updateNameMutation.error,
+        "We couldn't update the exercise name. Try again.",
+        {
+          exercise_not_found: 'This exercise is no longer available.',
+          invalid_request:
+            'The exercise name is invalid. Review it and try again.',
+        },
+      )
+    : undefined;
+
   function handleOpenChange(open: boolean) {
     setIsOpen(open);
 
@@ -53,16 +66,11 @@ export function EditExerciseNameDialog({
     }
   }
 
-  async function saveName(input: UpdateExerciseInput) {
-    const exercise = await updateNameMutation
-      .mutateAsync({ exerciseId, input })
-      .catch(() => null);
-
-    if (!exercise) {
-      return;
-    }
-
-    handleOpenChange(false);
+  function saveName(input: UpdateExerciseInput) {
+    updateNameMutation.mutate(
+      { exerciseId, input },
+      { onSuccess: () => handleOpenChange(false) },
+    );
   }
 
   return (
@@ -114,9 +122,9 @@ export function EditExerciseNameDialog({
             )}
           </div>
 
-          {updateNameMutation.isError && (
+          {updateErrorMessage && (
             <p className="text-sm text-destructive" role="alert">
-              Exercise name could not be updated. Please try again.
+              {updateErrorMessage}
             </p>
           )}
 

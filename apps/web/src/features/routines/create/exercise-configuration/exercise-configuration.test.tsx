@@ -257,3 +257,140 @@ it('deletes a custom exercise and removes it from the routine draft', async () =
     expect.objectContaining({ method: 'DELETE' }),
   );
 });
+
+it('explains when a custom exercise was already deleted', async () => {
+  const user = userEvent.setup();
+  const exerciseId = '26d34dc0-8e4c-4bd0-9e3b-7b839b44e486';
+  const fetchMock = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
+    if (input === '/auth/csrf-token') {
+      return Promise.resolve(Response.json({ csrfToken: 'csrf-token' }));
+    }
+
+    if (init?.method === 'DELETE') {
+      return Promise.resolve(
+        Response.json({ error: 'exercise_not_found' }, { status: 404 }),
+      );
+    }
+
+    return Promise.resolve(
+      Response.json({
+        exercises: [
+          {
+            id: exerciseId,
+            name: 'Custom Curl',
+            description: null,
+            isCustom: true,
+          },
+        ],
+      }),
+    );
+  });
+  vi.stubGlobal('fetch', fetchMock);
+
+  renderConfiguration(exerciseId);
+  await user.click(await screen.findByRole('button', { name: 'Add Exercise' }));
+  await user.click(await screen.findByRole('link', { name: /Custom Curl/ }));
+  await user.click(await screen.findByRole('button', { name: 'Done' }));
+  await user.click(
+    await screen.findByRole('button', { name: 'Actions for Custom Curl' }),
+  );
+  await user.click(screen.getByRole('menuitem', { name: 'Edit' }));
+  await user.click(
+    await screen.findByRole('button', { name: 'Delete exercise' }),
+  );
+  await user.click(screen.getByRole('button', { name: 'Delete' }));
+
+  expect(await screen.findByRole('alert')).toHaveTextContent(
+    'This exercise has already been deleted.',
+  );
+  expect(
+    screen.getByRole('heading', { name: 'Delete Custom Exercise?' }),
+  ).toBeVisible();
+});
+
+it('explains when a custom exercise can no longer be renamed', async () => {
+  const user = userEvent.setup();
+  const exerciseId = '26d34dc0-8e4c-4bd0-9e3b-7b839b44e486';
+  const fetchMock = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
+    if (input === '/auth/csrf-token') {
+      return Promise.resolve(Response.json({ csrfToken: 'csrf-token' }));
+    }
+
+    if (init?.method === 'PATCH') {
+      return Promise.resolve(
+        Response.json({ error: 'exercise_not_found' }, { status: 404 }),
+      );
+    }
+
+    return Promise.resolve(
+      Response.json({
+        exercises: [
+          {
+            id: exerciseId,
+            name: 'Custom Curl',
+            description: null,
+            isCustom: true,
+          },
+        ],
+      }),
+    );
+  });
+  vi.stubGlobal('fetch', fetchMock);
+
+  renderConfiguration(exerciseId);
+  await user.click(await screen.findByRole('button', { name: 'Add Exercise' }));
+  await user.click(await screen.findByRole('link', { name: /Custom Curl/ }));
+  await user.click(await screen.findByRole('button', { name: 'Edit name' }));
+
+  await user.clear(screen.getByLabelText('Exercise Name'));
+  await user.type(screen.getByLabelText('Exercise Name'), 'Renamed Curl');
+  await user.click(screen.getByRole('button', { name: 'Save' }));
+
+  expect(await screen.findByRole('alert')).toHaveTextContent(
+    'This exercise is no longer available.',
+  );
+  expect(
+    screen.getByRole('heading', { name: 'Edit Exercise Name' }),
+  ).toBeVisible();
+});
+
+it('explains when routine exercises are no longer available during save', async () => {
+  const user = userEvent.setup();
+  const exerciseId = '26d34dc0-8e4c-4bd0-9e3b-7b839b44e486';
+  const fetchMock = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
+    if (input === '/auth/csrf-token') {
+      return Promise.resolve(Response.json({ csrfToken: 'csrf-token' }));
+    }
+
+    if (input === '/api/routines' && init?.method === 'POST') {
+      return Promise.resolve(
+        Response.json({ error: 'invalid_exercise_selection' }, { status: 400 }),
+      );
+    }
+
+    return Promise.resolve(
+      Response.json({
+        exercises: [
+          {
+            id: exerciseId,
+            name: 'Bicep Curl',
+            description: null,
+            isCustom: false,
+          },
+        ],
+      }),
+    );
+  });
+  vi.stubGlobal('fetch', fetchMock);
+
+  renderConfiguration(exerciseId);
+  await user.type(await screen.findByLabelText('Routine Name'), 'Upper Body');
+  await user.click(screen.getByRole('button', { name: 'Add Exercise' }));
+  await user.click(await screen.findByRole('link', { name: /Bicep Curl/ }));
+  await user.click(screen.getByRole('button', { name: 'Done' }));
+  await user.click(await screen.findByRole('button', { name: 'Save' }));
+
+  expect(await screen.findByRole('alert')).toHaveTextContent(
+    'One or more exercises are no longer available. Review your exercises and try again.',
+  );
+});

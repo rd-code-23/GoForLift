@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import { PageTitle } from '@/components/ui/page-title';
 import { exercisesQueryOptions } from '@/features/exercises/exercises.query';
 import { useCreateRoutineMutation } from '@/features/routines/api/routines.mutation';
+import { getApiErrorMessage } from '@/lib/api-error-message';
 import { cn } from '@/lib/utils';
 import type {
   ParsedRoutineDraftFormValues,
@@ -35,6 +36,17 @@ export function RoutineEditor() {
     unknown,
     ParsedRoutineDraftFormValues
   >();
+
+  const saveErrorMessage = createRoutineMutation.isError
+    ? getApiErrorMessage(
+        createRoutineMutation.error,
+        "We couldn't save your routine. Try again.",
+        {
+          invalid_exercise_selection:
+            'One or more exercises are no longer available. Review your exercises and try again.',
+        },
+      )
+    : undefined;
 
   const addExercise = async () => {
     await navigate({ to: '/routines/new/exercises' });
@@ -69,9 +81,9 @@ export function RoutineEditor() {
         showRequiredFieldsMessage={showRequiredFieldsMessage}
       />
 
-      {createRoutineMutation.isError && (
+      {saveErrorMessage && (
         <p className="mb-5 text-sm text-destructive" role="alert">
-          Routine could not be saved. Please try again.
+          {saveErrorMessage}
         </p>
       )}
 

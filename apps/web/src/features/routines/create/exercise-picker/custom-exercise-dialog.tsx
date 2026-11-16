@@ -22,6 +22,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useCreateExerciseMutation } from '@/features/exercises/exercises.mutation';
+import { getApiErrorMessage } from '@/lib/api-error-message';
 import { cn } from '@/lib/utils';
 
 export function CustomExerciseDialog() {
@@ -39,6 +40,17 @@ export function CustomExerciseDialog() {
     resolver: zodResolver(createExerciseInputSchema),
   });
 
+  const createErrorMessage = createExerciseMutation.isError
+    ? getApiErrorMessage(
+        createExerciseMutation.error,
+        "We couldn't create your custom exercise. Try again.",
+        {
+          invalid_request:
+            'Some exercise details are invalid. Review them and try again.',
+        },
+      )
+    : undefined;
+
   function handleOpenChange(open: boolean) {
     setIsOpen(open);
 
@@ -48,19 +60,15 @@ export function CustomExerciseDialog() {
     }
   }
 
-  async function saveCustomExercise(input: CreateExerciseInput) {
-    const exercise = await createExerciseMutation
-      .mutateAsync(input)
-      .catch(() => null);
-
-    if (!exercise) {
-      return;
-    }
-
-    handleOpenChange(false);
-    await navigate({
-      params: { exerciseId: exercise.id },
-      to: '/routines/new/exercises/$exerciseId',
+  function saveCustomExercise(input: CreateExerciseInput) {
+    createExerciseMutation.mutate(input, {
+      onSuccess: (exercise) => {
+        handleOpenChange(false);
+        void navigate({
+          params: { exerciseId: exercise.id },
+          to: '/routines/new/exercises/$exerciseId',
+        });
+      },
     });
   }
 
@@ -123,9 +131,9 @@ export function CustomExerciseDialog() {
             />
           </div>
 
-          {createExerciseMutation.isError && (
+          {createErrorMessage && (
             <p className="text-sm text-destructive" role="alert">
-              Custom exercise could not be created. Please try again.
+              {createErrorMessage}
             </p>
           )}
 
