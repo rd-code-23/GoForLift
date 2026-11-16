@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { ApiError } from '@/lib/api-error';
 
-import { createRoutine, fetchRoutines } from './routines.api';
+import { createRoutine, deleteRoutine, fetchRoutines } from './routines.api';
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -104,5 +104,26 @@ describe('createRoutine', () => {
       'csrf-token-123',
     );
     expect(JSON.parse(requestInit.body as string)).toEqual(input);
+  });
+});
+
+describe('deleteRoutine', () => {
+  it('deletes a routine with CSRF protection', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(Response.json({ csrfToken: 'csrf-token-123' }))
+      .mockResolvedValueOnce(new Response(null, { status: 204 }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await deleteRoutine('26d34dc0-8e4c-4bd0-9e3b-7b839b44e486');
+
+    const requestInit = fetchMock.mock.calls[1]?.[1] as RequestInit;
+    expect(fetchMock.mock.calls[1]?.[0]).toBe(
+      '/api/routines/26d34dc0-8e4c-4bd0-9e3b-7b839b44e486',
+    );
+    expect(requestInit.method).toBe('DELETE');
+    expect(new Headers(requestInit.headers).get('X-CSRF-Token')).toBe(
+      'csrf-token-123',
+    );
   });
 });

@@ -10,6 +10,7 @@ import {
 import { InvalidRoutineExerciseSelectionError } from './routine.errors.js';
 import {
   createRoutineForUser,
+  deleteRoutineForUser,
   getRoutineForUser,
   listRoutinesForUser,
 } from './routine.service.js';
@@ -256,5 +257,44 @@ describe('getRoutineForUser', () => {
 
     expect(result).toBeNull();
     expect(select).toHaveBeenCalledOnce();
+  });
+});
+
+describe('deleteRoutineForUser', () => {
+  it('deletes only an owner-matched routine', async () => {
+    const returning = vi
+      .fn()
+      .mockResolvedValue([{ id: 'c38794ef-9a4a-40d8-8cdc-7f7416a53120' }]);
+    const where = vi.fn(() => ({ returning }));
+    const database = {
+      delete: vi.fn(() => ({ where })),
+    } as unknown as NodePgDatabase;
+
+    await expect(
+      deleteRoutineForUser(
+        database,
+        userId,
+        'c38794ef-9a4a-40d8-8cdc-7f7416a53120',
+      ),
+    ).resolves.toBe(true);
+    expect(where).toHaveBeenCalledOnce();
+  });
+
+  it('reports when no owner-matched routine was deleted', async () => {
+    const database = {
+      delete: vi.fn(() => ({
+        where: vi.fn(() => ({
+          returning: vi.fn().mockResolvedValue([]),
+        })),
+      })),
+    } as unknown as NodePgDatabase;
+
+    await expect(
+      deleteRoutineForUser(
+        database,
+        userId,
+        'c38794ef-9a4a-40d8-8cdc-7f7416a53120',
+      ),
+    ).resolves.toBe(false);
   });
 });
