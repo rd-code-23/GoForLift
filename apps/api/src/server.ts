@@ -29,6 +29,7 @@ import {
   createRoutineForUser,
   getRoutineForUser,
   listRoutinesForUser,
+  updateRoutineForUser,
 } from './features/routines/routine.service.js';
 
 const { db, pool } = createDatabase(env.DATABASE_URL);
@@ -66,6 +67,8 @@ const routineRouter = createRoutineRouter({
   createRoutine: (userId, input) => createRoutineForUser(db, userId, input),
   getRoutine: (userId, routineId) => getRoutineForUser(db, userId, routineId),
   listRoutines: (userId) => listRoutinesForUser(db, userId),
+  updateRoutine: (userId, routineId, input) =>
+    updateRoutineForUser(db, userId, routineId, input),
 });
 
 const app = createApp({

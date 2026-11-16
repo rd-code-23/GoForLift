@@ -9,6 +9,7 @@ import {
   routineDetailSchema,
   routineNameSchema,
   routineSummarySchema,
+  updateRoutineInputSchema,
 } from './routine.contract.js';
 
 const validCreateRoutineInput = {
@@ -137,6 +138,14 @@ describe('createRoutineInputSchema', () => {
         userId: '26d34dc0-8e4c-4bd0-9e3b-7b839b44e486',
       }),
     ).toThrow();
+  });
+});
+
+describe('updateRoutineInputSchema', () => {
+  it('uses the same complete-form validation and defaults as routine creation', () => {
+    expect(updateRoutineInputSchema.parse(validCreateRoutineInput)).toEqual(
+      createRoutineInputSchema.parse(validCreateRoutineInput),
+    );
   });
 });
 

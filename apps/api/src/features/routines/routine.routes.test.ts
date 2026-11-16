@@ -64,6 +64,9 @@ function createTestApp(
   getRoutine = vi.fn(() =>
     Promise.resolve<typeof routineDetail | null>(routineDetail),
   ),
+  updateRoutine = vi.fn(() =>
+    Promise.resolve<typeof routineSummary | null>(routineSummary),
+  ),
 ) {
   const app = express();
   app.use(express.json());
@@ -76,10 +79,15 @@ function createTestApp(
   app.use(establishAuthenticatedTestSession());
   app.use(
     '/routines',
-    createRoutineRouter({ createRoutine, getRoutine, listRoutines }),
+    createRoutineRouter({
+      createRoutine,
+      getRoutine,
+      listRoutines,
+      updateRoutine,
+    }),
   );
 
-  return { app, createRoutine, getRoutine, listRoutines };
+  return { app, createRoutine, getRoutine, listRoutines, updateRoutine };
 }
 
 describe('POST /routines', () => {
@@ -207,5 +215,86 @@ describe('GET /routines/:routineId', () => {
     expect(invalidResponse.body).toEqual({ error: 'routine_not_found' });
     expect(unavailableResponse.body).toEqual({ error: 'routine_not_found' });
     expect(getRoutine).toHaveBeenCalledOnce();
+  });
+});
+
+describe('PATCH /routines/:routineId', () => {
+  it('updates an owned routine with normalized form data', async () => {
+    const { app, updateRoutine } = createTestApp();
+
+    const response = await request(app)
+      .patch(`/routines/${routineSummary.id}`)
+      .set('x-test-authenticated-user-id', userId)
+      .send(createRoutineInput);
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual(routineSummary);
+    expect(updateRoutine).toHaveBeenCalledWith(userId, routineSummary.id, {
+      ...createRoutineInput,
+      exercises: [
+        {
+          ...createRoutineInput.exercises[0],
+          restBetweenSetsSeconds: 60,
+          restAfterExerciseSeconds: 0,
+          notes: null,
+        },
+      ],
+      schedules: [],
+    });
+  });
+
+  it('rejects invalid requests before updating', async () => {
+    const { app, updateRoutine } = createTestApp();
+
+    const invalidIdResponse = await request(app)
+      .patch('/routines/not-a-uuid')
+      .set('x-test-authenticated-user-id', userId)
+      .send(createRoutineInput);
+    const invalidBodyResponse = await request(app)
+      .patch(`/routines/${routineSummary.id}`)
+      .set('x-test-authenticated-user-id', userId)
+      .send({ ...createRoutineInput, exercises: [] });
+
+    expect(invalidIdResponse.status).toBe(400);
+    expect(invalidBodyResponse.status).toBe(400);
+    expect(updateRoutine).not.toHaveBeenCalled();
+  });
+
+  it('does not reveal non-owned routines', async () => {
+    const updateRoutine = vi.fn(() => Promise.resolve(null));
+    const { app } = createTestApp(
+      undefined,
+      undefined,
+      undefined,
+      updateRoutine,
+    );
+
+    const response = await request(app)
+      .patch(`/routines/${routineSummary.id}`)
+      .set('x-test-authenticated-user-id', userId)
+      .send(createRoutineInput);
+
+    expect(response.status).toBe(404);
+    expect(response.body).toEqual({ error: 'routine_not_found' });
+  });
+
+  it('rejects exercises unavailable to the authenticated user', async () => {
+    const updateRoutine = vi.fn(() =>
+      Promise.reject(new InvalidRoutineExerciseSelectionError()),
+    );
+    const { app } = createTestApp(
+      undefined,
+      undefined,
+      undefined,
+      updateRoutine,
+    );
+
+    const response = await request(app)
+      .patch(`/routines/${routineSummary.id}`)
+      .set('x-test-authenticated-user-id', userId)
+      .send(createRoutineInput);
+
+    expect(response.status).toBe(400);
+    expect(response.body).toEqual({ error: 'invalid_exercise_selection' });
   });
 });

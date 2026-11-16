@@ -12,6 +12,7 @@ import {
   createRoutineForUser,
   getRoutineForUser,
   listRoutinesForUser,
+  updateRoutineForUser,
 } from './routine.service.js';
 
 const userId = '26d34dc0-8e4c-4bd0-9e3b-7b839b44e486';
@@ -256,5 +257,207 @@ describe('getRoutineForUser', () => {
 
     expect(result).toBeNull();
     expect(select).toHaveBeenCalledOnce();
+  });
+});
+
+describe('updateRoutineForUser', () => {
+  it('replaces routine details, exercises, and schedules in one transaction', async () => {
+    const routineId = 'c38794ef-9a4a-40d8-8cdc-7f7416a53120';
+    const createdAt = new Date('2026-08-24T18:00:00.000Z');
+    const updatedAt = new Date('2026-08-25T19:00:00.000Z');
+    const updatedRoutine = {
+      id: routineId,
+      name: 'Updated Upper Body',
+      description: 'Updated plan',
+      createdAt,
+      updatedAt,
+    };
+    const returning = vi.fn().mockResolvedValue([updatedRoutine]);
+    const updateWhere = vi.fn(() => ({ returning }));
+    const set = vi.fn(
+      (values: {
+        name: string;
+        description: string | null;
+        updatedAt: Date;
+      }) => {
+        void values;
+        return { where: updateWhere };
+      },
+    );
+    const availableWhere = vi.fn().mockResolvedValue([{ id: exerciseId }]);
+    const deleteWhere = vi.fn().mockResolvedValue(undefined);
+    const exerciseValues = vi.fn().mockResolvedValue(undefined);
+    const scheduleValues = vi.fn().mockResolvedValue(undefined);
+    const transaction = {
+      update: vi.fn(() => ({ set })),
+      select: vi.fn(() => ({
+        from: vi.fn(() => ({ where: availableWhere })),
+      })),
+      delete: vi.fn(() => ({ where: deleteWhere })),
+      insert: vi.fn((table) => {
+        if (table === routineExercises) return { values: exerciseValues };
+        if (table === routineSchedules) return { values: scheduleValues };
+        throw new Error('Unexpected table.');
+      }),
+    };
+    const database = {
+      transaction: vi.fn(
+        async <Result>(
+          callback: (activeTransaction: typeof transaction) => Promise<Result>,
+        ) => callback(transaction),
+      ),
+    } as unknown as NodePgDatabase;
+    const input = {
+      name: updatedRoutine.name,
+      description: updatedRoutine.description,
+      exercises: [
+        {
+          exerciseId,
+          position: 0,
+          sets: 4,
+          targetReps: 8,
+          weight: 30,
+          weightUnit: 'lb' as const,
+          restBetweenSetsSeconds: 75,
+          restAfterExerciseSeconds: 90,
+          notes: 'Controlled tempo',
+        },
+      ],
+      schedules: [{ dayOfWeek: 2, localTime: '18:30:00' }],
+    };
+
+    const result = await updateRoutineForUser(
+      database,
+      userId,
+      routineId,
+      input,
+    );
+
+    const updateValues = set.mock.calls[0]?.[0];
+    expect(updateValues?.name).toBe(input.name);
+    expect(updateValues?.description).toBe(input.description);
+    expect(updateValues?.updatedAt).toBeInstanceOf(Date);
+    expect(deleteWhere).toHaveBeenCalledTimes(2);
+    expect(exerciseValues).toHaveBeenCalledWith([
+      expect.objectContaining({
+        routineId,
+        exerciseId,
+        weight: '30',
+      }),
+    ]);
+    expect(scheduleValues).toHaveBeenCalledWith([
+      { routineId, dayOfWeek: 2, localTime: '18:30:00' },
+    ]);
+    expect(result).toEqual({
+      id: routineId,
+      name: input.name,
+      description: input.description,
+      exerciseCount: 1,
+      scheduledDays: [2],
+      createdAt: createdAt.toISOString(),
+      updatedAt: updatedAt.toISOString(),
+    });
+  });
+
+  it('stops before replacing children when the routine is not owned', async () => {
+    const deleteRows = vi.fn();
+    const insert = vi.fn();
+    const transaction = {
+      update: vi.fn(() => ({
+        set: vi.fn(() => ({
+          where: vi.fn(() => ({
+            returning: vi.fn().mockResolvedValue([]),
+          })),
+        })),
+      })),
+      select: vi.fn(),
+      delete: deleteRows,
+      insert,
+    };
+    const database = {
+      transaction: vi.fn(
+        async <Result>(
+          callback: (activeTransaction: typeof transaction) => Promise<Result>,
+        ) => callback(transaction),
+      ),
+    } as unknown as NodePgDatabase;
+
+    const result = await updateRoutineForUser(database, userId, exerciseId, {
+      name: 'Updated Routine',
+      exercises: [
+        {
+          exerciseId,
+          position: 0,
+          sets: 3,
+          targetReps: 8,
+          weight: 10,
+          weightUnit: 'lb',
+          restBetweenSetsSeconds: 60,
+          restAfterExerciseSeconds: 0,
+          notes: null,
+        },
+      ],
+      schedules: [],
+    });
+
+    expect(result).toBeNull();
+    expect(transaction.select).not.toHaveBeenCalled();
+    expect(deleteRows).not.toHaveBeenCalled();
+    expect(insert).not.toHaveBeenCalled();
+  });
+
+  it('rejects unavailable exercises before replacing child rows', async () => {
+    const updatedRoutine = {
+      id: exerciseId,
+      name: 'Updated Routine',
+      description: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    const deleteRows = vi.fn();
+    const insert = vi.fn();
+    const transaction = {
+      update: vi.fn(() => ({
+        set: vi.fn(() => ({
+          where: vi.fn(() => ({
+            returning: vi.fn().mockResolvedValue([updatedRoutine]),
+          })),
+        })),
+      })),
+      select: vi.fn(() => ({
+        from: vi.fn(() => ({ where: vi.fn().mockResolvedValue([]) })),
+      })),
+      delete: deleteRows,
+      insert,
+    };
+    const database = {
+      transaction: vi.fn(
+        async <Result>(
+          callback: (activeTransaction: typeof transaction) => Promise<Result>,
+        ) => callback(transaction),
+      ),
+    } as unknown as NodePgDatabase;
+
+    await expect(
+      updateRoutineForUser(database, userId, updatedRoutine.id, {
+        name: updatedRoutine.name,
+        exercises: [
+          {
+            exerciseId,
+            position: 0,
+            sets: 3,
+            targetReps: 8,
+            weight: 10,
+            weightUnit: 'lb',
+            restBetweenSetsSeconds: 60,
+            restAfterExerciseSeconds: 0,
+            notes: null,
+          },
+        ],
+        schedules: [],
+      }),
+    ).rejects.toBeInstanceOf(InvalidRoutineExerciseSelectionError);
+    expect(deleteRows).not.toHaveBeenCalled();
+    expect(insert).not.toHaveBeenCalled();
   });
 });
