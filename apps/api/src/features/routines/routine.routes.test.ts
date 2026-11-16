@@ -64,6 +64,7 @@ function createTestApp(
   getRoutine = vi.fn(() =>
     Promise.resolve<typeof routineDetail | null>(routineDetail),
   ),
+  deleteRoutine = vi.fn(() => Promise.resolve(true)),
 ) {
   const app = express();
   app.use(express.json());
@@ -76,10 +77,15 @@ function createTestApp(
   app.use(establishAuthenticatedTestSession());
   app.use(
     '/routines',
-    createRoutineRouter({ createRoutine, getRoutine, listRoutines }),
+    createRoutineRouter({
+      createRoutine,
+      deleteRoutine,
+      getRoutine,
+      listRoutines,
+    }),
   );
 
-  return { app, createRoutine, getRoutine, listRoutines };
+  return { app, createRoutine, deleteRoutine, getRoutine, listRoutines };
 }
 
 describe('POST /routines', () => {
@@ -207,5 +213,41 @@ describe('GET /routines/:routineId', () => {
     expect(invalidResponse.body).toEqual({ error: 'routine_not_found' });
     expect(unavailableResponse.body).toEqual({ error: 'routine_not_found' });
     expect(getRoutine).toHaveBeenCalledOnce();
+  });
+});
+
+describe('DELETE /routines/:routineId', () => {
+  it('deletes an owned routine', async () => {
+    const { app, deleteRoutine } = createTestApp();
+
+    const response = await request(app)
+      .delete(`/routines/${routineDetail.id}`)
+      .set('x-test-authenticated-user-id', userId);
+
+    expect(response.status).toBe(204);
+    expect(deleteRoutine).toHaveBeenCalledWith(userId, routineDetail.id);
+  });
+
+  it('returns the same not-found response for invalid and non-owned routines', async () => {
+    const deleteRoutine = vi.fn(() => Promise.resolve(false));
+    const { app } = createTestApp(
+      undefined,
+      undefined,
+      undefined,
+      deleteRoutine,
+    );
+
+    const invalidResponse = await request(app)
+      .delete('/routines/not-a-uuid')
+      .set('x-test-authenticated-user-id', userId);
+    const nonOwnedResponse = await request(app)
+      .delete(`/routines/${routineDetail.id}`)
+      .set('x-test-authenticated-user-id', userId);
+
+    expect(invalidResponse.status).toBe(404);
+    expect(nonOwnedResponse.status).toBe(404);
+    expect(invalidResponse.body).toEqual({ error: 'routine_not_found' });
+    expect(nonOwnedResponse.body).toEqual({ error: 'routine_not_found' });
+    expect(deleteRoutine).toHaveBeenCalledOnce();
   });
 });

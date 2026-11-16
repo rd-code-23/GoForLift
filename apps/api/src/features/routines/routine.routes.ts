@@ -22,6 +22,7 @@ type RoutineRouterDependencies = {
     userId: string,
     input: CreateRoutineInput,
   ) => Promise<RoutineSummary>;
+  deleteRoutine: (userId: string, routineId: string) => Promise<boolean>;
   listRoutines: (userId: string) => Promise<RoutineSummary[]>;
   getRoutine: (
     userId: string,
@@ -31,6 +32,7 @@ type RoutineRouterDependencies = {
 
 export function createRoutineRouter({
   createRoutine,
+  deleteRoutine,
   getRoutine,
   listRoutines,
 }: RoutineRouterDependencies) {
@@ -91,6 +93,35 @@ export function createRoutineRouter({
         }
 
         response.status(200).json(routineDetailSchema.parse(routine));
+      } catch (error) {
+        next(error);
+      }
+    },
+  );
+
+  router.delete(
+    '/:routineId',
+    requireAuthentication,
+    async (request, response, next) => {
+      const routineIdResult = routineDetailSchema.shape.id.safeParse(
+        request.params.routineId,
+      );
+
+      if (!routineIdResult.success) {
+        response.status(404).json({ error: 'routine_not_found' });
+        return;
+      }
+
+      try {
+        const userId = getAuthenticatedUserId(request);
+        const wasDeleted = await deleteRoutine(userId, routineIdResult.data);
+
+        if (!wasDeleted) {
+          response.status(404).json({ error: 'routine_not_found' });
+          return;
+        }
+
+        response.sendStatus(204);
       } catch (error) {
         next(error);
       }

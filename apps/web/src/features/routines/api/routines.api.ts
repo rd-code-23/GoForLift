@@ -49,3 +49,9 @@ export async function createRoutine(
 
   return routineSummarySchema.parse(data);
 }
+
+export async function deleteRoutine(routineId: string): Promise<void> {
+  await requestWithCsrf(`/api/routines/${routineId}`, {
+    method: 'DELETE',
+  });
+}
