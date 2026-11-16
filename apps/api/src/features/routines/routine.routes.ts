@@ -2,10 +2,13 @@
 import {
   createRoutineInputSchema,
   routineListResponseSchema,
+  routineDetailSchema,
   routineSummarySchema,
   type CreateRoutineInput,
   type RoutineSummary,
+  type RoutineDetail,
 } from '@goforlift/contracts';
+import { z } from 'zod';
 import { Router } from 'express';
 
 import {
@@ -20,10 +23,15 @@ type RoutineRouterDependencies = {
     input: CreateRoutineInput,
   ) => Promise<RoutineSummary>;
   listRoutines: (userId: string) => Promise<RoutineSummary[]>;
+  getRoutine: (
+    userId: string,
+    routineId: string,
+  ) => Promise<RoutineDetail | null>;
 };
 
 export function createRoutineRouter({
   createRoutine,
+  getRoutine,
   listRoutines,
 }: RoutineRouterDependencies) {
   const router = Router();
@@ -61,6 +69,33 @@ export function createRoutineRouter({
       next(error);
     }
   });
+
+  router.get(
+    '/:routineId',
+    requireAuthentication,
+    async (request, response, next) => {
+      const routineIdResult = z.uuid().safeParse(request.params.routineId);
+
+      if (!routineIdResult.success) {
+        response.status(404).json({ error: 'routine_not_found' });
+        return;
+      }
+
+      try {
+        const userId = getAuthenticatedUserId(request);
+        const routine = await getRoutine(userId, routineIdResult.data);
+
+        if (!routine) {
+          response.status(404).json({ error: 'routine_not_found' });
+          return;
+        }
+
+        response.status(200).json(routineDetailSchema.parse(routine));
+      } catch (error) {
+        next(error);
+      }
+    },
+  );
 
   return router;
 }

@@ -2,9 +2,11 @@
 import {
   createRoutineInputSchema,
   routineListResponseSchema,
+  routineDetailSchema,
   routineSummarySchema,
   type CreateRoutineInput,
   type RoutineListResponse,
+  type RoutineDetail,
   type RoutineSummary,
 } from '@goforlift/contracts';
 
@@ -20,6 +22,18 @@ export async function fetchRoutines(
   });
 
   return parseApiJsonResponse(response, routineListResponseSchema);
+}
+
+export async function fetchRoutine(
+  routineId: string,
+  signal?: AbortSignal,
+): Promise<RoutineDetail> {
+  const response = await fetch(`/api/routines/${routineId}`, {
+    credentials: 'include',
+    signal,
+  });
+
+  return parseApiJsonResponse(response, routineDetailSchema);
 }
 
 export async function createRoutine(

@@ -6,6 +6,7 @@ import {
   createRoutineInputSchema,
   ROUTINE_NAME_MAX_LENGTH,
   routineListResponseSchema,
+  routineDetailSchema,
   routineNameSchema,
   routineSummarySchema,
 } from './routine.contract.js';
@@ -177,6 +178,40 @@ describe('routine contracts', () => {
       routineSummarySchema.safeParse({
         ...routineSummary,
         createdAt: 'not-a-date',
+      }).success,
+    ).toBe(false);
+  });
+
+  it('accepts a complete routine detail and rejects malformed exercises', () => {
+    const detail = {
+      id: routineSummary.id,
+      name: routineSummary.name,
+      description: null,
+      exercises: [
+        {
+          exerciseId: '9f4b5a8e-2c3d-4f10-8a11-000000000001',
+          name: 'Bench Press',
+          description: null,
+          position: 0,
+          sets: 3,
+          targetReps: 10,
+          weight: 25,
+          weightUnit: 'lb',
+          restBetweenSetsSeconds: 60,
+          restAfterExerciseSeconds: 0,
+          notes: null,
+        },
+      ],
+      schedules: [{ dayOfWeek: 1, localTime: '18:30:00' }],
+      createdAt: routineSummary.createdAt,
+      updatedAt: routineSummary.updatedAt,
+    };
+
+    expect(routineDetailSchema.safeParse(detail).success).toBe(true);
+    expect(
+      routineDetailSchema.safeParse({
+        ...detail,
+        exercises: [{ ...detail.exercises[0], sets: 0 }],
       }).success,
     ).toBe(false);
   });

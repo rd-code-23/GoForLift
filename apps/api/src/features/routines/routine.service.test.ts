@@ -10,6 +10,7 @@ import {
 import { InvalidRoutineExerciseSelectionError } from './routine.errors.js';
 import {
   createRoutineForUser,
+  getRoutineForUser,
   listRoutinesForUser,
 } from './routine.service.js';
 
@@ -176,5 +177,84 @@ describe('listRoutinesForUser', () => {
     ]);
     expect(result[0]?.id).toBe(rows[0]?.id);
     expect(routines.userId).toBeDefined();
+  });
+});
+
+describe('getRoutineForUser', () => {
+  it('returns the owner-scoped routine with ordered exercises and schedules', async () => {
+    const routineId = 'c38794ef-9a4a-40d8-8cdc-7f7416a53120';
+    const createdAt = new Date('2026-08-24T18:00:00.000Z');
+    const updatedAt = new Date('2026-08-24T19:00:00.000Z');
+    const ownedRoutine = {
+      id: routineId,
+      name: 'Upper Body',
+      description: null,
+      createdAt,
+      updatedAt,
+    };
+    const exerciseRows = [
+      {
+        exerciseId,
+        name: 'Bench Press',
+        description: null,
+        position: 0,
+        sets: 3,
+        targetReps: 10,
+        weight: '25.00',
+        weightUnit: 'lb',
+        restBetweenSetsSeconds: 60,
+        restAfterExerciseSeconds: 0,
+        notes: null,
+      },
+    ];
+    const scheduleRows = [{ dayOfWeek: 1, localTime: '18:30:00' }];
+    const ownerLimit = vi.fn().mockResolvedValue([ownedRoutine]);
+    const ownerWhere = vi.fn(() => ({ limit: ownerLimit }));
+    const exerciseOrderBy = vi.fn().mockResolvedValue(exerciseRows);
+    const exerciseWhere = vi.fn(() => ({ orderBy: exerciseOrderBy }));
+    const exerciseInnerJoin = vi.fn(() => ({ where: exerciseWhere }));
+    const scheduleOrderBy = vi.fn().mockResolvedValue(scheduleRows);
+    const scheduleWhere = vi.fn(() => ({ orderBy: scheduleOrderBy }));
+    const select = vi
+      .fn()
+      .mockReturnValueOnce({
+        from: vi.fn(() => ({ where: ownerWhere })),
+      })
+      .mockReturnValueOnce({
+        from: vi.fn(() => ({ innerJoin: exerciseInnerJoin })),
+      })
+      .mockReturnValueOnce({
+        from: vi.fn(() => ({ where: scheduleWhere })),
+      });
+    const database = { select } as unknown as NodePgDatabase;
+
+    const result = await getRoutineForUser(database, userId, routineId);
+
+    expect(ownerWhere).toHaveBeenCalledOnce();
+    expect(result).toEqual({
+      ...ownedRoutine,
+      exercises: [{ ...exerciseRows[0], weight: 25 }],
+      schedules: scheduleRows,
+      createdAt: createdAt.toISOString(),
+      updatedAt: updatedAt.toISOString(),
+    });
+  });
+
+  it('does not load child data when the routine is not owned', async () => {
+    const select = vi.fn(() => ({
+      from: vi.fn(() => ({
+        where: vi.fn(() => ({ limit: vi.fn().mockResolvedValue([]) })),
+      })),
+    }));
+    const database = { select } as unknown as NodePgDatabase;
+
+    const result = await getRoutineForUser(
+      database,
+      userId,
+      'c38794ef-9a4a-40d8-8cdc-7f7416a53120',
+    );
+
+    expect(result).toBeNull();
+    expect(select).toHaveBeenCalledOnce();
   });
 });

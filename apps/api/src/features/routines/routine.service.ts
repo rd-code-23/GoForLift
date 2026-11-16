@@ -1,5 +1,9 @@
 /** Lists browser-safe routine summaries owned by the authenticated user. */
-import type { CreateRoutineInput, RoutineSummary } from '@goforlift/contracts';
+import type {
+  CreateRoutineInput,
+  RoutineDetail,
+  RoutineSummary,
+} from '@goforlift/contracts';
 import {
   and,
   asc,
@@ -146,4 +150,68 @@ export async function listRoutinesForUser(
     createdAt: routine.createdAt.toISOString(),
     updatedAt: routine.updatedAt.toISOString(),
   }));
+}
+
+export async function getRoutineForUser(
+  database: NodePgDatabase,
+  userId: string,
+  routineId: string,
+): Promise<RoutineDetail | null> {
+  const [ownedRoutine] = await database
+    .select({
+      id: routines.id,
+      name: routines.name,
+      description: routines.description,
+      createdAt: routines.createdAt,
+      updatedAt: routines.updatedAt,
+    })
+    .from(routines)
+    .where(and(eq(routines.id, routineId), eq(routines.userId, userId)))
+    .limit(1);
+
+  if (!ownedRoutine) return null;
+
+  const [configuredExercises, schedules] = await Promise.all([
+    database
+      .select({
+        exerciseId: routineExercises.exerciseId,
+        name: exercises.name,
+        description: exercises.description,
+        position: routineExercises.position,
+        sets: routineExercises.sets,
+        targetReps: routineExercises.targetReps,
+        weight: routineExercises.weight,
+        weightUnit: routineExercises.weightUnit,
+        restBetweenSetsSeconds: routineExercises.restBetweenSetsSeconds,
+        restAfterExerciseSeconds: routineExercises.restAfterExerciseSeconds,
+        notes: routineExercises.notes,
+      })
+      .from(routineExercises)
+      .innerJoin(exercises, eq(exercises.id, routineExercises.exerciseId))
+      .where(eq(routineExercises.routineId, routineId))
+      .orderBy(asc(routineExercises.position)),
+    database
+      .select({
+        dayOfWeek: routineSchedules.dayOfWeek,
+        localTime: routineSchedules.localTime,
+      })
+      .from(routineSchedules)
+      .where(eq(routineSchedules.routineId, routineId))
+      .orderBy(
+        asc(routineSchedules.dayOfWeek),
+        asc(routineSchedules.localTime),
+      ),
+  ]);
+
+  return {
+    ...ownedRoutine,
+    exercises: configuredExercises.map((exercise) => ({
+      ...exercise,
+      weight: Number(exercise.weight),
+      weightUnit: exercise.weightUnit as 'lb' | 'kg',
+    })),
+    schedules,
+    createdAt: ownedRoutine.createdAt.toISOString(),
+    updatedAt: ownedRoutine.updatedAt.toISOString(),
+  };
 }

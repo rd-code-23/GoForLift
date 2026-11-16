@@ -21,6 +21,29 @@ const routineSummary = {
   updatedAt: '2026-08-24T19:00:00.000Z',
 };
 const routineList = [routineSummary];
+const routineDetail = {
+  id: routineSummary.id,
+  name: routineSummary.name,
+  description: routineSummary.description,
+  exercises: [
+    {
+      exerciseId: '9f4b5a8e-2c3d-4f10-8a11-000000000001',
+      name: 'Bench Press',
+      description: null,
+      position: 0,
+      sets: 3,
+      targetReps: 10,
+      weight: 25,
+      weightUnit: 'lb' as const,
+      restBetweenSetsSeconds: 60,
+      restAfterExerciseSeconds: 0,
+      notes: null,
+    },
+  ],
+  schedules: [{ dayOfWeek: 1, localTime: '18:30:00' }],
+  createdAt: routineSummary.createdAt,
+  updatedAt: routineSummary.updatedAt,
+};
 const createRoutineInput = {
   name: 'Upper Body',
   exercises: [
@@ -38,6 +61,9 @@ const createRoutineInput = {
 function createTestApp(
   createRoutine = vi.fn(() => Promise.resolve(routineSummary)),
   listRoutines = vi.fn(() => Promise.resolve(routineList)),
+  getRoutine = vi.fn(() =>
+    Promise.resolve<typeof routineDetail | null>(routineDetail),
+  ),
 ) {
   const app = express();
   app.use(express.json());
@@ -48,9 +74,12 @@ function createTestApp(
     ),
   );
   app.use(establishAuthenticatedTestSession());
-  app.use('/routines', createRoutineRouter({ createRoutine, listRoutines }));
+  app.use(
+    '/routines',
+    createRoutineRouter({ createRoutine, getRoutine, listRoutines }),
+  );
 
-  return { app, createRoutine, listRoutines };
+  return { app, createRoutine, getRoutine, listRoutines };
 }
 
 describe('POST /routines', () => {
@@ -146,5 +175,37 @@ describe('GET /routines', () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual({ routines: [] });
+  });
+});
+
+describe('GET /routines/:routineId', () => {
+  it('returns the owner-scoped routine detail', async () => {
+    const { app, getRoutine } = createTestApp();
+
+    const response = await request(app)
+      .get(`/routines/${routineDetail.id}`)
+      .set('x-test-authenticated-user-id', userId);
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual(routineDetail);
+    expect(getRoutine).toHaveBeenCalledWith(userId, routineDetail.id);
+  });
+
+  it('returns the same not-found response for invalid and unavailable ids', async () => {
+    const getRoutine = vi.fn(() => Promise.resolve(null));
+    const { app } = createTestApp(undefined, undefined, getRoutine);
+
+    const invalidResponse = await request(app)
+      .get('/routines/not-a-uuid')
+      .set('x-test-authenticated-user-id', userId);
+    const unavailableResponse = await request(app)
+      .get(`/routines/${routineDetail.id}`)
+      .set('x-test-authenticated-user-id', userId);
+
+    expect(invalidResponse.status).toBe(404);
+    expect(unavailableResponse.status).toBe(404);
+    expect(invalidResponse.body).toEqual({ error: 'routine_not_found' });
+    expect(unavailableResponse.body).toEqual({ error: 'routine_not_found' });
+    expect(getRoutine).toHaveBeenCalledOnce();
   });
 });
