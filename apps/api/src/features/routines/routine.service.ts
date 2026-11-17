@@ -304,3 +304,16 @@ export async function updateRoutineForUser(
     };
   });
 }
+
+export async function deleteRoutineForUser(
+  database: NodePgDatabase,
+  userId: string,
+  routineId: string,
+): Promise<boolean> {
+  const deletedRoutines = await database
+    .delete(routines)
+    .where(and(eq(routines.id, routineId), eq(routines.userId, userId)))
+    .returning({ id: routines.id });
+
+  return deletedRoutines.length > 0;
+}

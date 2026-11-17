@@ -27,6 +27,7 @@ import {
 import { createRoutineRouter } from './features/routines/routine.routes.js';
 import {
   createRoutineForUser,
+  deleteRoutineForUser,
   getRoutineForUser,
   listRoutinesForUser,
   updateRoutineForUser,
@@ -65,6 +66,8 @@ const exerciseRouter = createExerciseRouter({
 
 const routineRouter = createRoutineRouter({
   createRoutine: (userId, input) => createRoutineForUser(db, userId, input),
+  deleteRoutine: (userId, routineId) =>
+    deleteRoutineForUser(db, userId, routineId),
   getRoutine: (userId, routineId) => getRoutineForUser(db, userId, routineId),
   listRoutines: (userId) => listRoutinesForUser(db, userId),
   updateRoutine: (userId, routineId, input) =>

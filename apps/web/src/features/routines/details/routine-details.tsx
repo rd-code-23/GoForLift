@@ -8,6 +8,7 @@ import { PageTitle } from '@/components/ui/page-title';
 import { ApiError } from '@/lib/api-error';
 import { cn } from '@/lib/utils';
 import { useRoutine } from '../api/routines.query';
+import { DeleteRoutineDialog } from './delete-routine-dialog';
 
 const DAY_LABELS = [
   'Sunday',
@@ -59,7 +60,10 @@ function RoutineContent({ routine }: { routine: RoutineDetailData }) {
       >
         <ArrowLeft aria-hidden="true" className="size-4" /> Back to routines
       </Link>
-      <PageTitle>{routine.name}</PageTitle>
+      <div className="flex items-center justify-between gap-4">
+        <PageTitle>{routine.name}</PageTitle>
+        <DeleteRoutineDialog name={routine.name} routineId={routine.id} />
+      </div>
       {routine.description && (
         <p className="mt-2 text-muted-foreground">{routine.description}</p>
       )}
