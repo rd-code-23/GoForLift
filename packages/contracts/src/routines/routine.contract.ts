@@ -80,6 +80,10 @@ export const createRoutineInputSchema = z
     });
   });
 
+// Creating and editing submit the same complete routine form. Keeping a named
+// update contract makes the API intent explicit while sharing every validation.
+export const updateRoutineInputSchema = createRoutineInputSchema;
+
 export const routineSummarySchema = z.object({
   id: z.uuid(),
   name: z.string().min(1),
@@ -114,4 +118,5 @@ export const routineDetailSchema = z.object({
 export type RoutineSummary = z.infer<typeof routineSummarySchema>;
 export type RoutineListResponse = z.infer<typeof routineListResponseSchema>;
 export type CreateRoutineInput = z.infer<typeof createRoutineInputSchema>;
+export type UpdateRoutineInput = z.infer<typeof updateRoutineInputSchema>;
 export type RoutineDetail = z.infer<typeof routineDetailSchema>;

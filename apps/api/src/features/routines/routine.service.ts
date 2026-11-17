@@ -3,6 +3,7 @@ import type {
   CreateRoutineInput,
   RoutineDetail,
   RoutineSummary,
+  UpdateRoutineInput,
 } from '@goforlift/contracts';
 import {
   and,
@@ -214,6 +215,94 @@ export async function getRoutineForUser(
     createdAt: ownedRoutine.createdAt.toISOString(),
     updatedAt: ownedRoutine.updatedAt.toISOString(),
   };
+}
+
+export async function updateRoutineForUser(
+  database: NodePgDatabase,
+  userId: string,
+  routineId: string,
+  input: UpdateRoutineInput,
+): Promise<RoutineSummary | null> {
+  return database.transaction(async (currentTransaction) => {
+    const [updatedRoutine] = await currentTransaction
+      .update(routines)
+      .set({
+        name: input.name,
+        description: input.description ?? null,
+        updatedAt: new Date(),
+      })
+      .where(and(eq(routines.id, routineId), eq(routines.userId, userId)))
+      .returning({
+        id: routines.id,
+        name: routines.name,
+        description: routines.description,
+        createdAt: routines.createdAt,
+        updatedAt: routines.updatedAt,
+      });
+
+    if (!updatedRoutine) return null;
+
+    const requestedExerciseIds = [
+      ...new Set(input.exercises.map((exercise) => exercise.exerciseId)),
+    ];
+    const availableExercises = await currentTransaction
+      .select({ id: exercises.id })
+      .from(exercises)
+      .where(
+        and(
+          inArray(exercises.id, requestedExerciseIds),
+          or(isNull(exercises.ownerUserId), eq(exercises.ownerUserId, userId)),
+        ),
+      );
+
+    if (availableExercises.length !== requestedExerciseIds.length) {
+      throw new InvalidRoutineExerciseSelectionError();
+    }
+
+    await currentTransaction
+      .delete(routineExercises)
+      .where(eq(routineExercises.routineId, routineId));
+    await currentTransaction
+      .delete(routineSchedules)
+      .where(eq(routineSchedules.routineId, routineId));
+
+    await currentTransaction.insert(routineExercises).values(
+      input.exercises.map((exercise) => ({
+        routineId,
+        exerciseId: exercise.exerciseId,
+        position: exercise.position,
+        sets: exercise.sets,
+        targetReps: exercise.targetReps,
+        weight: exercise.weight.toString(),
+        weightUnit: exercise.weightUnit,
+        restBetweenSetsSeconds: exercise.restBetweenSetsSeconds,
+        restAfterExerciseSeconds: exercise.restAfterExerciseSeconds,
+        notes: exercise.notes ?? null,
+      })),
+    );
+
+    if (input.schedules.length > 0) {
+      await currentTransaction.insert(routineSchedules).values(
+        input.schedules.map((schedule) => ({
+          routineId,
+          dayOfWeek: schedule.dayOfWeek,
+          localTime: schedule.localTime,
+        })),
+      );
+    }
+
+    return {
+      id: updatedRoutine.id,
+      name: updatedRoutine.name,
+      description: updatedRoutine.description,
+      exerciseCount: input.exercises.length,
+      scheduledDays: [
+        ...new Set(input.schedules.map((schedule) => schedule.dayOfWeek)),
+      ].sort((first, second) => first - second),
+      createdAt: updatedRoutine.createdAt.toISOString(),
+      updatedAt: updatedRoutine.updatedAt.toISOString(),
+    };
+  });
 }
 
 export async function deleteRoutineForUser(
