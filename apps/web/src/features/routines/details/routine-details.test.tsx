@@ -90,6 +90,10 @@ describe('routine details', () => {
     expect(screen.getByText('Monday')).toBeVisible();
     expect(screen.getByText('6:30 PM')).toBeVisible();
     expect(screen.getByText('25 lb')).toBeVisible();
+    expect(screen.getByRole('link', { name: 'Edit Routine' })).toHaveAttribute(
+      'href',
+      `/routines/${routineId}/edit`,
+    );
   });
 
   it('requires confirmation before deleting the routine', async () => {

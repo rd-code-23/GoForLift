@@ -18,6 +18,10 @@ function ExerciseConfigurationRoute() {
   const { position } = Route.useSearch();
 
   return (
-    <ExerciseConfiguration exerciseId={exerciseId} editPosition={position} />
+    <ExerciseConfiguration
+      editPosition={position}
+      exerciseId={exerciseId}
+      mode="create"
+    />
   );
 }

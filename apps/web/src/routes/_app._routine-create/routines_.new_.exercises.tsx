@@ -6,5 +6,9 @@ import { ExercisePicker } from '../../features/routines/create/exercise-picker/e
 export const Route = createFileRoute(
   '/_app/_routine-create/routines_/new_/exercises',
 )({
-  component: ExercisePicker,
+  component: CreateRoutineExercisePicker,
 });
+
+function CreateRoutineExercisePicker() {
+  return <ExercisePicker mode="create" />;
+}

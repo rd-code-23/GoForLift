@@ -4,6 +4,7 @@ import { Link } from '@tanstack/react-router';
 import { ArrowLeft, CalendarDays, Dumbbell } from 'lucide-react';
 
 import { useApplicationIdentity } from '@/app/application-identity';
+import { Button } from '@/components/ui/button';
 import { PageTitle } from '@/components/ui/page-title';
 import { ApiError } from '@/lib/api-error';
 import { cn } from '@/lib/utils';
@@ -62,7 +63,17 @@ function RoutineContent({ routine }: { routine: RoutineDetailData }) {
       </Link>
       <div className="flex items-center justify-between gap-4">
         <PageTitle>{routine.name}</PageTitle>
-        <DeleteRoutineDialog name={routine.name} routineId={routine.id} />
+        <div className="flex items-center gap-2">
+          <Button asChild>
+            <Link
+              params={{ routineId: routine.id }}
+              to="/routines/$routineId/edit"
+            >
+              Edit Routine
+            </Link>
+          </Button>
+          <DeleteRoutineDialog name={routine.name} routineId={routine.id} />
+        </div>
       </div>
       {routine.description && (
         <p className="mt-2 text-muted-foreground">{routine.description}</p>
