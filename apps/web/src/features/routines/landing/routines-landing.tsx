@@ -78,6 +78,10 @@ function RoutineLoadError({ onRetry }: { onRetry: () => unknown }) {
 }
 
 function EmptyRoutineList() {
+  return <AddRoutineButton />;
+}
+
+function AddRoutineButton() {
   return (
     <AddActionButton asChild>
       <Link to="/routines/new">
@@ -94,11 +98,16 @@ type RoutineListProps = {
 
 function RoutineList({ routines }: RoutineListProps) {
   return (
-    <ul className="grid gap-4 md:grid-cols-2">
-      {routines.map((routine) => (
-        <RoutineCard key={routine.id} routine={routine} />
-      ))}
-    </ul>
+    <>
+      <ul className="grid gap-4 md:grid-cols-2">
+        {routines.map((routine) => (
+          <RoutineCard key={routine.id} routine={routine} />
+        ))}
+      </ul>
+      <div className="mt-6">
+        <AddRoutineButton />
+      </div>
+    </>
   );
 }
 
