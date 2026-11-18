@@ -121,7 +121,7 @@ function RoutineCard({ routine }: RoutineCardProps) {
           'transition-colors hover:border-primary/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
         )}
         params={{ routineId: routine.id }}
-        to="/routines/$routineId"
+        to="/routines/$routineId/edit"
       >
         <h2 className="text-lg font-semibold">{routine.name}</h2>
         {routine.description && (

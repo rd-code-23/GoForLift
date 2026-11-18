@@ -218,10 +218,34 @@ describe('routine editor', () => {
       ],
     });
     await waitFor(() =>
-      expect(router.state.location.pathname).toBe(
-        '/routines/26d34dc0-8e4c-4bd0-9e3b-7b839b44e486',
-      ),
+      expect(router.state.location.pathname).toBe('/routines'),
     );
+  });
+
+  it('deletes an existing routine from the editor after confirmation', async () => {
+    const user = userEvent.setup();
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(Response.json({ csrfToken: 'csrf-token-123' }))
+      .mockResolvedValueOnce(new Response(null, { status: 204 }));
+    vi.stubGlobal('fetch', fetchMock);
+    const router = renderEditEditor();
+
+    await user.click(
+      await screen.findByRole('button', { name: 'Delete Routine' }),
+    );
+    expect(
+      screen.getByRole('heading', { name: 'Delete Routine?' }),
+    ).toBeVisible();
+    expect(fetchMock).not.toHaveBeenCalled();
+
+    await user.click(screen.getByRole('button', { name: 'Delete' }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+    expect(fetchMock.mock.calls[1]?.[0]).toBe(
+      '/api/routines/26d34dc0-8e4c-4bd0-9e3b-7b839b44e486',
+    );
+    expect(router.state.location.pathname).toBe('/routines');
   });
 });
 
@@ -320,16 +344,16 @@ function renderEditEditor() {
     path: '/routines/$routineId/edit',
     component: () => <RoutineEditor mode="edit" routineId={routineId} />,
   });
-  const detailRoute = createRoute({
+  const routinesRoute = createRoute({
     getParentRoute: () => rootRoute,
-    path: '/routines/$routineId',
-    component: () => <h1>Routine detail</h1>,
+    path: '/routines',
+    component: () => <h1>Routines</h1>,
   });
   const router = createRouter({
     history: createMemoryHistory({
       initialEntries: [`/routines/${routineId}/edit`],
     }),
-    routeTree: rootRoute.addChildren([editorRoute, detailRoute]),
+    routeTree: rootRoute.addChildren([editorRoute, routinesRoute]),
   });
 
   render(

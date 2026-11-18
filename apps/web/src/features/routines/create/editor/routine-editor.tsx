@@ -15,6 +15,7 @@ import {
   useCreateRoutineMutation,
   useUpdateRoutineMutation,
 } from '@/features/routines/api/routines.mutation';
+import { DeleteRoutineDialog } from '@/features/routines/details/delete-routine-dialog';
 import { getApiErrorMessage } from '@/lib/api-error-message';
 import { cn } from '@/lib/utils';
 import type {
@@ -47,11 +48,12 @@ export function RoutineEditor({
   const activeMutation = isEditing
     ? updateRoutineMutation
     : createRoutineMutation;
-  const { handleSubmit, reset } = useFormContext<
+  const { control, handleSubmit, reset } = useFormContext<
     RoutineDraftFormValues,
     unknown,
     ParsedRoutineDraftFormValues
   >();
+  const routineName = useWatch({ control, name: 'name' });
 
   const saveErrorMessage = activeMutation.isError
     ? getApiErrorMessage(
@@ -104,11 +106,7 @@ export function RoutineEditor({
       updateRoutineMutation.mutate(
         { input, routineId },
         {
-          onSuccess: () =>
-            void navigate({
-              params: { routineId },
-              to: '/routines/$routineId',
-            }),
+          onSuccess: () => void navigate({ to: '/routines' }),
         },
       );
       return;
@@ -132,6 +130,7 @@ export function RoutineEditor({
           setShowRequiredFieldsMessage(false);
         }}
         routineId={routineId}
+        routineName={routineName}
         showRequiredFieldsMessage={showRequiredFieldsMessage}
       />
 
@@ -171,32 +170,28 @@ function EditorHeader({
   isSaving,
   onClear,
   routineId,
+  routineName,
   showRequiredFieldsMessage,
 }: {
   isEditing: boolean;
   isSaving: boolean;
   onClear: () => void;
+  routineName: string;
   showRequiredFieldsMessage: boolean;
   routineId?: string;
 }) {
-  const backLink =
-    isEditing && routineId ? (
-      <Link params={{ routineId }} to="/routines/$routineId">
-        <ArrowLeft aria-hidden="true" />
-      </Link>
-    ) : (
-      <Link to="/routines">
-        <ArrowLeft aria-hidden="true" />
-      </Link>
-    );
-
   return (
     <header className="mb-7 flex items-center gap-3 border-b pb-5">
       <Button aria-label="Back to routines" asChild size="icon" variant="ghost">
-        {backLink}
+        <Link to="/routines">
+          <ArrowLeft aria-hidden="true" />
+        </Link>
       </Button>
       <PageTitle>{isEditing ? 'Edit Routine' : 'Create Routine'}</PageTitle>
       <div className="ml-auto flex gap-2">
+        {isEditing && routineId && (
+          <DeleteRoutineDialog name={routineName} routineId={routineId} />
+        )}
         <Button
           disabled={isSaving}
           onClick={onClear}

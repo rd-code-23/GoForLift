@@ -17,7 +17,6 @@ import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppHistoryRouteImport } from './routes/_app.history'
 import { Route as AppRoutinesRouteImport } from './routes/_app.routines'
 import { Route as AppSettingsRouteImport } from './routes/_app.settings'
-import { Route as AppRoutinesRoutineIdRouteImport } from './routes/_app.routines_.$routineId'
 import { Route as AppRoutineCreateRoutinesNewRouteImport } from './routes/_app._routine-create/routines_.new'
 import { Route as AppRoutineCreateRoutinesNewExercisesRouteImport } from './routes/_app._routine-create/routines_.new_.exercises'
 import { Route as AppRoutineEditRoutinesRoutineIdEditRouteRouteImport } from './routes/_app._routine-edit/routines_.$routineId.edit/route'
@@ -61,11 +60,6 @@ const AppRoutinesRoute = AppRoutinesRouteImport.update({
 const AppSettingsRoute = AppSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppRoutinesRoutineIdRoute = AppRoutinesRoutineIdRouteImport.update({
-  id: '/routines_/$routineId',
-  path: '/routines/$routineId',
   getParentRoute: () => AppRoute,
 } as any)
 const AppRoutineCreateRoutinesNewRoute =
@@ -117,7 +111,6 @@ export interface FileRoutesByFullPath {
   '/history': typeof AppHistoryRoute
   '/routines': typeof AppRoutinesRoute
   '/settings': typeof AppSettingsRoute
-  '/routines/$routineId': typeof AppRoutinesRoutineIdRoute
   '/routines/new': typeof AppRoutineCreateRoutinesNewRoute
   '/routines/$routineId/edit': typeof AppRoutineEditRoutinesRoutineIdEditRouteRouteWithChildren
   '/routines/new/exercises': typeof AppRoutineCreateRoutinesNewExercisesRoute
@@ -132,7 +125,6 @@ export interface FileRoutesByTo {
   '/history': typeof AppHistoryRoute
   '/routines': typeof AppRoutinesRoute
   '/settings': typeof AppSettingsRoute
-  '/routines/$routineId': typeof AppRoutinesRoutineIdRoute
   '/routines/new': typeof AppRoutineCreateRoutinesNewRoute
   '/routines/new/exercises': typeof AppRoutineCreateRoutinesNewExercisesRoute
   '/routines/new/exercises/$exerciseId': typeof AppRoutineCreateRoutinesNewExercisesExerciseIdRoute
@@ -150,7 +142,6 @@ export interface FileRoutesById {
   '/_app/history': typeof AppHistoryRoute
   '/_app/routines': typeof AppRoutinesRoute
   '/_app/settings': typeof AppSettingsRoute
-  '/_app/routines_/$routineId': typeof AppRoutinesRoutineIdRoute
   '/_app/_routine-create/routines_/new': typeof AppRoutineCreateRoutinesNewRoute
   '/_app/_routine-edit/routines_/$routineId/edit': typeof AppRoutineEditRoutinesRoutineIdEditRouteRouteWithChildren
   '/_app/_routine-create/routines_/new_/exercises': typeof AppRoutineCreateRoutinesNewExercisesRoute
@@ -167,7 +158,6 @@ export interface FileRouteTypes {
     | '/history'
     | '/routines'
     | '/settings'
-    | '/routines/$routineId'
     | '/routines/new'
     | '/routines/$routineId/edit'
     | '/routines/new/exercises'
@@ -182,7 +172,6 @@ export interface FileRouteTypes {
     | '/history'
     | '/routines'
     | '/settings'
-    | '/routines/$routineId'
     | '/routines/new'
     | '/routines/new/exercises'
     | '/routines/new/exercises/$exerciseId'
@@ -199,7 +188,6 @@ export interface FileRouteTypes {
     | '/_app/history'
     | '/_app/routines'
     | '/_app/settings'
-    | '/_app/routines_/$routineId'
     | '/_app/_routine-create/routines_/new'
     | '/_app/_routine-edit/routines_/$routineId/edit'
     | '/_app/_routine-create/routines_/new_/exercises'
@@ -270,13 +258,6 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof AppSettingsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/routines_/$routineId': {
-      id: '/_app/routines_/$routineId'
-      path: '/routines/$routineId'
-      fullPath: '/routines/$routineId'
-      preLoaderRoute: typeof AppRoutinesRoutineIdRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/_routine-create/routines_/new': {
@@ -390,7 +371,6 @@ interface AppRouteChildren {
   AppHistoryRoute: typeof AppHistoryRoute
   AppRoutinesRoute: typeof AppRoutinesRoute
   AppSettingsRoute: typeof AppSettingsRoute
-  AppRoutinesRoutineIdRoute: typeof AppRoutinesRoutineIdRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
@@ -400,7 +380,6 @@ const AppRouteChildren: AppRouteChildren = {
   AppHistoryRoute: AppHistoryRoute,
   AppRoutinesRoute: AppRoutinesRoute,
   AppSettingsRoute: AppSettingsRoute,
-  AppRoutinesRoutineIdRoute: AppRoutinesRoutineIdRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
