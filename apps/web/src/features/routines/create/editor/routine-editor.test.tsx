@@ -166,6 +166,87 @@ describe('routine editor', () => {
     expect(await screen.findByRole('alert')).toBeVisible();
     expect(screen.getByLabelText('Routine Name')).toHaveValue(invalidName);
   });
+
+  it('prefills and updates an existing routine', async () => {
+    const user = userEvent.setup();
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(Response.json({ csrfToken: 'csrf-token-123' }))
+      .mockResolvedValueOnce(
+        Response.json({
+          id: '26d34dc0-8e4c-4bd0-9e3b-7b839b44e486',
+          name: 'Updated Upper Body',
+          description: 'Monday training plan',
+          exerciseCount: 1,
+          scheduledDays: [1],
+          createdAt: '2026-08-26T10:00:00.000Z',
+          updatedAt: '2026-08-27T10:00:00.000Z',
+        }),
+      );
+    vi.stubGlobal('fetch', fetchMock);
+    const router = renderEditEditor();
+
+    expect(
+      await screen.findByRole('heading', { name: 'Edit Routine' }),
+    ).toBeVisible();
+    expect(screen.getByLabelText('Routine Name')).toHaveValue('Upper Body');
+    expect(screen.queryByLabelText(/Description/)).not.toBeInTheDocument();
+    expect(screen.getByText('Bench Press')).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Reset' })).toBeVisible();
+
+    await user.clear(screen.getByLabelText('Routine Name'));
+    await user.type(
+      screen.getByLabelText('Routine Name'),
+      'Updated Upper Body',
+    );
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+    const requestInit = fetchMock.mock.calls[1]?.[1] as RequestInit;
+    expect(fetchMock.mock.calls[1]?.[0]).toBe(
+      '/api/routines/26d34dc0-8e4c-4bd0-9e3b-7b839b44e486',
+    );
+    expect(requestInit.method).toBe('PATCH');
+    expect(JSON.parse(requestInit.body as string)).toMatchObject({
+      name: 'Updated Upper Body',
+      description: 'Monday training plan',
+      exercises: [
+        {
+          exerciseId: '16d34dc0-8e4c-4bd0-9e3b-7b839b44e486',
+          position: 0,
+        },
+      ],
+    });
+    await waitFor(() =>
+      expect(router.state.location.pathname).toBe('/routines'),
+    );
+  });
+
+  it('deletes an existing routine from the editor after confirmation', async () => {
+    const user = userEvent.setup();
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(Response.json({ csrfToken: 'csrf-token-123' }))
+      .mockResolvedValueOnce(new Response(null, { status: 204 }));
+    vi.stubGlobal('fetch', fetchMock);
+    const router = renderEditEditor();
+
+    await user.click(
+      await screen.findByRole('button', { name: 'Delete Routine' }),
+    );
+    expect(
+      screen.getByRole('heading', { name: 'Delete Routine?' }),
+    ).toBeVisible();
+    expect(fetchMock).not.toHaveBeenCalled();
+
+    await user.click(screen.getByRole('button', { name: 'Delete' }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+    expect(fetchMock.mock.calls[1]?.[0]).toBe(
+      '/api/routines/26d34dc0-8e4c-4bd0-9e3b-7b839b44e486',
+    );
+    expect(router.state.location.pathname).toBe('/routines');
+  });
 });
 
 function renderEditor() {
@@ -213,4 +294,73 @@ function TestApplicationLayout() {
       <Outlet />
     </RoutineDraftFormProvider>
   );
+}
+
+function renderEditEditor() {
+  const routineId = '26d34dc0-8e4c-4bd0-9e3b-7b839b44e486';
+  const exerciseId = '16d34dc0-8e4c-4bd0-9e3b-7b839b44e486';
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+  queryClient.setQueryData(exercisesQueryKey, {
+    exercises: [
+      {
+        id: exerciseId,
+        name: 'Bench Press',
+        description: null,
+        isCustom: false,
+      },
+    ],
+  });
+  const rootRoute = createRootRoute({
+    component: () => (
+      <RoutineDraftFormProvider
+        defaultValues={{
+          name: 'Upper Body',
+          description: 'Monday training plan',
+          exercises: [
+            {
+              draftExerciseId: '06d34dc0-8e4c-4bd0-9e3b-7b839b44e486',
+              exerciseId,
+              position: 0,
+              sets: 3,
+              targetReps: 8,
+              weight: 10,
+              weightUnit: 'lb',
+              restBetweenSetsSeconds: 60,
+              restAfterExerciseSeconds: 0,
+              notes: null,
+            },
+          ],
+          schedules: [{ dayOfWeek: 1, localTime: '18:00:00' }],
+        }}
+      >
+        <Outlet />
+      </RoutineDraftFormProvider>
+    ),
+  });
+  const editorRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/routines/$routineId/edit',
+    component: () => <RoutineEditor mode="edit" routineId={routineId} />,
+  });
+  const routinesRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/routines',
+    component: () => <h1>Routines</h1>,
+  });
+  const router = createRouter({
+    history: createMemoryHistory({
+      initialEntries: [`/routines/${routineId}/edit`],
+    }),
+    routeTree: rootRoute.addChildren([editorRoute, routinesRoute]),
+  });
+
+  render(
+    <QueryClientProvider client={queryClient}>
+      <RouterProvider router={router} />
+    </QueryClientProvider>,
+  );
+
+  return router;
 }

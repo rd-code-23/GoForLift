@@ -107,7 +107,7 @@ describe('routines landing', () => {
     expect(screen.getByText('Mon, Wed, Fri')).toBeVisible();
     expect(screen.getByRole('link', { name: /Upper Body/ })).toHaveAttribute(
       'href',
-      '/routines/26d34dc0-8e4c-4bd0-9e3b-7b839b44e486',
+      '/routines/26d34dc0-8e4c-4bd0-9e3b-7b839b44e486/edit',
     );
   });
 

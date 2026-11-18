@@ -13,6 +13,6 @@ export const exercisesQueryOptions = queryOptions({
   staleTime: EXERCISES_STALE_TIME_MS,
 });
 
-export function useExercises() {
-  return useQuery(exercisesQueryOptions);
+export function useExercises(enabled = true) {
+  return useQuery({ ...exercisesQueryOptions, enabled });
 }

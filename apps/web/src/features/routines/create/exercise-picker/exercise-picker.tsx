@@ -9,10 +9,25 @@ import { Input } from '@/components/ui/input';
 import { LoadingState } from '@/components/ui/loading-state';
 import { PageTitle } from '@/components/ui/page-title';
 import { useExercises } from '@/features/exercises/exercises.query';
+import { cn } from '@/lib/utils';
 
 import { CustomExerciseDialog } from './custom-exercise-dialog';
 
-export function ExercisePicker() {
+const EXERCISE_LINK_CLASS_NAME = cn(
+  'flex min-h-12 items-center gap-3 rounded-md px-2 py-1.5',
+  'transition-colors hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+  'lg:min-h-14 lg:gap-4 lg:px-3 lg:py-2',
+);
+
+type ExercisePickerProps = {
+  mode?: 'create' | 'edit';
+  routineId?: string;
+};
+
+export function ExercisePicker({
+  mode = 'create',
+  routineId,
+}: ExercisePickerProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const exercisesQuery = useExercises();
 
@@ -22,7 +37,13 @@ export function ExercisePicker() {
     exercise.name.toLocaleLowerCase().includes(normalizedSearchTerm),
   );
 
-  let content = <ExerciseList exercises={visibleExercises} />;
+  let content = (
+    <ExerciseList
+      exercises={visibleExercises}
+      mode={mode}
+      routineId={routineId}
+    />
+  );
 
   if (exercisesQuery.isPending) {
     content = <LoadingState />;
@@ -46,9 +67,15 @@ export function ExercisePicker() {
           size="icon"
           variant="ghost"
         >
-          <Link to="/routines/new">
-            <X aria-hidden="true" />
-          </Link>
+          {mode === 'edit' && routineId ? (
+            <Link params={{ routineId }} to="/routines/$routineId/edit">
+              <X aria-hidden="true" />
+            </Link>
+          ) : (
+            <Link to="/routines/new">
+              <X aria-hidden="true" />
+            </Link>
+          )}
         </Button>
         <PageTitle className="flex-1 text-center">Add Exercise</PageTitle>
         <div aria-hidden="true" className="size-9" />
@@ -78,7 +105,15 @@ export function ExercisePicker() {
   );
 }
 
-function ExerciseList({ exercises }: { exercises: ExerciseSummary[] }) {
+function ExerciseList({
+  exercises,
+  mode,
+  routineId,
+}: {
+  exercises: ExerciseSummary[];
+  mode: 'create' | 'edit';
+  routineId?: string;
+}) {
   return (
     <ul>
       {exercises.map((exercise) => (
@@ -86,24 +121,42 @@ function ExerciseList({ exercises }: { exercises: ExerciseSummary[] }) {
           className="relative after:absolute after:bottom-0 after:left-[12.5%] after:h-0.5 after:w-3/4 after:bg-border/20 after:content-[''] last:after:hidden"
           key={exercise.id}
         >
-          <Link
-            className="flex min-h-12 items-center gap-3 rounded-md px-2 py-1.5 transition-colors hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:min-h-14 lg:gap-4 lg:px-3 lg:py-2"
-            params={{ exerciseId: exercise.id }}
-            to="/routines/new/exercises/$exerciseId"
-          >
-            <div className="flex size-9 shrink-0 items-center justify-center rounded-md bg-surface-elevated text-primary lg:size-10">
-              <Dumbbell aria-hidden="true" className="size-5 lg:size-6" />
-            </div>
-            <p className="min-w-0 flex-1 truncate text-[15px] font-normal text-muted-foreground lg:text-base">
-              {exercise.name}
-            </p>
-            <ChevronRight
-              aria-hidden="true"
-              className="size-4 shrink-0 text-muted-foreground lg:size-5"
-            />
-          </Link>
+          {mode === 'edit' && routineId ? (
+            <Link
+              className={EXERCISE_LINK_CLASS_NAME}
+              params={{ exerciseId: exercise.id, routineId }}
+              to="/routines/$routineId/edit/exercises/$exerciseId"
+            >
+              <ExerciseLinkContent exercise={exercise} />
+            </Link>
+          ) : (
+            <Link
+              className={EXERCISE_LINK_CLASS_NAME}
+              params={{ exerciseId: exercise.id }}
+              to="/routines/new/exercises/$exerciseId"
+            >
+              <ExerciseLinkContent exercise={exercise} />
+            </Link>
+          )}
         </li>
       ))}
     </ul>
+  );
+}
+
+function ExerciseLinkContent({ exercise }: { exercise: ExerciseSummary }) {
+  return (
+    <>
+      <div className="flex size-9 shrink-0 items-center justify-center rounded-md bg-surface-elevated text-primary lg:size-10">
+        <Dumbbell aria-hidden="true" className="size-5 lg:size-6" />
+      </div>
+      <p className="min-w-0 flex-1 truncate text-[15px] font-normal text-muted-foreground lg:text-base">
+        {exercise.name}
+      </p>
+      <ChevronRight
+        aria-hidden="true"
+        className="size-4 shrink-0 text-muted-foreground lg:size-5"
+      />
+    </>
   );
 }

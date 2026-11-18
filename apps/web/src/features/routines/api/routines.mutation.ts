@@ -2,7 +2,7 @@
 import type { RoutineListResponse } from '@goforlift/contracts';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-import { createRoutine, deleteRoutine } from './routines.api';
+import { createRoutine, deleteRoutine, updateRoutine } from './routines.api';
 import { routineQueryKey, routinesQueryKey } from './routines.query';
 
 export function useCreateRoutineMutation() {
@@ -35,5 +35,23 @@ export function useDeleteRoutineMutation() {
         exact: true,
       });
     },
+  });
+}
+
+export function useUpdateRoutineMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: updateRoutine,
+    onSuccess: (_, { routineId }) =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: routinesQueryKey }),
+        // The detail query is still active behind the editor. Mark it stale
+        // without fetching there; the destination details page refetches it.
+        queryClient.invalidateQueries({
+          queryKey: routineQueryKey(routineId),
+          refetchType: 'none',
+        }),
+      ]),
   });
 }

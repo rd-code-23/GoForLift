@@ -37,6 +37,7 @@ const routineDraftExercisesSchema = z
 
 const routineDraftFormSchema = z.object({
   name: routineNameSchema,
+  description: createRoutineInputSchema.shape.description,
   exercises: routineDraftExercisesSchema,
   schedules: z.array(createRoutineScheduleInputSchema),
 });
@@ -55,15 +56,22 @@ export type ParsedRoutineDraftFormValues = z.output<
 
 export function RoutineDraftFormProvider({
   children,
+  defaultValues = {
+    description: null,
+    exercises: [],
+    name: '',
+    schedules: [],
+  },
 }: {
   children: ReactNode;
+  defaultValues?: RoutineDraftFormValues;
 }) {
   const form = useForm<
     RoutineDraftFormValues,
     unknown,
     ParsedRoutineDraftFormValues
   >({
-    defaultValues: { exercises: [], name: '', schedules: [] },
+    defaultValues,
     mode: 'onChange', // when to run validation.
     resolver: zodResolver(routineDraftFormSchema),
   });

@@ -4,10 +4,12 @@ import {
   routineListResponseSchema,
   routineDetailSchema,
   routineSummarySchema,
+  updateRoutineInputSchema,
   type CreateRoutineInput,
   type RoutineListResponse,
   type RoutineDetail,
   type RoutineSummary,
+  type UpdateRoutineInput,
 } from '@goforlift/contracts';
 
 import { requestWithCsrf } from '@/features/auth/auth.api';
@@ -54,4 +56,21 @@ export async function deleteRoutine(routineId: string): Promise<void> {
   await requestWithCsrf(`/api/routines/${routineId}`, {
     method: 'DELETE',
   });
+}
+
+export async function updateRoutine({
+  input,
+  routineId,
+}: {
+  input: UpdateRoutineInput;
+  routineId: string;
+}): Promise<RoutineSummary> {
+  const validatedInput = updateRoutineInputSchema.parse(input);
+  const response = await requestWithCsrf(`/api/routines/${routineId}`, {
+    body: JSON.stringify(validatedInput),
+    headers: { 'Content-Type': 'application/json' },
+    method: 'PATCH',
+  });
+
+  return parseApiJsonResponse(response, routineSummarySchema);
 }
