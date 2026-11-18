@@ -3,7 +3,12 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { ApiError } from '@/lib/api-error';
 
-import { createRoutine, deleteRoutine, fetchRoutines } from './routines.api';
+import {
+  createRoutine,
+  deleteRoutine,
+  fetchRoutines,
+  updateRoutine,
+} from './routines.api';
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -125,5 +130,55 @@ describe('deleteRoutine', () => {
     expect(new Headers(requestInit.headers).get('X-CSRF-Token')).toBe(
       'csrf-token-123',
     );
+  });
+});
+
+describe('updateRoutine', () => {
+  it('updates a routine with CSRF protection and validates the response', async () => {
+    const routineId = '26d34dc0-8e4c-4bd0-9e3b-7b839b44e486';
+    const input = {
+      name: 'Updated Upper Body',
+      description: 'Updated training plan',
+      exercises: [
+        {
+          exerciseId: '16d34dc0-8e4c-4bd0-9e3b-7b839b44e486',
+          position: 0,
+          sets: 4,
+          targetReps: 8,
+          weight: 20,
+          weightUnit: 'lb' as const,
+          restBetweenSetsSeconds: 60,
+          restAfterExerciseSeconds: 0,
+          notes: null,
+        },
+      ],
+      schedules: [],
+    };
+    const response = {
+      id: routineId,
+      name: input.name,
+      description: input.description,
+      exerciseCount: 1,
+      scheduledDays: [],
+      createdAt: '2026-08-26T10:00:00.000Z',
+      updatedAt: '2026-08-27T10:00:00.000Z',
+    };
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(Response.json({ csrfToken: 'csrf-token-123' }))
+      .mockResolvedValueOnce(Response.json(response));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await expect(updateRoutine({ input, routineId })).resolves.toEqual(
+      response,
+    );
+
+    const requestInit = fetchMock.mock.calls[1]?.[1] as RequestInit;
+    expect(fetchMock.mock.calls[1]?.[0]).toBe(`/api/routines/${routineId}`);
+    expect(requestInit.method).toBe('PATCH');
+    expect(new Headers(requestInit.headers).get('X-CSRF-Token')).toBe(
+      'csrf-token-123',
+    );
+    expect(JSON.parse(requestInit.body as string)).toEqual(input);
   });
 });

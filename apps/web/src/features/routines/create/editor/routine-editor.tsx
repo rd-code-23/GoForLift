@@ -11,7 +11,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PageTitle } from '@/components/ui/page-title';
 import { exercisesQueryOptions } from '@/features/exercises/exercises.query';
-import { useCreateRoutineMutation } from '@/features/routines/api/routines.mutation';
+import {
+  useCreateRoutineMutation,
+  useUpdateRoutineMutation,
+} from '@/features/routines/api/routines.mutation';
 import { getApiErrorMessage } from '@/lib/api-error-message';
 import { cn } from '@/lib/utils';
 import type {
@@ -24,35 +27,67 @@ import { reorderRoutineExercises } from './routine-exercise-order';
 import { RoutineExerciseList } from './routine-exercise-list';
 import { RoutineScheduleField } from './routine-schedule-field';
 
-export function RoutineEditor() {
+type RoutineEditorProps = {
+  mode?: 'create' | 'edit';
+  routineId?: string;
+};
+
+export function RoutineEditor({
+  mode = 'create',
+  routineId,
+}: RoutineEditorProps) {
   const navigate = useNavigate();
+  const isEditing = mode === 'edit';
 
   const [showRequiredFieldsMessage, setShowRequiredFieldsMessage] =
     useState(false);
 
   const createRoutineMutation = useCreateRoutineMutation();
+  const updateRoutineMutation = useUpdateRoutineMutation();
+  const activeMutation = isEditing
+    ? updateRoutineMutation
+    : createRoutineMutation;
   const { handleSubmit, reset } = useFormContext<
     RoutineDraftFormValues,
     unknown,
     ParsedRoutineDraftFormValues
   >();
 
-  const saveErrorMessage = createRoutineMutation.isError
+  const saveErrorMessage = activeMutation.isError
     ? getApiErrorMessage(
-        createRoutineMutation.error,
+        activeMutation.error,
         "We couldn't save your routine. Try again.",
         {
           invalid_exercise_selection:
             'One or more exercises are no longer available. Review your exercises and try again.',
+          routine_not_found:
+            'This routine could not be found. It may have already been deleted.',
         },
       )
     : undefined;
 
   const addExercise = async () => {
+    if (isEditing && routineId) {
+      await navigate({
+        params: { routineId },
+        to: '/routines/$routineId/edit/exercises',
+      });
+      return;
+    }
+
     await navigate({ to: '/routines/new/exercises' });
   };
 
   const editExercise = async (exercise: RoutineDraftExerciseFormValues) => {
+    if (isEditing && routineId) {
+      await navigate({
+        params: { exerciseId: exercise.exerciseId, routineId },
+        search: { position: exercise.position },
+        to: '/routines/$routineId/edit/exercises/$exerciseId',
+      });
+      return;
+    }
+
     await navigate({
       params: { exerciseId: exercise.exerciseId },
       search: { position: exercise.position },
@@ -62,7 +97,24 @@ export function RoutineEditor() {
 
   function saveRoutine(draft: ParsedRoutineDraftFormValues) {
     setShowRequiredFieldsMessage(false);
-    createRoutineMutation.mutate(toCreateRoutineInput(draft), {
+
+    const input = toCreateRoutineInput(draft);
+
+    if (isEditing && routineId) {
+      updateRoutineMutation.mutate(
+        { input, routineId },
+        {
+          onSuccess: () =>
+            void navigate({
+              params: { routineId },
+              to: '/routines/$routineId',
+            }),
+        },
+      );
+      return;
+    }
+
+    createRoutineMutation.mutate(input, {
       onSuccess: () => {
         reset();
         void navigate({ to: '/routines' });
@@ -73,11 +125,13 @@ export function RoutineEditor() {
   return (
     <section className="mx-auto w-full max-w-5xl">
       <EditorHeader
-        isSaving={createRoutineMutation.isPending}
+        isEditing={isEditing}
+        isSaving={activeMutation.isPending}
         onClear={() => {
           reset();
           setShowRequiredFieldsMessage(false);
         }}
+        routineId={routineId}
         showRequiredFieldsMessage={showRequiredFieldsMessage}
       />
 
@@ -113,22 +167,35 @@ export function RoutineEditor() {
 }
 
 function EditorHeader({
+  isEditing,
   isSaving,
   onClear,
+  routineId,
   showRequiredFieldsMessage,
 }: {
+  isEditing: boolean;
   isSaving: boolean;
   onClear: () => void;
   showRequiredFieldsMessage: boolean;
+  routineId?: string;
 }) {
+  const backLink =
+    isEditing && routineId ? (
+      <Link params={{ routineId }} to="/routines/$routineId">
+        <ArrowLeft aria-hidden="true" />
+      </Link>
+    ) : (
+      <Link to="/routines">
+        <ArrowLeft aria-hidden="true" />
+      </Link>
+    );
+
   return (
     <header className="mb-7 flex items-center gap-3 border-b pb-5">
       <Button aria-label="Back to routines" asChild size="icon" variant="ghost">
-        <Link to="/routines">
-          <ArrowLeft aria-hidden="true" />
-        </Link>
+        {backLink}
       </Button>
-      <PageTitle>Create Routine</PageTitle>
+      <PageTitle>{isEditing ? 'Edit Routine' : 'Create Routine'}</PageTitle>
       <div className="ml-auto flex gap-2">
         <Button
           disabled={isSaving}
@@ -136,7 +203,7 @@ function EditorHeader({
           type="button"
           variant="ghost"
         >
-          Clear
+          {isEditing ? 'Reset' : 'Clear'}
         </Button>
         <div className="flex w-20 flex-col items-start gap-1">
           <Button

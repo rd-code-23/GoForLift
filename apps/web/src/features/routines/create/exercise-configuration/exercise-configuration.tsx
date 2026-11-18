@@ -36,11 +36,15 @@ type RoutineExerciseInput = z.output<typeof createRoutineExerciseInputSchema>;
 type ExerciseConfigurationProps = {
   exerciseId: string;
   editPosition?: number;
+  mode?: 'create' | 'edit';
+  routineId?: string;
 };
 
 export function ExerciseConfiguration({
   exerciseId,
   editPosition,
+  mode = 'create',
+  routineId,
 }: ExerciseConfigurationProps) {
   const exercisesQuery = useExercises();
   const exercise = exercisesQuery.data?.exercises.find(
@@ -62,19 +66,27 @@ export function ExerciseConfiguration({
       <ExerciseConfigurationForm
         editPosition={editPosition}
         exercise={exercise}
+        mode={mode}
+        routineId={routineId}
       />
     );
   }
 
   return (
     <section className="mx-auto w-full max-w-2xl lg:max-w-3xl">
-      <ConfigurationHeader />
+      <ConfigurationHeader mode={mode} routineId={routineId} />
       {content}
     </section>
   );
 }
 
-function ConfigurationHeader() {
+function ConfigurationHeader({
+  mode,
+  routineId,
+}: {
+  mode: 'create' | 'edit';
+  routineId?: string;
+}) {
   return (
     <header className="mb-7 flex items-center gap-3">
       <Button
@@ -83,9 +95,15 @@ function ConfigurationHeader() {
         size="icon"
         variant="ghost"
       >
-        <Link to="/routines/new/exercises">
-          <X aria-hidden="true" />
-        </Link>
+        {mode === 'edit' && routineId ? (
+          <Link params={{ routineId }} to="/routines/$routineId/edit/exercises">
+            <X aria-hidden="true" />
+          </Link>
+        ) : (
+          <Link to="/routines/new/exercises">
+            <X aria-hidden="true" />
+          </Link>
+        )}
       </Button>
       <PageTitle className="flex-1 text-center">Configure Exercise</PageTitle>
       <div aria-hidden="true" className="size-9" />
@@ -96,9 +114,13 @@ function ConfigurationHeader() {
 function ExerciseConfigurationForm({
   exercise,
   editPosition,
+  mode,
+  routineId,
 }: {
   exercise: ExerciseSummary;
+  mode: 'create' | 'edit';
   editPosition?: number;
+  routineId?: string;
 }) {
   const navigate = useNavigate();
   const { getValues, setValue: setDraftValue } =
@@ -149,6 +171,14 @@ function ExerciseConfigurationForm({
       shouldDirty: true,
       shouldValidate: true,
     });
+    if (mode === 'edit' && routineId) {
+      await navigate({
+        params: { routineId },
+        to: '/routines/$routineId/edit',
+      });
+      return;
+    }
+
     await navigate({ to: '/routines/new' });
   }
 
@@ -161,6 +191,14 @@ function ExerciseConfigurationForm({
       shouldDirty: true,
       shouldValidate: true,
     });
+    if (mode === 'edit' && routineId) {
+      await navigate({
+        params: { routineId },
+        to: '/routines/$routineId/edit',
+      });
+      return;
+    }
+
     await navigate({ to: '/routines/new' });
   }
 
@@ -177,7 +215,9 @@ function ExerciseConfigurationForm({
       <div className="mt-7 lg:mt-0 lg:pl-8">
         <ExerciseFields
           defaultValues={defaultValues}
+          mode={mode}
           register={register}
+          routineId={routineId}
           setValue={setConfigurationValue}
         />
       </div>
@@ -225,12 +265,16 @@ function ExerciseIdentity({
 
 function ExerciseFields({
   defaultValues,
+  mode,
   register,
+  routineId,
   setValue,
 }: {
   defaultValues: RoutineExerciseInput;
+  mode: 'create' | 'edit';
   register: UseFormRegister<RoutineExerciseFormValues>;
   setValue: UseFormSetValue<RoutineExerciseFormValues>;
+  routineId?: string;
 }) {
   return (
     <div>
@@ -306,7 +350,16 @@ function ExerciseFields({
 
       <div className="mt-8 grid grid-cols-2 gap-3">
         <Button asChild variant="outline">
-          <Link to="/routines/new/exercises">Cancel</Link>
+          {mode === 'edit' && routineId ? (
+            <Link
+              params={{ routineId }}
+              to="/routines/$routineId/edit/exercises"
+            >
+              Cancel
+            </Link>
+          ) : (
+            <Link to="/routines/new/exercises">Cancel</Link>
+          )}
         </Button>
         <Button type="submit">Done</Button>
       </div>
