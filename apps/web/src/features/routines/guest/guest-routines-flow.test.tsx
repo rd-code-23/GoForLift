@@ -14,12 +14,15 @@ import {
   startGuestSession,
 } from '@/features/auth/guest-session';
 import { routeTree } from '@/routeTree.gen';
+import { useGuestExercisesStore } from '@/features/exercises/guest-exercises.store';
 import { createGuestRoutinesStore } from './guest-routines.store';
 
 afterEach(() => {
   cleanup();
   clearGuestSession();
   createGuestRoutinesStore().persist.clearStorage();
+  useGuestExercisesStore.setState({ exercises: [] });
+  useGuestExercisesStore.persist.clearStorage();
   vi.unstubAllGlobals();
 });
 
@@ -39,7 +42,7 @@ async function renderGuestApp() {
   );
 }
 
-it('creates, reopens, edits, and deletes a guest routine with only catalog reads', async () => {
+it('manages guest routines and custom exercises with only catalog reads', async () => {
   startGuestSession();
   const fetchMock = vi.fn((url: string) => {
     if (url !== '/api/exercises')
@@ -64,11 +67,24 @@ it('creates, reopens, edits, and deletes a guest routine with only catalog reads
   await user.click(await screen.findByRole('link', { name: 'Add Routine' }));
   await user.type(await screen.findByLabelText('Routine Name'), 'Push Day');
   await user.click(screen.getByRole('button', { name: 'Add Exercise' }));
-  const benchPress = await screen.findByRole('link', { name: /Bench Press/ });
   expect(
-    screen.queryByRole('button', { name: 'Create Custom Exercise' }),
-  ).toBeNull();
-  await user.click(benchPress);
+    await screen.findByRole('link', { name: /Bench Press/ }),
+  ).toBeVisible();
+  await user.click(
+    screen.getByRole('button', { name: 'Create Custom Exercise' }),
+  );
+  await user.type(screen.getByLabelText('Exercise Name'), 'Custom Press');
+  await user.type(screen.getByLabelText(/Description/), 'Use a narrow grip.');
+  await user.click(screen.getByRole('button', { name: 'Create' }));
+  await user.click(await screen.findByRole('link', { name: /Custom Press/ }));
+  await user.click(await screen.findByRole('button', { name: 'Edit name' }));
+  const exerciseName = screen.getByLabelText('Exercise Name');
+  await user.clear(exerciseName);
+  await user.type(exerciseName, 'Narrow Press');
+  await user.click(screen.getByRole('button', { name: 'Save' }));
+  expect(
+    await screen.findByRole('heading', { name: 'Narrow Press' }),
+  ).toBeVisible();
   await user.click(await screen.findByRole('button', { name: 'Done' }));
   await user.click(await screen.findByRole('button', { name: 'Save' }));
   expect(await screen.findByRole('link', { name: /Push Day/ })).toBeVisible();
@@ -77,14 +93,29 @@ it('creates, reopens, edits, and deletes a guest routine with only catalog reads
   );
   firstVisit.unmount();
 
-  await renderGuestApp();
+  expect(localStorage.getItem('goforlift-guest-exercises')).toContain(
+    'Narrow Press',
+  );
+  const secondVisit = await renderGuestApp();
   await user.click(await screen.findByRole('link', { name: /Push Day/ }));
   const name = await screen.findByLabelText('Routine Name');
   expect(name).toHaveValue('Push Day');
-  expect(screen.getByText('Bench Press')).toBeVisible();
+  expect(screen.getByText('Narrow Press')).toBeVisible();
   await user.clear(name);
   await user.type(name, 'Upper Body');
   await user.click(screen.getByRole('button', { name: 'Save' }));
+  await user.click(await screen.findByRole('link', { name: /Upper Body/ }));
+  await user.click(await screen.findByRole('button', { name: 'Add Exercise' }));
+  await user.click(await screen.findByRole('link', { name: /Narrow Press/ }));
+  await user.click(
+    await screen.findByRole('button', { name: 'Delete exercise' }),
+  );
+  await user.click(screen.getByRole('button', { name: 'Delete' }));
+  expect(
+    await screen.findByText(/Remove this exercise from your saved routines/),
+  ).toBeVisible();
+  secondVisit.unmount();
+  await renderGuestApp();
   await user.click(await screen.findByRole('link', { name: /Upper Body/ }));
   await user.click(
     await screen.findByRole('button', { name: 'Delete Routine' }),
@@ -94,6 +125,18 @@ it('creates, reopens, edits, and deletes a guest routine with only catalog reads
     await screen.findByRole('link', { name: 'Add Routine' }),
   ).toBeVisible();
   expect(createGuestRoutinesStore().getState().routines).toEqual([]);
+  await user.click(screen.getByRole('link', { name: 'Add Routine' }));
+  await user.click(await screen.findByRole('button', { name: 'Add Exercise' }));
+  await user.click(await screen.findByRole('link', { name: /Narrow Press/ }));
+  await user.click(
+    await screen.findByRole('button', { name: 'Delete exercise' }),
+  );
+  await user.click(screen.getByRole('button', { name: 'Delete' }));
+  await screen.findByLabelText('Routine Name');
+  expect(useGuestExercisesStore.getState().exercises).toEqual([]);
+  expect(localStorage.getItem('goforlift-guest-exercises')).not.toContain(
+    'Narrow Press',
+  );
   expect(fetchMock).toHaveBeenCalledWith(
     '/api/exercises',
     expect.objectContaining({
@@ -103,4 +146,4 @@ it('creates, reopens, edits, and deletes a guest routine with only catalog reads
   expect(fetchMock.mock.calls.every(([url]) => url === '/api/exercises')).toBe(
     true,
   );
-});
+}, 15000);

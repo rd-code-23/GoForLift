@@ -776,8 +776,10 @@ identifiers supplied by the client are never authoritative.
 # 28. Guest Architecture
 
 Guests can read the built-in exercise catalog through `GET /api/exercises`.
-Custom exercises are visible only to their signed-in owner, and exercise writes
-require authentication.
+Server-stored custom exercises are visible only to their signed-in owner, and
+exercise API writes require authentication. Guests can create, rename, and delete
+custom exercises in browser storage. The picker combines them with the built-in
+catalog. A guest exercise cannot be deleted while a saved guest routine uses it.
 
 Guest routines are stored in the browser using Zustand and localStorage. They
 survive a refresh on the same browser. The guest list and editor use this local
