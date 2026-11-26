@@ -27,7 +27,9 @@ const exerciseList = [builtInExercise, customExercise];
 function createTestApp(
   createExercise = vi.fn(() => Promise.resolve(customExercise)),
   deleteExercise = vi.fn(() => Promise.resolve(true)),
-  listExercises = vi.fn(() => Promise.resolve(exerciseList)),
+  listExercises = vi.fn((requestUserId: string | undefined) =>
+    Promise.resolve(requestUserId ? exerciseList : [builtInExercise]),
+  ),
   updateExercise = vi.fn((): Promise<typeof customExercise | null> =>
     Promise.resolve(customExercise),
   ),
@@ -173,14 +175,14 @@ describe('DELETE /exercises/:exerciseId', () => {
 });
 
 describe('GET /exercises', () => {
-  it('rejects anonymous requests', async () => {
+  it('returns only built-in exercises to anonymous requests', async () => {
     const { app, listExercises } = createTestApp();
 
     const response = await request(app).get('/exercises');
 
-    expect(response.status).toBe(401);
-    expect(response.body).toEqual({ error: 'authentication_required' });
-    expect(listExercises).not.toHaveBeenCalled();
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({ exercises: [builtInExercise] });
+    expect(listExercises).toHaveBeenCalledWith(undefined);
   });
 
   it('returns exercises visible to the authenticated user', async () => {

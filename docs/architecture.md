@@ -775,6 +775,10 @@ identifiers supplied by the client are never authoritative.
 
 # 28. Guest Architecture
 
+Guests can read the built-in exercise catalog through `GET /api/exercises`.
+Custom exercises are visible only to their signed-in owner, and exercise writes
+require authentication.
+
 Guest mode should not create permanently persisted user data.
 
 The exact implementation can be finalized with the guest feature.

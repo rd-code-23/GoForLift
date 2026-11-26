@@ -1,4 +1,4 @@
-/** Defines authenticated exercise-list API routes. */
+/** Lists visible exercises and protects custom exercise writes. */
 import {
   createExerciseInputSchema,
   exerciseListResponseSchema,
@@ -12,6 +12,7 @@ import { Router } from 'express';
 
 import {
   getAuthenticatedUserId,
+  isAuthenticatedRequest,
   requireAuthentication,
 } from '../auth/guards/authentication.middleware.js';
 
@@ -20,7 +21,7 @@ type ExerciseRouterDependencies = {
     userId: string,
     input: CreateExerciseInput,
   ) => Promise<ExerciseSummary>;
-  listExercises: (userId: string) => Promise<ExerciseSummary[]>;
+  listExercises: (userId: string | undefined) => Promise<ExerciseSummary[]>;
   deleteExercise: (userId: string, exerciseId: string) => Promise<boolean>;
   updateExercise: (
     userId: string,
@@ -55,11 +56,14 @@ export function createExerciseRouter({
     }
   });
 
-  router.get('/', requireAuthentication, async (request, response, next) => {
+  router.get('/', async (request, response, next) => {
     try {
-      const userId = getAuthenticatedUserId(request);
+      const userId = isAuthenticatedRequest(request)
+        ? request.session.userId
+        : undefined;
       const exercises = await listExercises(userId);
 
+      response.set('Cache-Control', 'private, no-store');
       response.status(200).json(
         exerciseListResponseSchema.parse({
           exercises,

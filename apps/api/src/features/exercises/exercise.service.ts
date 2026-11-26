@@ -39,8 +39,13 @@ export async function createExerciseForUser(
 
 export async function listExercisesForUser(
   database: NodePgDatabase,
-  userId: string,
+  userId: string | undefined,
 ): Promise<ExerciseSummary[]> {
+  const builtInOnly = isNull(exercises.ownerUserId);
+  const visibleToRequester = userId
+    ? or(builtInOnly, eq(exercises.ownerUserId, userId))
+    : builtInOnly;
+
   const visibleExercises = await database
     .select({
       id: exercises.id,
@@ -49,7 +54,7 @@ export async function listExercisesForUser(
       ownerUserId: exercises.ownerUserId,
     })
     .from(exercises)
-    .where(or(isNull(exercises.ownerUserId), eq(exercises.ownerUserId, userId)))
+    .where(visibleToRequester)
     .orderBy(asc(exercises.name));
 
   return visibleExercises.map(({ ownerUserId, ...exercise }) => ({
