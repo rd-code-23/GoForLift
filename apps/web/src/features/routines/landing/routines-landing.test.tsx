@@ -109,6 +109,10 @@ describe('routines landing', () => {
       'href',
       '/routines/26d34dc0-8e4c-4bd0-9e3b-7b839b44e486/edit',
     );
+    expect(screen.getByRole('link', { name: 'Add Routine' })).toHaveAttribute(
+      'href',
+      '/routines/new',
+    );
   });
 
   it('shows a retry action after an API failure', async () => {
