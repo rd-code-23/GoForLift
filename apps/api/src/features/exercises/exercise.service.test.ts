@@ -1,4 +1,5 @@
 /** Verifies that exercise listing applies ownership visibility rules. */
+import { isNull } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -41,6 +42,18 @@ describe('createExerciseForUser', () => {
 });
 
 describe('listExercisesForUser', () => {
+  it('queries only exercises without an owner for guests', async () => {
+    const orderBy = vi.fn().mockResolvedValue([]);
+    const where = vi.fn(() => ({ orderBy }));
+    const from = vi.fn(() => ({ where }));
+    const select = vi.fn(() => ({ from }));
+    const database = { select } as unknown as NodePgDatabase;
+
+    await listExercisesForUser(database, undefined);
+
+    expect(where).toHaveBeenCalledWith(isNull(exercises.ownerUserId));
+  });
+
   it('selects the safe projection and identifies custom exercises', async () => {
     const builtInExercise = {
       id: 'bde77251-e433-4f39-b1cb-41a2f2ad5462',
