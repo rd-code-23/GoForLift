@@ -9,6 +9,7 @@ import { AddActionButton } from '@/components/ui/add-action-button';
 import { PageTitle } from '@/components/ui/page-title';
 import { cn } from '@/lib/utils';
 import { useRoutines } from '../api/routines.query';
+import { useGuestRoutinesStore } from '../guest/guest-routines.store';
 
 const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -17,7 +18,7 @@ export function RoutinesLanding() {
   const isRegisteredUser = identity.kind === 'user';
 
   const routineContent = !isRegisteredUser ? (
-    <GuestRoutinesMessage />
+    <GuestRoutines />
   ) : (
     <RegisteredUserRoutines />
   );
@@ -30,11 +31,21 @@ export function RoutinesLanding() {
   );
 }
 
-function GuestRoutinesMessage() {
+function GuestRoutines() {
+  const routines = useGuestRoutinesStore((state) => state.routines);
   return (
-    <RoutineMessage
-      detail="Sign in with Google when you want to create routines that persist across devices."
-      title="Guest routines are coming later."
+    <RoutineCollection
+      routines={routines.map(({ id, input, createdAt, updatedAt }) => ({
+        id,
+        name: input.name,
+        description: input.description ?? null,
+        exerciseCount: input.exercises.length,
+        scheduledDays: [
+          ...new Set(input.schedules.map((day) => day.dayOfWeek)),
+        ].sort((first, second) => first - second),
+        createdAt,
+        updatedAt,
+      }))}
     />
   );
 }
@@ -50,11 +61,18 @@ function RegisteredUserRoutines() {
     return <RoutineLoadError onRetry={routinesQuery.refetch} />;
   }
 
-  if (routinesQuery.data.routines.length === 0) {
-    return <EmptyRoutineList />;
-  }
+  return <RoutineCollection routines={routinesQuery.data.routines} />;
+}
 
-  return <RoutineList routines={routinesQuery.data.routines} />;
+function RoutineCollection({ routines }: { routines: RoutineSummary[] }) {
+  return (
+    <>
+      {routines.length > 0 && <RoutineList routines={routines} />}
+      <div className={routines.length ? 'mt-6' : undefined}>
+        <AddRoutineAction />
+      </div>
+    </>
+  );
 }
 
 function RoutineLoadError({ onRetry }: { onRetry: () => unknown }) {
@@ -77,7 +95,7 @@ function RoutineLoadError({ onRetry }: { onRetry: () => unknown }) {
   );
 }
 
-function EmptyRoutineList() {
+function AddRoutineAction() {
   return (
     <AddActionButton asChild>
       <Link to="/routines/new">

@@ -135,8 +135,8 @@ describe('routines landing', () => {
     render(<RoutinesLanding />, { wrapper: createWrapper('guest') });
 
     expect(
-      await screen.findByText('Guest routines are coming later.'),
-    ).toBeVisible();
+      await screen.findByRole('link', { name: 'Add Routine' }),
+    ).toHaveAttribute('href', '/routines/new');
     expect(fetchMock).not.toHaveBeenCalled();
   });
 });

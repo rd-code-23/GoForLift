@@ -6,6 +6,7 @@ import {
 } from '@goforlift/contracts';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { Dumbbell, X } from 'lucide-react';
+import { useContext } from 'react';
 import {
   type UseFormRegister,
   type UseFormSetValue,
@@ -13,6 +14,7 @@ import {
   useFormContext,
 } from 'react-hook-form';
 
+import { ApplicationIdentityContext } from '@/app/application-identity';
 import { cn } from '@/lib/utils';
 
 import { Button } from '@/components/ui/button';
@@ -46,7 +48,8 @@ export function ExerciseConfiguration({
   mode = 'create',
   routineId,
 }: ExerciseConfigurationProps) {
-  const exercisesQuery = useExercises();
+  const isGuest = useContext(ApplicationIdentityContext)?.kind === 'guest';
+  const exercisesQuery = useExercises(true, isGuest);
   const exercise = exercisesQuery.data?.exercises.find(
     (availableExercise) => availableExercise.id === exerciseId,
   );

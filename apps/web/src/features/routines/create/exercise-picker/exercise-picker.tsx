@@ -2,8 +2,9 @@
 import type { ExerciseSummary } from '@goforlift/contracts';
 import { Link } from '@tanstack/react-router';
 import { ChevronRight, Dumbbell, Search, X } from 'lucide-react';
-import { useState } from 'react';
+import { useContext, useState } from 'react';
 
+import { ApplicationIdentityContext } from '@/app/application-identity';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { LoadingState } from '@/components/ui/loading-state';
@@ -29,7 +30,8 @@ export function ExercisePicker({
   routineId,
 }: ExercisePickerProps) {
   const [searchTerm, setSearchTerm] = useState('');
-  const exercisesQuery = useExercises();
+  const isGuest = useContext(ApplicationIdentityContext)?.kind === 'guest';
+  const exercisesQuery = useExercises(true, isGuest);
 
   const normalizedSearchTerm = searchTerm.trim().toLocaleLowerCase();
   const exercises = exercisesQuery.data?.exercises ?? [];
@@ -98,9 +100,11 @@ export function ExercisePicker({
 
       <div className="mt-4">{content}</div>
 
-      <div className="mt-7">
-        <CustomExerciseDialog />
-      </div>
+      {!isGuest && (
+        <div className="mt-7">
+          <CustomExerciseDialog />
+        </div>
+      )}
     </section>
   );
 }

@@ -8,6 +8,7 @@ import { useExercises } from '@/features/exercises/exercises.query';
 import { useRoutine } from '@/features/routines/api/routines.query';
 import { RoutineDraftFormProvider } from '@/features/routines/create/routine-draft-form';
 import { toRoutineDraftFormValues } from '@/features/routines/create/routine-draft.mapper';
+import { useGuestRoutinesStore } from '@/features/routines/guest/guest-routines.store';
 import { getApiErrorMessage } from '@/lib/api-error-message';
 
 export const Route = createFileRoute(
@@ -21,24 +22,33 @@ function RoutineEditFormLayout() {
   const identity = useApplicationIdentity();
   const isRegisteredUser = identity.kind === 'user';
   const routineQuery = useRoutine(routineId, isRegisteredUser);
-  const exercisesQuery = useExercises(isRegisteredUser);
+  const guestRoutine = useGuestRoutinesStore((state) =>
+    state.routines.find((routine) => routine.id === routineId),
+  );
+  const exercisesQuery = useExercises(
+    isRegisteredUser || !!guestRoutine,
+    !isRegisteredUser,
+  );
+  const routine = isRegisteredUser ? routineQuery.data : guestRoutine?.input;
   const defaultValues = useMemo(
-    () =>
-      routineQuery.data
-        ? toRoutineDraftFormValues(routineQuery.data)
-        : undefined,
-    [routineQuery.data],
+    () => (routine ? toRoutineDraftFormValues(routine) : undefined),
+    [routine],
   );
 
-  if (!isRegisteredUser) {
-    return <EditLoadError message="Sign in to edit saved routines." />;
+  if (!isRegisteredUser && !guestRoutine) {
+    return (
+      <EditLoadError message="This routine could not be found on this device." />
+    );
   }
 
-  if (routineQuery.isPending || exercisesQuery.isPending) {
+  if (
+    (isRegisteredUser && routineQuery.isPending) ||
+    exercisesQuery.isPending
+  ) {
     return <LoadingState label="Loading routine…" />;
   }
 
-  if (routineQuery.isError) {
+  if (isRegisteredUser && routineQuery.isError) {
     return (
       <EditLoadError
         message={getApiErrorMessage(
@@ -60,7 +70,7 @@ function RoutineEditFormLayout() {
   }
 
   return (
-    <RoutineDraftFormProvider defaultValues={defaultValues}>
+    <RoutineDraftFormProvider defaultValues={defaultValues} key={routineId}>
       <Outlet />
     </RoutineDraftFormProvider>
   );

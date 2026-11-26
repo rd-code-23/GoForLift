@@ -1,21 +1,22 @@
 /** Presents the responsive visual shell for creating a registered-user routine. */
-import { useQuery } from '@tanstack/react-query';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { ArrowLeft, Plus } from 'lucide-react';
-import { useState } from 'react';
+import { useContext, useState } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
+import { ApplicationIdentityContext } from '@/app/application-identity';
 
 import { AddActionButton } from '@/components/ui/add-action-button';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { PageTitle } from '@/components/ui/page-title';
-import { exercisesQueryOptions } from '@/features/exercises/exercises.query';
+import { useExercises } from '@/features/exercises/exercises.query';
 import {
   useCreateRoutineMutation,
   useUpdateRoutineMutation,
 } from '@/features/routines/api/routines.mutation';
 import { DeleteRoutineDialog } from '@/features/routines/details/delete-routine-dialog';
+import { useGuestRoutinesStore } from '@/features/routines/guest/guest-routines.store';
 import { getApiErrorMessage } from '@/lib/api-error-message';
 import { cn } from '@/lib/utils';
 import type {
@@ -39,6 +40,15 @@ export function RoutineEditor({
 }: RoutineEditorProps) {
   const navigate = useNavigate();
   const isEditing = mode === 'edit';
+  const editingRoutineId = isEditing ? routineId : undefined;
+  const isGuest = useContext(ApplicationIdentityContext)?.kind === 'guest';
+  const createGuestRoutine = useGuestRoutinesStore(
+    (state) => state.createRoutine,
+  );
+  const updateGuestRoutine = useGuestRoutinesStore(
+    (state) => state.updateRoutine,
+  );
+  const [guestSaveError, setGuestSaveError] = useState<string>();
 
   const [showRequiredFieldsMessage, setShowRequiredFieldsMessage] =
     useState(false);
@@ -55,7 +65,7 @@ export function RoutineEditor({
   >();
   const routineName = useWatch({ control, name: 'name' });
 
-  const saveErrorMessage = activeMutation.isError
+  const apiSaveError = activeMutation.isError
     ? getApiErrorMessage(
         activeMutation.error,
         "We couldn't save your routine. Try again.",
@@ -67,11 +77,12 @@ export function RoutineEditor({
         },
       )
     : undefined;
+  const saveErrorMessage = isGuest ? guestSaveError : apiSaveError;
 
   const addExercise = async () => {
-    if (isEditing && routineId) {
+    if (editingRoutineId) {
       await navigate({
-        params: { routineId },
+        params: { routineId: editingRoutineId },
         to: '/routines/$routineId/edit/exercises',
       });
       return;
@@ -81,9 +92,12 @@ export function RoutineEditor({
   };
 
   const editExercise = async (exercise: RoutineDraftExerciseFormValues) => {
-    if (isEditing && routineId) {
+    if (editingRoutineId) {
       await navigate({
-        params: { exerciseId: exercise.exerciseId, routineId },
+        params: {
+          exerciseId: exercise.exerciseId,
+          routineId: editingRoutineId,
+        },
         search: { position: exercise.position },
         to: '/routines/$routineId/edit/exercises/$exerciseId',
       });
@@ -97,27 +111,55 @@ export function RoutineEditor({
     });
   };
 
+  function finishSave() {
+    if (!editingRoutineId) reset();
+    void navigate({ to: '/routines' });
+  }
+
+  function saveGuestRoutine(input: ReturnType<typeof toCreateRoutineInput>) {
+    setGuestSaveError(undefined);
+
+    try {
+      if (editingRoutineId) {
+        const updatedRoutine = updateGuestRoutine(editingRoutineId, input);
+        if (!updatedRoutine) {
+          setGuestSaveError('This routine could not be found on this device.');
+          return;
+        }
+      } else {
+        createGuestRoutine(input);
+      }
+    } catch {
+      setGuestSaveError(
+        "We couldn't save your routine on this device. Try again.",
+      );
+      return;
+    }
+
+    finishSave();
+  }
+
   function saveRoutine(draft: ParsedRoutineDraftFormValues) {
     setShowRequiredFieldsMessage(false);
 
     const input = toCreateRoutineInput(draft);
 
-    if (isEditing && routineId) {
+    if (isGuest) {
+      saveGuestRoutine(input);
+      return;
+    }
+
+    if (editingRoutineId) {
       updateRoutineMutation.mutate(
-        { input, routineId },
+        { input, routineId: editingRoutineId },
         {
-          onSuccess: () => void navigate({ to: '/routines' }),
+          onSuccess: finishSave,
         },
       );
       return;
     }
 
-    createRoutineMutation.mutate(input, {
-      onSuccess: () => {
-        reset();
-        void navigate({ to: '/routines' });
-      },
-    });
+    createRoutineMutation.mutate(input, { onSuccess: finishSave });
   }
 
   return (
@@ -129,7 +171,7 @@ export function RoutineEditor({
           reset();
           setShowRequiredFieldsMessage(false);
         }}
-        routineId={routineId}
+        routineId={editingRoutineId}
         routineName={routineName}
         showRequiredFieldsMessage={showRequiredFieldsMessage}
       />
@@ -156,6 +198,7 @@ export function RoutineEditor({
 
         <div className="lg:col-span-2">
           <ExerciseSection
+            isGuest={isGuest}
             onAddExercise={() => void addExercise()}
             onEditExercise={(exercise) => void editExercise(exercise)}
           />
@@ -189,7 +232,7 @@ function EditorHeader({
       </Button>
       <PageTitle>{isEditing ? 'Edit Routine' : 'Create Routine'}</PageTitle>
       <div className="ml-auto flex gap-2">
-        {isEditing && routineId && (
+        {routineId && (
           <DeleteRoutineDialog name={routineName} routineId={routineId} />
         )}
         <Button
@@ -262,9 +305,11 @@ function RoutineDetails() {
 }
 
 function ExerciseSection({
+  isGuest,
   onAddExercise,
   onEditExercise,
 }: {
+  isGuest: boolean;
   onAddExercise: () => void;
   onEditExercise: (exercise: RoutineDraftExerciseFormValues) => void;
 }) {
@@ -276,10 +321,7 @@ function ExerciseSection({
   } = useFormContext<RoutineDraftFormValues>();
   const exercises = useWatch({ control, name: 'exercises' });
 
-  const exercisesQuery = useQuery({
-    ...exercisesQueryOptions,
-    enabled: false,
-  });
+  const exercisesQuery = useExercises(false, isGuest);
 
   const exerciseNames = new Map(
     exercisesQuery.data?.exercises.map((exercise) => [
