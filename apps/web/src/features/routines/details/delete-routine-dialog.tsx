@@ -1,7 +1,8 @@
 /** Confirms deletion of a persisted routine and returns to the routine list. */
 import { useNavigate } from '@tanstack/react-router';
-import { useState } from 'react';
+import { useContext, useState } from 'react';
 
+import { ApplicationIdentityContext } from '@/app/application-identity';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -12,6 +13,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { useDeleteRoutineMutation } from '../api/routines.mutation';
+import { useGuestRoutinesStore } from '../guest/guest-routines.store';
 
 type DeleteRoutineDialogProps = {
   name: string;
@@ -24,15 +26,35 @@ export function DeleteRoutineDialog({
 }: DeleteRoutineDialogProps) {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
+  const [guestDeleteError, setGuestDeleteError] = useState(false);
+  const isGuest = useContext(ApplicationIdentityContext)?.kind === 'guest';
+  const deleteGuestRoutine = useGuestRoutinesStore(
+    (state) => state.deleteRoutine,
+  );
   const deleteRoutineMutation = useDeleteRoutineMutation();
 
   function handleOpenChange(open: boolean) {
     setIsOpen(open);
 
-    if (!open) deleteRoutineMutation.reset();
+    if (!open) {
+      deleteRoutineMutation.reset();
+      setGuestDeleteError(false);
+    }
   }
 
   async function deleteRoutine() {
+    if (isGuest) {
+      try {
+        deleteGuestRoutine(routineId);
+      } catch {
+        setGuestDeleteError(true);
+        return;
+      }
+      handleOpenChange(false);
+      await navigate({ to: '/routines' });
+      return;
+    }
+
     const wasDeleted = await deleteRoutineMutation
       .mutateAsync(routineId)
       .then(() => true)
@@ -57,7 +79,7 @@ export function DeleteRoutineDialog({
           “{name}” and all of its exercise configuration and schedules will be
           permanently deleted. This action cannot be undone.
         </DialogDescription>
-        {deleteRoutineMutation.isError && (
+        {(guestDeleteError || deleteRoutineMutation.isError) && (
           <p className="mt-4 text-sm text-destructive" role="alert">
             Routine could not be deleted. Please try again.
           </p>

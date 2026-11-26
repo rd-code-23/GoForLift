@@ -1,18 +1,22 @@
 /** Provides the TanStack Query source for exercises available to the user. */
-import { queryOptions, useQuery } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 
 import { fetchExercises } from './exercises.api';
 
 export const exercisesQueryKey = ['exercises'] as const;
 const EXERCISES_STALE_TIME_MS = 2 * 60 * 1000;
 
-export const exercisesQueryOptions = queryOptions({
-  queryKey: exercisesQueryKey,
-  queryFn: ({ signal }) => fetchExercises(signal),
-  retry: false,
-  staleTime: EXERCISES_STALE_TIME_MS,
-});
-
-export function useExercises(enabled = true) {
-  return useQuery({ ...exercisesQueryOptions, enabled });
+export function useExercises(enabled = true, isGuest = false) {
+  return useQuery({
+    retry: false,
+    staleTime: EXERCISES_STALE_TIME_MS,
+    queryKey: isGuest ? (['guest-exercises'] as const) : exercisesQueryKey,
+    queryFn: async ({ signal }) => {
+      const data = await fetchExercises(signal, isGuest ? 'omit' : 'include');
+      return isGuest
+        ? { exercises: data.exercises.filter((exercise) => !exercise.isCustom) }
+        : data;
+    },
+    enabled,
+  });
 }

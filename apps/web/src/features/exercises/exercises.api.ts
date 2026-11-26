@@ -1,4 +1,4 @@
-/** Fetches and validates exercises available to the authenticated user. */
+/** Fetches and validates the exercise catalog and custom exercise changes. */
 import {
   createExerciseInputSchema,
   exerciseListResponseSchema,
@@ -15,9 +15,10 @@ import { parseApiJsonResponse } from '@/lib/api-error';
 
 export async function fetchExercises(
   signal?: AbortSignal,
+  credentials: RequestCredentials = 'include',
 ): Promise<ExerciseListResponse> {
   const response = await fetch('/api/exercises', {
-    credentials: 'include',
+    credentials,
     signal,
   });
 

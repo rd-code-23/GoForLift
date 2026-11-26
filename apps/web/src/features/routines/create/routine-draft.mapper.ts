@@ -1,4 +1,4 @@
-/** Converts UI-only routine draft data into the strict create-routine contract. */
+/** Converts between routine form drafts and saved routine data. */
 import {
   createRoutineExerciseInputSchema,
   createRoutineInputSchema,
@@ -23,7 +23,7 @@ export function toCreateRoutineInput(
 }
 
 export function toRoutineDraftFormValues(
-  routine: RoutineDetail,
+  routine: CreateRoutineInput | RoutineDetail,
 ): RoutineDraftFormValues {
   return {
     description: routine.description,

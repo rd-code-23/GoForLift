@@ -779,11 +779,9 @@ Guests can read the built-in exercise catalog through `GET /api/exercises`.
 Custom exercises are visible only to their signed-in owner, and exercise writes
 require authentication.
 
-Guest mode should not create permanently persisted user data.
-
-The exact implementation can be finalized with the guest feature.
-
-Possible approaches may include temporary client-side state.
+Guest routines are stored in the browser using Zustand and localStorage. They
+survive a refresh on the same browser. The guest list and editor use this local
+store for all routine operations.
 
 Avoid creating unnecessary backend guest-account infrastructure unless
 requirements justify it.
