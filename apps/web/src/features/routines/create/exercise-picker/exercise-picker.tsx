@@ -100,11 +100,9 @@ export function ExercisePicker({
 
       <div className="mt-4">{content}</div>
 
-      {!isGuest && (
-        <div className="mt-7">
-          <CustomExerciseDialog />
-        </div>
-      )}
+      <div className="mt-7">
+        <CustomExerciseDialog />
+      </div>
     </section>
   );
 }

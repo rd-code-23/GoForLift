@@ -1,6 +1,7 @@
-/** Confirms and deletes a custom exercise owned by the current user. */
-import { useState } from 'react';
+/** Confirms custom exercise deletion and protects saved guest routines. */
+import { useContext, useState } from 'react';
 
+import { ApplicationIdentityContext } from '@/app/application-identity';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -13,6 +14,7 @@ import {
 import { useDeleteExerciseMutation } from '@/features/exercises/exercises.mutation';
 import { getApiErrorMessage } from '@/lib/api-error-message';
 import { cn } from '@/lib/utils';
+import { useGuestRoutinesStore } from '../../guest/guest-routines.store';
 
 type DeleteExerciseDialogProps = {
   exerciseId: string;
@@ -26,6 +28,15 @@ export function DeleteExerciseDialog({
   onDeleted,
 }: DeleteExerciseDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [deletionBlocked, setDeletionBlocked] = useState(false);
+  const isGuest = useContext(ApplicationIdentityContext)?.kind === 'guest';
+  const usedInSavedRoutine = useGuestRoutinesStore(
+    (state) =>
+      isGuest &&
+      state.routines.some(({ input }) =>
+        input.exercises.some((exercise) => exercise.exerciseId === exerciseId),
+      ),
+  );
   const deleteExerciseMutation = useDeleteExerciseMutation();
 
   const deleteErrorMessage = deleteExerciseMutation.isError
@@ -42,17 +53,25 @@ export function DeleteExerciseDialog({
     setIsOpen(open);
 
     if (!open) {
+      setDeletionBlocked(false);
       deleteExerciseMutation.reset();
     }
   }
 
-  function deleteExercise() {
-    deleteExerciseMutation.mutate(exerciseId, {
-      onSuccess: () => {
-        handleOpenChange(false);
-        void onDeleted();
-      },
-    });
+  async function deleteExercise() {
+    if (usedInSavedRoutine) {
+      setDeletionBlocked(true);
+      return;
+    }
+
+    try {
+      await deleteExerciseMutation.mutateAsync(exerciseId);
+    } catch {
+      // The mutation exposes the error in the dialog.
+      return;
+    }
+    handleOpenChange(false);
+    await onDeleted();
   }
 
   return (
@@ -77,6 +96,12 @@ export function DeleteExerciseDialog({
           list. This action cannot be undone.
         </DialogDescription>
 
+        {deletionBlocked && usedInSavedRoutine && (
+          <p className="mt-4 text-sm text-destructive" role="alert">
+            Remove this exercise from your saved routines before deleting it.
+          </p>
+        )}
+
         {deleteErrorMessage && (
           <p className="mt-4 text-sm text-destructive" role="alert">
             {deleteErrorMessage}
@@ -91,7 +116,7 @@ export function DeleteExerciseDialog({
           </DialogClose>
           <Button
             disabled={deleteExerciseMutation.isPending}
-            onClick={deleteExercise}
+            onClick={() => void deleteExercise()}
             type="button"
             variant="destructive"
           >
